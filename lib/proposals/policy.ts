@@ -76,7 +76,7 @@ export function packetFromScenario(args:{
     (!nado&&request.action!=="tydro-debt-review")||
     !validTimestamp(result.snapshotAt)||Math.abs(now-Date.parse(result.snapshotAt))>180_000)
     return null;
-  const protocol=nado?"Nado":"Tydro";
+  const protocol: "Nado"|"Tydro"=nado?"Nado":"Tydro";
   const details=nado?
     {label:result.symbol+" | hypothetical "+result.reductionPct+"% position reduction at "+result.shockPct+"% price shock",
      before:result.originalPositionSensitivity,after:result.remainingPositionSensitivity,
