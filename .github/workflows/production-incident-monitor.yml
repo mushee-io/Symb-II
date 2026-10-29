@@ -1,0 +1,103 @@
+name: Production incident monitor
+
+# Independent of the Vercel daily Cron: checks publicly readable, non-transactional
+# endpoints and opens ONE GitHub incident issue until the service recovers.
+on:
+  schedule:
+    - cron: "17,47 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: symb-ii-production-incident-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SMOKE_URL: https://symb-ii.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Probe public production endpoints without credentials
+        id: probe
+        shell: bash
+        run: |
+          set +e
+          node scripts/smoke.mjs > monitor.log 2>&1
+          result=$?
+          set -e
+          cat monitor.log
+          echo "exit_code=$result" >> "$GITHUB_OUTPUT"
+      - name: Create or resolve a deduplicated incident issue
+        if: always() && steps.probe.outputs.exit_code != ''
+        uses: actions/github-script@v7
+        env:
+          SMOKE_EXIT_CODE: ${{ steps.probe.outputs.exit_code }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('node:fs');
+            const {owner, repo} = context.repo;
+            const title = '[M7] Symb-II production monitor: degraded';
+            const marker = '<!-- symb-ii-m7-production-incident -->';
+            const run = `https://github.com/${owner}/${repo}/actions/runs/${context.runId}`;
+            const failed = process.env.SMOKE_EXIT_CODE !== '0';
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', per_page: 100
+            });
+            const existing = open.find(i =>
+              !i.pull_request && i.title === title && i.body?.includes(marker)
+            );
+            if (failed) {
+              if (!existing) {
+                const log = fs.readFileSync('monitor.log', 'utf8')
+                  .replaceAll('`', "'").slice(-6500);
+                const body = [
+                  marker,
+                  'An automated, read-only production smoke check failed.',
+                  'This monitor checks the public API surface only; it does NOT verify',
+                  'Upstash Redis, private Cron authentication or real wallet actions.',
+                  '',
+                  `First detection (UTC): ${new Date().toISOString()}`,
+                  `Failed workflow: ${run}`,
+                  '',
+                  '### Smoke output',
+                  '```text',
+                  log,
+                  '```',
+                  '',
+                  'Do not enable execution while the underlying provider is degraded.',
+                  'The issue will close automatically after a passing check.'
+                ].join('\n');
+                const {data} = await github.rest.issues.create({owner, repo, title, body});
+                core.notice(`Opened incident #${data.number}`);
+              } else {
+                core.warning(`Incident #${existing.number} is still open; suppressing duplicate.`);
+              }
+            } else if (existing) {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number: existing.number,
+                body: `Recovered at ${new Date().toISOString()} UTC. Public smoke passed. [Successful run](${run}). Private services and real-wallet acceptance remain unverified.`
+              });
+              await github.rest.issues.update({
+                owner, repo, issue_number: existing.number, state: 'closed', state_reason: 'completed'
+              });
+              core.notice(`Closed recovered incident #${existing.number}`);
+            } else {
+              core.info('Public endpoints passed; no open incident to resolve.');
+            }
+      - name: Fail monitoring workflow on production degradation
+        if: always() && steps.probe.outputs.exit_code != '0'
+        run: |
+          echo "::error::Symb-II production public smoke failed; inspect monitoring issue and job log."
+          exit 1
