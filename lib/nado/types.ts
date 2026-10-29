@@ -1,0 +1,5 @@
+export type NadoMarket = { productId: number; symbol: string; type: "spot" | "perp"; base: string; quote: string; lastPrice: number; change24h: number; volume24h: number };
+export type NadoMarketsResponse = { source: "Nado indexer"; chainId: 57073; updatedAt: string; markets: NadoMarket[] };
+export type NadoPosition = { id: string; subaccount: string; productId: number; symbol: string; side: "long" | "short"; marginMode: "cross" | "isolated"; size: string; entryPrice: string; openedAt: number | null; updatedAt: number | null };
+export type NadoOrder = { id: string; subaccount: string; productId: number; symbol: string; side: "buy" | "sell"; size: string; price: string; filled?: string; timestamp: number | null; kind: "open" | "indexed" };
+export type NadoAccountResponse = { source: "Nado engine + indexer"; chainId: 57073; address: string; updatedAt: string; subaccounts: string[]; positions: NadoPosition[]; openOrders: NadoOrder[]; indexedOrders: NadoOrder[]; warnings: string[]; incomplete: boolean };

@@ -15,7 +15,11 @@
     "wagmi": "^2.17.0",
     "viem": "^2.37.0",
     "@tanstack/react-query": "^5.85.0",
-    "lucide-react": "^0.468.0"
+    "lucide-react": "^0.468.0",
+    "@nadohq/engine-client": "0.66.0",
+    "@nadohq/indexer-client": "0.66.0",
+    "@nadohq/shared": "0.66.0",
+    "bignumber.js": "^9.3.1"
   },
   "devDependencies": {
     "typescript": "^5.9.0",
