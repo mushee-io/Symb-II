@@ -75,10 +75,18 @@ export function RiskPanel(){
       </div>}
     {connected && address && <RiskAlerts wallet={address} nado={{status:nado.isPending?"loading":nado.isError?"error":"success",data:nado.data}} tydro={{status:tydro.isPending?"loading":tydro.isError?"error":"success",data:tydro.data}} fetching={nado.isFetching||tydro.isFetching}/>}
     {connected && address && <PersistentWatch key={address.toLowerCase()} wallet={address}/>}
+    {!connected && <div className="rescue-lab" id="portfolio-rescue" aria-labelledby="rescue-preview-title">
+      <div className="rescue-head"><div><span className="eyebrow">M06 / PORTFOLIO RESCUE PREVIEW</span>
+        <h2 id="rescue-preview-title">Explore risk scenarios, not automatic trades.</h2>
+        <p>Connect an Ink wallet to compare your actual Nado position sensitivity and Tydro lending health in separate, non-executable models.</p>
+      </div><span className="rescue-lock"><ShieldCheck size={16}/> READ-ONLY</span></div>
+      <div className="nado-state nado-wallet-state"><Wallet size={22}/><strong>Connect on Ink to unlock account-based scenarios</strong>
+        <span>No example holdings, generated trade plans or fabricated wallet data will be displayed.</span></div>
+    </div>}
     {connected && address && <RescueLab wallet={address} nado={nado.data} tydro={tydro.data}/>}
     {connected && nado.data && tydro.data && <ExposureOverview nado={nado.data} tydro={tydro.data}/>}
     {connected && nado.data && <NadoStress account={nado.data}/>}
     {connected && tydro.data && <TydroStress account={tydro.data}/>}
-    <div className="risk-warning"><ShieldAlert size={18}/><span>Risk status above reflects snapshots; the optional Nado and Tydro what-if models use bounded simplifying assumptions and is not a guarantee. Nado maintenance health and Tydro health factor have different units and liquidation rules. A positive reading does not ensure safety during volatile markets or stale data.</span></div>
+    <div className="risk-warning"><ShieldAlert size={18}/><span>Risk status above reflects snapshots; the optional Nado and Tydro what-if models use bounded simplifying assumptions and are not guarantees. Nado maintenance health and Tydro health factor have different units and liquidation rules. A positive reading does not ensure safety during volatile markets or stale data.</span></div>
   </section>;
 }
