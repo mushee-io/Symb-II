@@ -35,13 +35,16 @@ export function simulateNadoPosition(
   if(!recent(snapshots.marketUpdatedAt,now,MAX_SNAPSHOT_AGE_MS)||
      !recent(snapshots.accountUpdatedAt,now,MAX_POSITION_AGE_MS))
     return {ok:false,reason:"Market or position snapshot is stale. Refresh Nado data to continue."};
+  if(!/^(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:[eE][+-]?\\d+)?$/.test(position.size) ||
+     !Number.isFinite(market.lastPrice) || !["long","short"].includes(position.side))
+    return {ok:false,reason:"Invalid position size, side or Nado market price."};
   const size=new BigNumber(position.size);
   const price=new BigNumber(market.lastPrice);
   if(!size.isFinite()||!size.isGreaterThan(0)||
      !price.isFinite()||!price.isGreaterThan(0)||
      !market.quote||!/^[a-z0-9]+$/i.test(market.quote))
     return {ok:false,reason:"The position size, ticker price or quote unit is unavailable."};
-  if(!Number.isFinite(market.lastPrice)||size.decimalPlaces()!>24)
+  if(!Number.isFinite(market.lastPrice)||(size.decimalPlaces() ?? 99)>24)
     return {ok:false,reason:"Position size precision or quote data is unsupported."};
   const scenarioMultiplier=new BigNumber(100+shockPct).dividedBy(100);
   const shockedPrice=price.multipliedBy(scenarioMultiplier);
