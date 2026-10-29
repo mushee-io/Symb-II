@@ -28,5 +28,5 @@ jobs:
           node-version: '22'
       - name: Wait for exact Vercel production commit
         run: node scripts/await-production.mjs
-      - name: Verify eight safe read-only production endpoints
+      - name: Verify eleven safe public production and M8 security checks
         run: npm run smoke
