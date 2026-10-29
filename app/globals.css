@@ -530,3 +530,21 @@ h1,h2,h3,p { margin-top: 0; }
 .rescue-conclusion p{font-size:11px;line-height:1.7;color:#c1cbb1;margin:7px 0 0}
 @media(max-width:840px){.rescue-grid{grid-template-columns:1fr}.rescue-head{flex-direction:column}.rescue-lock{align-self:flex-start}}
 @media(max-width:510px){.rescue-lab{padding:15px}.rescue-protocol{padding:15px}.rescue-scenario>div{align-items:flex-start;flex-direction:column;gap:7px}.rescue-scenario>div strong{text-align:left}}
+
+/* M06 explicit review acknowledgement, separate from trading permissions */
+.proposal-review{margin-top:19px;border:1px solid #3d6146;background:#1c2c21;border-radius:10px;padding:17px}
+.proposal-review-title{display:flex;align-items:center;gap:8px;color:#e5f5e6}
+.proposal-review-title strong{font-size:13px}
+.proposal-review-title small{margin-left:auto;color:#b6d8b1;font-size:9px;letter-spacing:.08em}
+.proposal-review>p{font-size:11px;line-height:1.7;color:#a9bcac}
+.proposal-review .btn{font-size:11px}
+.proposal-note{font-size:10px;color:#aec0af;line-height:1.6}
+.proposal-steps{margin-top:14px}
+.proposal-packet{background:#2a362a;border:1px solid #586d53;padding:13px;margin-top:13px;border-radius:9px}
+.proposal-packet strong{font-size:12px;color:#e9f8df}
+.proposal-packet p{font-size:10px;line-height:1.7;color:#bbcfbd}
+.proposal-packet label{display:flex;align-items:flex-start;gap:9px;font-size:10px;color:#d9e6d5;line-height:1.6;margin:14px 0}
+.proposal-packet input{accent-color:#88c998;flex:0 0 14px;margin-top:2px}
+.proposal-receipt{margin-top:12px;background:#2b4632;border:1px solid #6ca473;border-radius:8px;color:#d5f4d9;font-size:11px;padding:13px}
+.proposal-receipt small{display:block;font-size:10px;margin-top:8px;overflow-wrap:anywhere}
+.proposal-error{background:#3e2925;border:1px solid #96634b;border-radius:8px;color:#ffd1b0;font-size:10px;padding:11px;line-height:1.6}

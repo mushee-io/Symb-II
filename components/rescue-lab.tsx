@@ -8,6 +8,7 @@ import type {NadoAccountResponse,NadoMarketsResponse} from "@/lib/nado/types";
 import type {TydroAccountResponse} from "@/lib/tydro/types";
 import {nadoPositionKey} from "@/lib/risk/nado-stress";
 import {reviewNadoReduction,reviewTydroDebtReduction} from "@/lib/risk/rescue";
+import {ProposalReview} from "@/components/proposal-review";
 
 const nadoSizes=[10,25,50,75] as const;
 const debtSizes=[10,25,50,75] as const;
@@ -92,6 +93,10 @@ export function RescueLab({nado,tydro,wallet}:{
               <p>Illustrative remaining base quantity: {showQuantity(tradeScenario.remainingSize,6)}. This is not projected net profit, savings or margin health.</p>
             </div>:<div className="rescue-empty"><AlertTriangle size={16}/>{tradeScenario && !tradeScenario.ok ? tradeScenario.reason : "Unable to calculate the Nado what-if."}</div>}
             {tradeScenario?.ok && tradeScenario.kind==="position-reduction"&&<Assumptions items={tradeScenario.assumptions}/>}
+            {tradeScenario?.ok && tradeScenario.kind==="position-reduction"&&
+              <ProposalReview key={wallet+":"+positionKey+":"+shock+":"+reduction} wallet={wallet}
+                request={{wallet,action:"nado-reduction-review",positionKey,shockPct:shock,reductionPct:reduction}}
+                scenario={tradeScenario}/>}
           </>}
       </div>
       <div className="rescue-protocol">
@@ -109,6 +114,10 @@ export function RescueLab({nado,tydro,wallet}:{
               <p>Baseline: {lendingScenario.currentRisk}. Scenario: {lendingScenario.estimatedRisk}. This does not establish repay feasibility, remaining borrowing capacity or liquidation protection.</p>
             </div>:<div className="rescue-empty"><AlertTriangle size={16}/>{lendingScenario && !lendingScenario.ok ? lendingScenario.reason : "Unable to calculate this Tydro scenario."}</div>}
             {lendingScenario?.ok && lendingScenario.kind==="proportional-debt-reduction"&&<Assumptions items={lendingScenario.assumptions}/>}
+            {lendingScenario?.ok && lendingScenario.kind==="proportional-debt-reduction"&&
+              <ProposalReview key={wallet+":tydro:"+repayment} wallet={wallet}
+                request={{wallet,action:"tydro-debt-review",repaymentPct:repayment}}
+                scenario={lendingScenario}/>}
           </>}
       </div>
     </div>

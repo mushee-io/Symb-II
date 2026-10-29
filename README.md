@@ -214,3 +214,11 @@ The connected Ink workspace now includes `/workspace#portfolio-rescue`: a **read
 - Automated tests verify calculation math, source guards, unsupported configurations, missing markets, and refusal of stale/partial data.
 
 **Not complete:** real-account reconciliation on Nado/Tydro, user-controlled execute proposals, per-asset repay simulation, account margin tier changes, gas estimates, preflight transaction simulations, continuous risk alarms and external security evaluation. None of the lab calculations are suitable as trading or liquidation protection guarantees.
+
+## M6 review packets and signed acknowledgements
+
+The Rescue Lab now offers copyable local what-if summaries and an optional server-verified receipt workflow. The backend re-reads Nado/Tydro data, reconstructs only bounded risk scenarios and creates a 120-second proposal packet pinned to the Ink chain, connected wallet, source timestamp and canonical Keccak-256 digest. The packet explicitly contains `executable:false`, `calldata:null`, `targetContract:null` and no gas or signing authority.
+
+A user may sign a **plain-text review acknowledgement** of that exact server packet. Server verification consumes the packet atomically via Redis `GETDEL`; replay or cross-wallet signatures fail. Only the wallet, proposal digest, action, receipt ID and timestamp are stored (up to 20 receipts; 30-day expiry). This signature is **not** order authorization, a token allowance, transaction calldata, a permit or a future delegation credential. No transactions can be executed by these routes.
+
+The authenticated receipt flow is disabled until private `SYMB_II_PROPOSALS_ENABLED=true`, `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are configured on Vercel. Exporting a local review summary does not need credentials. Signed receipts currently support EOA wallets only; contract-wallet verification, security review and real-wallet testing remain outstanding.
