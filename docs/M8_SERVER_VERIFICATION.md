@@ -117,3 +117,51 @@ not from the time the RPC verifier responds. A signature checked at the end of
 the challenge lifetime therefore has only the remaining time, not a renewed
 two-minute window. This prevents an old issued challenge from appearing fresh
 in an exported report. No reusable authentication is created.
+
+## Operator-only independent Ink block-reference verification
+
+A second read-only verification path now exists for redacted M8 reports.
+It does **not** require Redis, wallet private keys, a wallet signature, token
+approvals or a live transaction. It is an *offline operator check of publicly
+reported Ink block numbers and hashes*.
+
+1. In the [wallet lab](https://symb-ii.vercel.app/workspace#wallet-verification),
+   connect an actual Ink wallet and run **Run wallet verification**.
+2. Choose **Copy evidence report** and save the JSON locally as a UTF-8 file,
+   e.g. `wallet-evidence.json`. Do **not** commit it to GitHub or send it to
+   third-party issue trackers: the redacted report still contains a public
+   wallet address and metadata.
+3. Choose a separately operated HTTPS Ink RPC provider, different from the
+   browser's wallet RPC. Run from the checked-out Symb-II repository with
+   Node 22 and installed dependencies:
+
+   ```sh
+   M8_INDEPENDENT_INK_RPC_URL="https://another-ink-rpc-provider.example" \
+     npm run verify:m8:evidence -- ./wallet-evidence.json
+   ```
+
+   Replace the example URL with an actual independent Ink RPC supplied by
+   the operator. Do not insert passwords into URL user-info or query
+   parameters. The CLI will reject the project's default
+   `rpc-gel.inkonchain.com` endpoint to discourage repeating the same
+   provider check.
+
+4. The command validates a fresh (under 3 minutes), non-executable,
+   public-only M8 report, checks that each reference's corresponding check
+   passed, independently retrieves every reported block via the configured
+   RPC, requires chain ID 57073, matching block numbers and 32-byte hashes,
+   and checks block timestamps. It exits unsuccessfully on stale,
+   inconsistent or unavailable evidence.
+
+Only a **scope-limited public-block-reference result** is returned, plus a
+SHA-256 digest of the locally supplied evidence. The command never prints
+wallet addresses, raw balances, secret values, or signature bytes. It does
+**not** create a signature or a durable cryptographic attestation of a
+browser-supplied report.
+
+A passing result does **not** establish that the wallet belongs to the
+operator; does **not** prove the Nado position or Tydro variable debt was
+correct; does **not** make a signed or protected preflight request; and does
+**not** satisfy the independent external security review. Each of those
+remains a separately documented M8 acceptance gate. Independent RPC
+operation and service independence must be established by the operator.

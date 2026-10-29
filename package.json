@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
-    "smoke": "node scripts/smoke.mjs"
+    "smoke": "node scripts/smoke.mjs",
+    "verify:m8:evidence": "node scripts/verify-m8-evidence.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
