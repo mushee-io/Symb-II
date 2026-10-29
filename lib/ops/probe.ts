@@ -4,6 +4,7 @@ import {ink} from "../ink";
 import {redis} from "../agent/redis";
 import {getNadoMarkets} from "../nado/queries";
 import {getTydroMarkets} from "../tydro/queries";
+import {assessNadoMarketIntegrity,assessTydroMarketIntegrity} from "./provider-integrity";
 import {describeReadiness,type ServiceId} from "./readiness";
 
 export type ProbeResult={id:ServiceId|"nado"|"tydro";state:"pass"|"fail"|"not-configured";detail:string};
@@ -28,15 +29,11 @@ export async function probeServices():Promise<{checkedAt:string;results:ProbeRes
   }),
   probe("nado",async()=>{
    const data=await getNadoMarkets();
-   const t=Date.parse(data.updatedAt);
-   return data.chainId===57073&&data.markets.length>0&&Number.isFinite(t)&&
-     t<=Date.now()+5000&&Date.now()-t<180000;
+   return assessNadoMarketIntegrity(data).valid;
   }),
   probe("tydro",async()=>{
    const data=await getTydroMarkets();
-   const t=Date.parse(data.updatedAt);
-   return data.chainId===57073&&!data.incomplete&&data.reserves.length>0&&
-     t<=Date.now()+5000&&Date.now()-t<180000;
+   return assessTydroMarketIntegrity(data).valid;
   }),
  ]);
  return {checkedAt:new Date().toISOString(),results:checks,summary:summariseProbes(checks),executionEnabled:false};
