@@ -21,6 +21,9 @@ const secureUrl=(value:string|undefined)=>{
 export function hasValidRedisConfiguration(env:NodeJS.ProcessEnv=process.env):boolean{
  return secureUrl(env.UPSTASH_REDIS_REST_URL)&&set(env.UPSTASH_REDIS_REST_TOKEN);
 }
+export function possibleGatewayAuthentication(env:NodeJS.ProcessEnv=process.env):boolean{
+ return Boolean(env.AI_GATEWAY_API_KEY)||Boolean(env.VERCEL_OIDC_TOKEN)||env.VERCEL==="1";
+}
 export function describeReadiness(env:NodeJS.ProcessEnv=process.env):{
  network:"Ink";chainId:57073;services:LaunchGate[];allServicesConfigured:boolean;
  liveCredentialsValidated:false;executionEnabled:false;
@@ -50,7 +53,7 @@ export function describeReadiness(env:NodeJS.ProcessEnv=process.env):{
  };
  dependent("ai","Model-generated account explanations","SYMB_II_AI_ENABLED",[
    {ok:redis,label:"Private Redis credentials"},
-   {ok:set(env.AI_GATEWAY_API_KEY),label:"AI Gateway key"},
+   {ok:possibleGatewayAuthentication(env),label:"AI Gateway key or Vercel OIDC runtime (live verification and budget required)"},
  ]);
  dependent("watch","Opt-in background risk snapshots","SYMB_II_WATCH_ENABLED",[
    {ok:redis,label:"Private Redis credentials"},

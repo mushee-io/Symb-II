@@ -14,3 +14,12 @@ test("AI cannot activate without authenticated model, security store and explici
  assert.equal(isAIConfigured({...env,UPSTASH_REDIS_REST_URL:"https://malicious.example"}),false);
  assert.equal(isAIConfigured(env),true);
 });
+
+test("Vercel OIDC permits keyless config eligibility but never bypasses Redis or feature flag",()=>{
+ const base={VERCEL:"1",SYMB_II_AI_ENABLED:"true",
+  UPSTASH_REDIS_REST_URL:"https://unit.upstash.io",UPSTASH_REDIS_REST_TOKEN:"fake"};
+ assert.equal(isAIConfigured(base),true);
+ assert.equal(isAIConfigured({...base,UPSTASH_REDIS_REST_TOKEN:""}),false);
+ assert.equal(isAIConfigured({...base,SYMB_II_AI_ENABLED:"false"}),false);
+ assert.equal(isAIConfigured({...base,VERCEL:""}),false);
+});

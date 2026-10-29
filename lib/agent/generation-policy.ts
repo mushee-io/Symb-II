@@ -10,9 +10,16 @@ export function gatewayModel(env:NodeJS.ProcessEnv=process.env):string|null{
  return /^[a-z0-9][a-z0-9-]{1,35}\/[a-z0-9][a-z0-9._-]{2,90}$/.test(value)?value:null;
 }
 
+/** Vercel's AI SDK automatically authenticates with deployment OIDC.
+ * VERCEL=1 signals only a POSSIBLE auth path; runtime model calls still need
+ * successful gateway auth, billing access and operator-controlled budget.
+ */
+export function canAttemptGatewayAuth(env:NodeJS.ProcessEnv=process.env):boolean{
+ return Boolean(env.AI_GATEWAY_API_KEY)||Boolean(env.VERCEL_OIDC_TOKEN)||env.VERCEL==="1";
+}
 export function isAIConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
   return env.SYMB_II_AI_ENABLED === "true"
-    && Boolean(env.AI_GATEWAY_API_KEY)
+    && canAttemptGatewayAuth(env)
     && gatewayModel(env)!==null
     && hasValidRedisConfiguration(env);
 }

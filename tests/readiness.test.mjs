@@ -46,3 +46,12 @@ test("disabled feature cannot become enabled just from configured credentials",(
  assert.equal(r.services.find(x=>x.id==="preflight").status,"disabled");
  assert.equal(r.executionEnabled,false);
 });
+
+test("Vercel deployment OIDC is a configured-but-untested auth possibility, never live proof",()=>{
+ const e={VERCEL:"1",UPSTASH_REDIS_REST_URL:"https://m7-fake.upstash.io/",
+ UPSTASH_REDIS_REST_TOKEN:"private-token",SYMB_II_AI_ENABLED:"true"};
+ const r=describeReadiness(e);
+ assert.equal(r.services.find(x=>x.id==="ai").status,"configured");
+ assert.equal(r.liveCredentialsValidated,false);
+ assert.equal(r.executionEnabled,false);
+});
