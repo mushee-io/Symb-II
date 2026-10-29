@@ -2,6 +2,7 @@ import "server-only";
 import {createPublicClient,http} from "viem";
 import {ink} from "../ink";
 import {redis} from "../agent/redis";
+import {verifyRedisOneUse} from "./redis-one-use";
 import {getNadoMarkets} from "../nado/queries";
 import {getTydroMarkets} from "../tydro/queries";
 import {assessNadoMarketIntegrity,assessTydroMarketIntegrity} from "./provider-integrity";
@@ -18,7 +19,12 @@ export async function probeServices():Promise<{checkedAt:string;results:ProbeRes
  const r=describeReadiness();
  const enabledRedis=r.services.find(x=>x.id==="redis")?.status==="configured";
  const checks=await Promise.all([
-  enabledRedis?probe("redis",async()=>await redis(["PING"])==="PONG"):
+  enabledRedis?probe("redis",async()=>{
+   // A PING is not enough for production one-use signatures. These commands
+   // exercise the same Redis atomic nonce primitives used by M8.
+   if(await redis(["PING"])!=="PONG")return false;
+   return (await verifyRedisOneUse(redis)).ok;
+  }):
    Promise.resolve({id:"redis",state:"not-configured",detail:"Redis credentials missing."} as ProbeResult),
   probe("rpc",async()=>{
    const c=createPublicClient({chain:ink,transport:http(process.env.INK_RPC_URL||
