@@ -3,7 +3,7 @@ import type {TydroAccountResponse} from "../tydro/types.ts";
 import {TYDRO} from "../tydro/contracts.ts";
 
 export type TydroDirectObservation={
-  observedAt:string;blockTimestamp:string;blockNumber:string;
+  observedAt:string;blockTimestamp:string;blockNumber:string;blockHash:string;
   chainId:number;verifiedProviderPool:string;
   oracleBaseUnit:string;collateralBaseRaw:string;debtBaseRaw:string;
   availableBorrowsBaseRaw:string;healthFactorRaw:string;emodeCategory:string;
@@ -52,7 +52,8 @@ export function reconcileTydroDirect(
     direct.verifiedProviderPool.toLowerCase()!==TYDRO.pool.toLowerCase()||
     account.pool.toLowerCase()!==TYDRO.pool.toLowerCase())
    return failed("Independent contract deployment or Ink chain ID does not match the pinned Tydro Pool.");
- if(!/^\d+$/.test(direct.blockNumber))return failed("Invalid reference block number.");
+ if(!/^\d+$/.test(direct.blockNumber)||!/^0x[0-9a-f]{64}$/i.test(direct.blockHash))
+   return failed("Invalid reference block number or block hash.");
  if(account.incomplete||account.warnings.length||account.userEModeCategory===null)
    return unavailable("Tydro HTTP adapter is partial; no positive reconciliation claim is possible.");
  if(!Number.isSafeInteger(account.userEModeCategory)||account.userEModeCategory<0)

@@ -86,3 +86,23 @@ required. Any unexpected success fails production acceptance.
 **Live gates remain blocked** until Upstash is configured and a genuine Ink
 EOA and deployed ERC-1271 wallet complete nonce replay, expiration and
 independent signature verification against the production endpoint.
+
+## Independent block evidence in the Wallet Verification Lab
+
+The read-only RPC wallet observation and pinned Tydro Pool comparison now
+include **public Ink block numbers and hashes** in the copied, redacted M8
+evidence report. Wallet code and native balance are read against the same
+pinned Ink block as the reported RPC hash, with a second block retrieval to
+detect a reorganization during inspection. Tydro reserve/pool calls remain
+pinned and checked against a repeated read of the same block hash.
+
+A passing RPC or Tydro Pool reference requires a well-formed 32-byte block
+hash and recent timestamps; missing hashes fail closed. An auditor can query
+the Ink explorer or an independent RPC for the reported block number and
+compare its hash. The block reference is **not** a cryptographic attestation
+that browser-generated JSON is untampered, nor a proof of funds, wallet
+ownership, trade execution or settlement. Real EOA/ERC-1271 signatures and
+the protected Redis preflight must still pass separately.
+
+Exported evidence continues to omit position sizes, balance values, private
+keys and signature bytes. The report expires after three minutes.
