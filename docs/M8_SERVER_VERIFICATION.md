@@ -165,3 +165,24 @@ correct; does **not** make a signed or protected preflight request; and does
 **not** satisfy the independent external security review. Each of those
 remains a separately documented M8 acceptance gate. Independent RPC
 operation and service independence must be established by the operator.
+
+## Block-consistent server signature verification
+
+The server's Ink EOA and deployed ERC-1271 signature verifier now obtains a
+fresh reference Ink block and performs both the wallet-code check and
+`isValidSignature(bytes32,bytes)` ERC-1271 contract read at the **same
+block number**. Before returning a positive self-check, it fetches that
+reference block again and compares the block number and hash, then rechecks
+the chain ID. A missing block hash, code lookup failure, contract revert,
+chain mismatch or reorganized block fails closed. The reference block and
+contract bytes are **not** returned in the API response, and no transaction
+is executed.
+
+Unit tests cover ordinary EOAs, deployed ERC-1271 magic values, wrong
+signers, chain mismatches, missing hashes and mid-check reorgs with injected
+RPC runtimes. These remain mocked integration tests: a real Ink account
+and actual connected RPC are required to establish live M8 acceptance.
+
+This pins a historical observation; it cannot promise that an ERC-1271
+contract's owner set will not change after verification. No session or
+spending permission is granted, so the outcome remains informational only.

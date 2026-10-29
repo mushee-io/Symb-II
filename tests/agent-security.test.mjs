@@ -5,7 +5,12 @@ import {createChallenge,isValidSignedChallenge as verifySignedChallenge} from ".
 import {allowedIntent,isAIConfigured,buildModelInput,validateNarrative} from "../lib/agent/generation-policy.ts";
 
 // Unit tests use a deterministic Ink EOA-state fixture. No public RPC is needed.
-const authRuntime={chainId:async()=>57073,code:async()=>"0x",contractSignature:async()=>"0xffffffff"};
+const authRuntime={
+ chainId:async()=>57073,
+ block:async number=>({number:number??123456n,hash:"0x"+"ab".repeat(32)}),
+ code:async(_wallet,number)=>{assert.equal(number,123456n);return "0x";},
+ contractSignature:async()=>"0xffffffff",
+};
 const isValidSignedChallenge=(args)=>verifySignedChallenge(args,authRuntime);
 const signer=privateKeyToAccount("0x"+"1".repeat(64));
 const nonce="550e8400-e29b-41d4-a716-446655440000";
