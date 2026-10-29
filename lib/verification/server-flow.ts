@@ -1,5 +1,5 @@
 import {getAddress,isAddress} from "viem";
-import {isValidServerOwnershipMessage} from "./server-policy.ts";
+import {isValidServerOwnershipMessage,serverProofExpiry} from "./server-policy.ts";
 
 /**
  * Pure M8 one-use signature challenge decision layer.
@@ -16,7 +16,7 @@ export type OneUseVerificationDependencies={
  })=>Promise<boolean>;
 };
 export type OneUseVerificationResult=
- | {status:"verified";wallet:string}
+ | {status:"verified";wallet:string;expiresAt:string}
  | {status:"invalid"}
  | {status:"unavailable"};
 export const isM8ChallengeId=(value:unknown):value is string=>
@@ -42,8 +42,10 @@ export async function verifyOneUseWalletProof(
   storedMessage=await deps.consumeNonce("m8-"+input.challengeId);
  }catch{return {status:"unavailable"};}
  if(!storedMessage||
-  !isValidServerOwnershipMessage(storedMessage,wallet,input.origin,input.now))
+  !isValidServerOwnershipMessage(storedMessage,wallet,input.origin,input.now,input.challengeId))
   return {status:"invalid"};
+ const expiresAt=serverProofExpiry(storedMessage);
+ if(!expiresAt||Date.parse(expiresAt)<=input.now)return {status:"invalid"};
  try{
   const valid=await deps.verifySignature({
    wallet,challenge:storedMessage,expectedMessage:storedMessage,
@@ -51,5 +53,5 @@ export async function verifyOneUseWalletProof(
   });
   if(!valid)return {status:"invalid"};
  }catch{return {status:"invalid"};}
- return {status:"verified",wallet};
+ return {status:"verified",wallet,expiresAt};
 }
