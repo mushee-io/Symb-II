@@ -56,3 +56,18 @@ test("expired public evidence never passes, regardless of previous green checks"
  }
  assert.equal(x.transactionEnabled,false);
 });
+
+test("server-verification response is optional, ephemeral and never authorizes trading",()=>{
+ const local=null;
+ const verified={wallet,expiresAt:new Date(now+60000).toISOString(),verified:true};
+ const r=assessM8Acceptance(sample(),local,now,verified);
+ assert.equal(r.gates.find(g=>g.id==="server-wallet-signature").state,"pass");
+ assert.equal(r.gates.find(g=>g.id==="local-wallet-signature").state,"not-tested");
+ assert.equal(r.transactionEnabled,false);
+ assert.equal(r.complete,false);
+ assert.equal(assessM8Acceptance(sample(),null,now+60001,verified).
+  gates.find(g=>g.id==="server-wallet-signature").state,"not-tested");
+ assert.equal(assessM8Acceptance(sample(),null,now,{...verified,wallet:
+  "0x0000000000000000000000000000000000000002"}).
+  gates.find(g=>g.id==="server-wallet-signature").state,"not-tested");
+});
