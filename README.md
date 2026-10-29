@@ -132,3 +132,15 @@ The workspace adds a separate risk overview for each connected Ink wallet:
 - All calculations are read-only, require zero signing or custody, and never control execution.
 
 **Not implemented yet:** risk stress simulations, isolated-margin aggregate health, numerical capital reallocation, durable risk-alert workers, automatic liquidation protection or cross-protocol execution. Current labels are basic informational heuristics, not investment advice or a verified risk engine. Compare displayed values directly against Nado and Tydro before making financial decisions.
+
+## M4 — Tydro single-asset sensitivity simulator (initial)
+
+A guarded price-shock interface now lives in `/workspace#risk` for a connected Ink wallet that has Tydro debt. It uses **current on-chain** quantities and Oracle `getAssetPrice` values fetched through Tydro's verified contracts.
+
+The calculation independently values each Tydro supplied collateral and borrowed token, applies the selected asset's parallel price shock (-50% to +50%), and adjusts the existing protocol-reported health factor by the relative movement in liquidation-weighted collateral and debt. It refuses to emit a scenario when:
+
+- The account is in an eMode category (or the mode cannot be determined), data is incomplete or an oracle price is missing.
+- The reconstructed current health factor diverges by over 2% from the contract-reported value, e.g. from unmodelled risk settings.
+- The user has no outstanding debt, invalid collateral, missing positions or invalid asset/range inputs.
+
+The model assumes fixed token balances, reserve liquidation thresholds, all other oracle prices, and no intermediate trades, price feed updates or interest accrual. It is **not a liquidation guarantee, portfolio-wide risk simulator, full Nado stress test or execution advice**. Mathematical boundary tests run in CI (`npm run test`). Test with a real active Tydro account and compare to the Tydro app before relying on it.

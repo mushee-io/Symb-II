@@ -14,7 +14,7 @@ import { ink, INK_EXPLORER } from "@/lib/ink";
 const steps = [
   { number:"02",title:"Nado integration",description:"Read-only markets, positions and order records",status:"Implemented" },
   { number:"03",title:"Tydro integration",description:"Read-only reserves, lending balances and health",status:"Implemented" },
-  { number:"04",title:"Risk intelligence",description:"Protocol health monitor in progress; stress testing next",status:"In progress" },
+  { number:"04",title:"Risk intelligence",description:"Tydro price sensitivity + protocol margin status; further models planned",status:"In progress" },
   { number:"05",title:"AI capital operator",description:"Grounded suggestions and action plans",status:"Planned" },
 ];
 
@@ -58,7 +58,7 @@ export default function Workspace() {
           </section>
           <section className="workspace-card foundation-panel">
             <div className="panel-top"><span><ShieldAlert size={18}/> Protocol overview</span><span className="panel-status muted">ONCHAIN READS</span></div>
-            <div className="foundation-info"><div className="foundation-icon"><ChartNoAxesCombined size={25}/></div><h2>No simulated positions</h2><p>Nado trading and Tydro lending information appear below. They remain separate protocol accounts. A new read-only risk monitor is available below; cross-protocol simulations are not yet implemented.</p></div>
+            <div className="foundation-info"><div className="foundation-icon"><ChartNoAxesCombined size={25}/></div><h2>No simulated positions</h2><p>Nado trading and Tydro lending information appear below. They remain separate protocol accounts. A new read-only risk monitor and Tydro-only what-if simulation are available below. Cross-protocol liquidation models are not implemented.</p></div>
             <div className="foundation-rows"><div><span>Nado records</span><b>See live panel below</b></div><div><span>Tydro lending</span><b>See health below</b></div><div><span>Protocol risk</span><b>See risk monitor below</b></div></div>
           </section>
         </div>

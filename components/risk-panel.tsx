@@ -3,6 +3,7 @@ import { useAccount } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, AlertTriangle, ShieldCheck, ShieldAlert, Wallet } from "lucide-react";
 import { ink } from "@/lib/ink";
+import { TydroStress } from "@/components/tydro-stress";
 import type { NadoAccountResponse } from "@/lib/nado/types";
 import type { TydroAccountResponse } from "@/lib/tydro/types";
 import { nadoRiskState, tydroRiskState, type RiskState } from "@/lib/risk/status";
@@ -67,6 +68,7 @@ export function RiskPanel(){
             </>}
         </div>
       </div>}
-    <div className="risk-warning"><ShieldAlert size={18}/><span>These are protocol-reported snapshots, not price-shock simulations or guarantees. Nado maintenance health and Tydro health factor have different units and liquidation rules. A positive reading does not ensure safety during volatile markets or stale data.</span></div>
+    {connected && tydro.data && <TydroStress account={tydro.data}/>}
+    <div className="risk-warning"><ShieldAlert size={18}/><span>Risk status above reflects snapshots; the optional Tydro price-shock model below uses bounded simplifying assumptions and is not a guarantee. Nado maintenance health and Tydro health factor have different units and liquidation rules. A positive reading does not ensure safety during volatile markets or stale data.</span></div>
   </section>;
 }

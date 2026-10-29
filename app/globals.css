@@ -335,3 +335,34 @@ h1,h2,h3,p { margin-top: 0; }
 .risk-warning{display:flex;align-items:flex-start;gap:10px;margin-top:17px;padding:16px;border:1px solid #594b35;background:#30291e;color:#dcc39c;border-radius:10px;font-size:11px;line-height:1.7}
 .risk-warning svg{flex-shrink:0}
 @media(max-width:760px){.risk-cards{grid-template-columns:1fr}.risk-pill{margin-top:12px}}
+
+/* M04: Guarded Tydro oracle-based sensitivity control */
+.stress-panel{margin-top:20px;border:1px solid #405b46;border-radius:13px;padding:24px;background:linear-gradient(140deg,#1c2a20,#131d17)}
+.stress-heading{display:flex;align-items:flex-start;gap:13px}
+.stress-emblem{height:42px;width:42px;flex:0 0 42px;border-radius:11px;display:grid;place-items:center;background:#31503a;color:var(--accent)}
+.stress-heading .eyebrow{font-size:10px}
+.stress-heading h3{margin:9px 0 9px;font-size:23px;letter-spacing:-.04em}
+.stress-heading p{font-size:12px;line-height:1.7;color:#a9bead;margin:0;max-width:750px}
+.stress-controls{display:grid;grid-template-columns:1fr 1.2fr;gap:20px;margin:27px 0}
+.stress-field{display:flex;flex-direction:column;gap:11px;min-width:0}
+.stress-field>span{font-size:11px;color:#aac0af;font-weight:650}
+.stress-field select{border:1px solid #4b634e;background:#101a14;color:#e5f8e7;border-radius:9px;min-height:45px;padding:0 12px;font:inherit;font-size:12px;max-width:100%}
+.stress-range{display:flex;align-items:center;gap:13px}
+.stress-range input{flex:1;accent-color:#b6f7cd;min-width:0;cursor:pointer}
+.stress-range strong{width:52px;text-align:right;font-variant-numeric:tabular-nums;font-size:18px;white-space:nowrap}
+.stress-range strong.negative{color:#ffd2b7}.stress-range strong.positive{color:#b4f3ca}
+.stress-presets{display:flex;flex-wrap:wrap;gap:7px}
+.stress-presets button{border:1px solid #3b5541;background:#15231a;color:#b6c7ba;border-radius:7px;padding:7px 9px;font:inherit;font-size:11px;cursor:pointer}
+.stress-presets button.selected{background:#315540;color:#d1ffe0;border-color:#6b9c75}
+.stress-result{display:flex;gap:21px;align-items:center;border:1px solid #3d5845;background:#142419;border-radius:11px;padding:22px}
+.stress-result>div{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.stress-result>div>span{font-size:11px;color:#acc0ae}
+.stress-result>div>strong{font-size:32px;letter-spacing:-.05em;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.stress-result>svg{color:#b8eac7;flex-shrink:0}
+.stress-urgent{color:#ffb58a}.stress-caution{color:#ffe0a1}
+.stress-status{color:#d1ebd5;font-size:12px;margin:14px 0 0}
+.stress-footnote{color:#97b49e;font-size:11px;line-height:1.6;margin:11px 0 0}
+.stress-unavailable{display:flex;align-items:flex-start;gap:10px;border:1px solid #655540;border-radius:9px;background:#332a21;color:#f2d5aa;padding:15px;font-size:12px;line-height:1.6}
+.stress-unavailable svg{flex-shrink:0}
+.stress-disclaimer{color:#8fa998;font-size:10px;line-height:1.7;border-top:1px solid #36513d;margin-top:22px;padding-top:15px}
+@media(max-width:760px){.stress-panel{padding:16px}.stress-controls{grid-template-columns:1fr}.stress-result{padding:15px;gap:10px}.stress-result>div>strong{font-size:25px}}
