@@ -19,6 +19,7 @@ export const providerAbi = parseAbi([
 ]);
 export const poolAbi = parseAbi([
   "function getReservesList() view returns (address[])",
+  "function getUserEMode(address user) view returns (uint256)",
   "function getUserAccountData(address user) view returns (uint256 totalCollateralBase, uint256 totalDebtBase, uint256 availableBorrowsBase, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor)",
 ]);
 export const poolDataProviderAbi = parseAbi([
@@ -27,4 +28,4 @@ export const poolDataProviderAbi = parseAbi([
   "function getUserReserveData(address asset, address user) view returns (uint256 currentATokenBalance, uint256 currentStableDebt, uint256 currentVariableDebt, uint256 principalStableDebt, uint256 scaledVariableDebt, uint256 stableBorrowRate, uint256 liquidityRate, uint40 stableRateLastUpdated, bool usageAsCollateralEnabled)",
 ]);
 export const erc20SymbolAbi = parseAbi(["function symbol() view returns (string)"]);
-export const oracleAbi = parseAbi(["function BASE_CURRENCY_UNIT() view returns (uint256)"]);
+export const oracleAbi = parseAbi(["function BASE_CURRENCY_UNIT() view returns (uint256)", "function getAssetPrice(address asset) view returns (uint256)"]);

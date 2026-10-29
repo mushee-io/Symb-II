@@ -29,6 +29,9 @@ export type TydroUserReserve = {
   variableDebt: string;
   stableDebt: string;
   usingAsCollateral: boolean;
+  decimals: number;
+  liquidationThresholdBps: number;
+  oraclePriceRaw: string | null;
 };
 export type TydroAccountResponse = {
   source: "Tydro (Aave V3 Ink) contracts";
@@ -41,6 +44,8 @@ export type TydroAccountResponse = {
   availableBorrowsBase: string;
   baseCurrency: "Oracle base units";
   healthFactor: string | null;
+  userEModeCategory: number | null;
+  oraclePriceDecimals: number;
   liquidationThresholdPct: number;
   ltvPct: number;
   userReserves: TydroUserReserve[];

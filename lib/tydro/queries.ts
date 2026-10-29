@@ -125,10 +125,11 @@ export async function getTydroAccount(address:string):Promise<TydroAccountRespon
   if (!isAddress(address,{strict:false})) throw Error("Invalid address");
   const account = getAddress(address);
   const client = await checkedPool();
-  const [market,accountData,unit] = await Promise.all([
+  const [market,accountData,unit,eModeQuery] = await Promise.all([
     getTydroMarkets(),
     client.readContract({address:TYDRO.pool,abi:poolAbi,functionName:"getUserAccountData",args:[account]}),
     client.readContract({address:TYDRO.oracle,abi:oracleAbi,functionName:"BASE_CURRENCY_UNIT"}),
+    client.readContract({address:TYDRO.pool,abi:poolAbi,functionName:"getUserEMode",args:[account]}).catch(() => null),
   ]);
   const decimals=powerOfTenDecimals(unit);
   const results=await batches(market.reserves,async (reserve):Promise<TydroUserReserve>=>{
@@ -136,8 +137,16 @@ export async function getTydroAccount(address:string):Promise<TydroAccountRespon
       address:TYDRO.poolDataProvider,abi:poolDataProviderAbi,
       functionName:"getUserReserveData",args:[getAddress(reserve.address) as Address,account],
     });
+    const active = result[0] > 0n || result[1] > 0n || result[2] > 0n;
+    const price = active ? await client.readContract({
+      address:TYDRO.oracle, abi:oracleAbi, functionName:"getAssetPrice",
+      args:[getAddress(reserve.address) as Address],
+    }).catch(()=>null) : null;
     return {
       address:reserve.address,symbol:reserve.symbol,
+      decimals:reserve.decimals,
+      liquidationThresholdBps:Math.round(reserve.liquidationThresholdPct*100),
+      oraclePriceRaw:price===null||price<=0n?null:price.toString(),
       supplied:formatUnits(result[0],reserve.decimals),
       stableDebt:formatUnits(result[1],reserve.decimals),
       variableDebt:formatUnits(result[2],reserve.decimals),
@@ -150,9 +159,13 @@ export async function getTydroAccount(address:string):Promise<TydroAccountRespon
     const result=results[i];
     if(result.status==="fulfilled") {
       const r=result.value;
-      if(Number(r.supplied)>0||Number(r.stableDebt)>0||Number(r.variableDebt)>0) userReserves.push(r);
+      if(Number(r.supplied)>0||Number(r.stableDebt)>0||Number(r.variableDebt)>0){
+        userReserves.push(r);
+        if(r.oraclePriceRaw===null) warnings.push("Oracle price for "+r.symbol+" unavailable; stress simulation disabled.");
+      }
     } else warnings.push("Could not read user balance for "+market.reserves[i].symbol);
   }
+  if(eModeQuery===null) warnings.push("Tydro eMode status could not be read; stress simulation disabled.");
   const hasDebt=accountData[1]>0n;
   return {
     source:"Tydro (Aave V3 Ink) contracts",chainId:57073,
@@ -162,6 +175,8 @@ export async function getTydroAccount(address:string):Promise<TydroAccountRespon
     availableBorrowsBase:formatUnits(accountData[2],decimals),
     baseCurrency:"Oracle base units",
     healthFactor:hasDebt?formatUnits(accountData[5],18):null,
+    userEModeCategory:eModeQuery===null?null:Number(eModeQuery),
+    oraclePriceDecimals:decimals,
     liquidationThresholdPct:ratio(accountData[3]),
     ltvPct:ratio(accountData[4]),
     userReserves,warnings,incomplete:warnings.length>0,
