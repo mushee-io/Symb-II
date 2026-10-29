@@ -14,6 +14,11 @@ export type PreflightReport={
   gas:{estimatedUnits:string|null;maxEstimatedNativeFee:string|null;nativeBalance:string|null;
     feeModel?:"eip1559"|"unavailable";maxFeePerGasGwei?:string|null;
     approvalEstimatedGasUnits?:string|null;approvalFeeScreeningEth?:string|null};
+  snapshotEvidence?:{
+    number:string;hash:string|null;verified:boolean;
+    variableDebtAtomic:string;accountDebtDeviationAtomic:string;
+    tokenDecimals:number|null;explanation:string;
+  };
   approvalDiagnostics?:{status:"not-required"|"unavailable"|"single-call-simulated"|"zero-reset-possible"|"blocked";
     description:string;tokenAddress:string;spender:string;
     required:string|null;existing:string|null;shortfall:string|null};
