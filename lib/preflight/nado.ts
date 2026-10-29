@@ -1,31 +1,39 @@
 import "server-only";
-import {getNadoAccount,getNadoMarkets} from "@/lib/nado/queries";
+import {getNadoAccount,getNadoMarkets,getNadoPreflightEngineEvidence} from "@/lib/nado/queries";
 import {nadoPositionKey} from "@/lib/risk/nado-stress";
-import {finalizePreflight,type Gate,type PreflightRequest,type PreflightReport} from "./policy";
+import {assessNadoEvidence,type EngineMarketEvidence} from "./nado-evidence";
+import {finalizePreflight,type PreflightRequest,type PreflightReport} from "./policy";
 
-/** Nado requires protocol-authorised signed orders and specific execution
- * constraints. We deliberately do not synthesize order calldata or guess
- * collateral approval requirements from the public indexer.
+/** Read-only Nado product diagnostics, NEVER an authenticated order preview.
+ * The engine's public data is not trading authorization for any subaccount.
  */
 export async function preflightNado(request:Extract<PreflightRequest,{kind:"nado-position-reduce"}>):Promise<PreflightReport>{
  const [account,markets]=await Promise.all([getNadoAccount(request.wallet),getNadoMarkets()]);
- const position=account.positions.find(x=>nadoPositionKey(x)===request.positionKey);
- const market=markets.markets.find(x=>x.productId===position?.productId&&x.type==="perp");
- const fresh=Math.abs(Date.now()-Date.parse(account.updatedAt))<90_000&&Math.abs(Date.now()-Date.parse(markets.updatedAt))<90_000;
- const gates:Gate[]=[
-   {name:"Ink wallet",state:account.address.toLowerCase()===request.wallet.toLowerCase()&&account.chainId===57073?"pass":"fail",detail:"Wallet and Nado account must match Ink chain 57073"},
-   {name:"Position coverage",state:account.positionCoverageComplete?"pass":"fail",detail:"All relevant Nado positions must be included"},
-   {name:"Live perp reference",state:position&&market&&market.lastPrice>0?"pass":"fail",detail:"Exact position product must have a current perpetual reference ticker"},
-   {name:"Feed freshness",state:fresh?"pass":"fail",detail:"Indexed account and ticker reads must be current"},
-   {name:"Nado order constraints and signatures",state:"unknown",detail:"Independent Nado execution auth, product increments, margin, fees, oracle marks and order-signing scheme have not been verified"},
-   {name:"Nado executable preflight",state:"fail",detail:"No Nado order, delegated wallet signature, gas quote or execution simulation is available; route intentionally blocked"},
- ];
+ const positions=account.positions.filter(p=>nadoPositionKey(p)===request.positionKey);
+ const productId=positions.length===1?positions[0].productId:null;
+ const fallback:EngineMarketEvidence={
+   observedAt:new Date().toISOString(),engineChainId:null,engineEndpoint:null,
+   productId:productId??-1,productType:null,oraclePrice:null,priceIncrement:null,
+   sizeIncrement:null,minSize:null,bid:null,ask:null,
+   warnings:["No unique position or Nado engine could not be queried."],
+ };
+ let evidence=fallback;
+ if(productId!==null){
+   try{evidence=await getNadoPreflightEngineEvidence(productId);}
+   catch{/* Fail closed: missing independent Nado engine evidence */}
+ }
+ const assessed=assessNadoEvidence({
+   wallet:request.wallet,account,markets,positionKey:request.positionKey,engine:evidence,
+ });
+ // Nado execution restrictions ALWAYS fail regardless of all source gates.
  return finalizePreflight({
    version:1,network:"Ink",chainId:57073,kind:request.kind,
    wallet:request.wallet,asset:null,createdAt:new Date().toISOString(),blockNumber:null,
    reviewOnly:true,executionEnabled:false,transactionPayload:null,
-   amount:null,target:{protocol:"Nado",name:"Off-chain signed order — not configured",address:null},
+   amount:null,target:{protocol:"Nado",name:"Read-only engine evidence — no signed orders",address:null},
    gas:{estimatedUnits:null,maxEstimatedNativeFee:null,nativeBalance:null},
-   allowance:{required:null,current:null,sufficient:null},gates,
+   allowance:{required:null,current:null,sufficient:null},
+   nadoMarketEvidence:assessed.marketEvidence,
+   gates:assessed.gates,
  });
 }

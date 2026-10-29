@@ -2,6 +2,7 @@ import "server-only";
 import { EngineClient, ENGINE_CLIENT_ENDPOINTS } from "@nadohq/engine-client";
 import { IndexerClient, INDEXER_CLIENT_ENDPOINTS } from "@nadohq/indexer-client";
 import { isAddress } from "viem";
+import type { EngineMarketEvidence } from "../preflight/nado-evidence";
 import type { NadoMarket, NadoMarketsResponse, NadoAccountResponse, NadoPosition, NadoOrder, NadoSubaccountHealth } from "./types";
 
 const chainId = 57073 as const;
@@ -106,5 +107,43 @@ export async function getNadoAccount(address: string): Promise<NadoAccountRespon
     source:"Nado engine + indexer",chainId,address,updatedAt:new Date().toISOString(),
     subaccounts:selected.map(s=>s.subaccountName||"(unnamed)"),subaccountHealth,
     positions,openOrders,indexedOrders,warnings,incomplete:warnings.length>0,positionCoverageComplete,
+  };
+}
+
+
+/**
+ * Read-only, independent Nado engine provenance for a SINGLE discovered perp
+ * product. These SDK values are observations, not executable order parameters.
+ */
+export async function getNadoPreflightEngineEvidence(productId:number):Promise<EngineMarketEvidence>{
+  if(!Number.isSafeInteger(productId)||productId<0||productId>1000000)
+    throw Error("Invalid Nado product ID");
+  const eng=engine();
+  const [contracts,allMarkets,quote]=await Promise.allSettled([
+    eng.getContracts(),
+    eng.getAllMarkets(),
+    eng.getMarketPrice({productId}),
+  ]);
+  const warnings:string[]=[];
+  if(contracts.status==="rejected")warnings.push("Nado engine contract/chain verification unavailable.");
+  if(allMarkets.status==="rejected")warnings.push("Nado engine product configuration unavailable.");
+  if(quote.status==="rejected")warnings.push("Nado best bid/ask unavailable.");
+  const match=allMarkets.status==="fulfilled"?
+    allMarkets.value.filter(m=>m.productId===productId):[];
+  if(match.length!==1)warnings.push("Engine did not return exactly one matching product.");
+  const market=match.length===1?match[0]:null;
+  return {
+    observedAt:new Date().toISOString(),
+    engineChainId:contracts.status==="fulfilled"?contracts.value.chainId:null,
+    engineEndpoint:contracts.status==="fulfilled"?contracts.value.endpointAddr:null,
+    productId,
+    productType:market?.type===1?"perp":market?.type===0?"spot":null,
+    oraclePrice:market?.product.oraclePrice.toString()??null,
+    priceIncrement:market?.priceIncrement.toString()??null,
+    sizeIncrement:market?.sizeIncrement.toString()??null,
+    minSize:market?.minSize.toString()??null,
+    bid:quote.status==="fulfilled"&&quote.value.productId===productId?quote.value.bid.toString():null,
+    ask:quote.status==="fulfilled"&&quote.value.productId===productId?quote.value.ask.toString():null,
+    warnings,
   };
 }
