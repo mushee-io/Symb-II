@@ -3,7 +3,8 @@ import {getAddress,isAddress} from "viem";
 import {readBoundedJSON,PayloadTooLargeError} from "@/lib/security/request";
 import {consumeNonce} from "@/lib/agent/redis";
 import {isAcceptableSignature,isValidSignedChallenge} from "@/lib/agent/auth";
-import {isServerProofConfigured,isValidServerOwnershipMessage} from "@/lib/verification/server-policy";
+import {isServerProofConfigured} from "@/lib/verification/server-policy";
+import {isM8ChallengeId,verifyOneUseWalletProof} from "@/lib/verification/server-flow";
 
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=20;
 const headers={"Cache-Control":"private, no-store"};
@@ -20,21 +21,18 @@ export async function POST(req:NextRequest){
   return fail("Invalid verification request.",400);
  const b=payload as Record<string,unknown>;
  if(typeof b.wallet!=="string"||!isAddress(b.wallet,{strict:false})||
-   typeof b.challengeId!=="string"||!/^[0-9a-f-]{36}$/i.test(b.challengeId)||
+   !isM8ChallengeId(b.challengeId)||
    !isAcceptableSignature(b.signature))
   return fail("Invalid wallet, challenge or signature.",400);
- const wallet=getAddress(b.wallet);
- let message:string|null;
- try{message=await consumeNonce("m8-"+b.challengeId);}
- catch{return fail("Security store unavailable; no authentication granted.",503);}
- // GETDEL is atomic: wrong signatures, expired challenges, replay and
- // concurrent confirmations cannot reuse this nonce.
- if(!message||!isValidServerOwnershipMessage(message,wallet,origin,Date.now()))
-  return fail("Challenge expired, already consumed or mismatched.",401);
- if(!await isValidSignedChallenge({
-   wallet,challenge:message,expectedMessage:message,signature:b.signature,
- }))
-  return fail("Invalid Ink wallet signature.",401);
+ const outcome=await verifyOneUseWalletProof({
+  wallet:getAddress(b.wallet),challengeId:b.challengeId,
+  signature:b.signature,origin,now:Date.now(),
+ },{consumeNonce,verifySignature:isValidSignedChallenge});
+ if(outcome.status==="unavailable")
+  return fail("Security store unavailable; no authentication granted.",503);
+ if(outcome.status!=="verified")
+  return fail("Challenge invalid, consumed, expired or signature rejected.",401);
+ const wallet=outcome.wallet;
  const verifiedAt=new Date().toISOString();
  return NextResponse.json({
   verified:true,wallet,verifiedAt,expiresAt:new Date(Date.now()+120000).toISOString(),
