@@ -1,0 +1,22 @@
+name: Production smoke (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      production_url:
+        description: Public HTTPS production deployment to verify
+        required: true
+        default: https://symb-ii.vercel.app
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    env:
+      SMOKE_URL: ${{ inputs.production_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run smoke
