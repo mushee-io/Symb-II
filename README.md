@@ -334,3 +334,9 @@ The user-triggered wallet lab now reads the pinned Ink PoolAddressesProvider, Po
 
 ### M7 incident-signal integrity
 The authenticated daily and manual provider probe now returns HTTP 503 when Ink RPC, Nado or Tydro checks fail (or a **configured** Redis PING fails), rather than returning a superficially successful HTTP 200. Missing Redis is explicitly `not-configured`, not green or red by itself, until provisioned. Only the status and service identifier are written to runtime logs; there are no addresses or credentials. Cron logs are not yet a user notification or automatic incident response.
+
+## M7 automatic post-deployment acceptance
+
+GitHub Actions `Production acceptance` automatically starts after the `Build` workflow succeeds on a push to `main`; it can also be triggered manually. It waits for the production `/api/health` release hash to match the **exact triggering GitHub commit** (up to five minutes), then runs eight unauthenticated, read-only endpoint checks: health, configuration readiness, agent, watch, proposal/preflight execution-disabled flags, Nado markets and pinned Tydro reserves. A new site that has not deployed the expected commit, incomplete reserves, wrong chain/pool, missing market prices, or an unsafe service flag fails this workflow.
+
+This CI check does not need Upstash tokens, AI Gateway keys or user wallets. It does not prove on-chain execution or authorized account signatures. To exercise the separate protected daily heartbeat, use the authenticated operator probe. Runtime log access and the first scheduled cron still require operational review.

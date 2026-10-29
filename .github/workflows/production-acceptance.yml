@@ -1,0 +1,32 @@
+name: Production acceptance
+on:
+  workflow_run:
+    workflows: ["Build"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+jobs:
+  acceptance:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
+    concurrency:
+      group: symb-ii-production-acceptance
+      cancel-in-progress: true
+    env:
+      SMOKE_URL: https://symb-ii.vercel.app
+      EXPECTED_COMMIT_SHA: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Wait for exact Vercel production commit
+        run: node scripts/await-production.mjs
+      - name: Verify eight safe read-only production endpoints
+        run: npm run smoke
