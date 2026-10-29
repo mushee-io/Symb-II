@@ -471,3 +471,23 @@ h1,h2,h3,p { margin-top: 0; }
 .ai-narrative-guard{display:flex;align-items:flex-start;gap:8px;color:#b0cbb8;font-size:10px;line-height:1.6;border-top:1px solid #38523c;padding-top:14px;margin-top:17px}
 .ai-narrative-guard svg{flex:0 0 14px}
 @media(max-width:500px){.ai-narrative{margin:0 15px 18px;padding:16px}}
+
+/* M05 risk watch: signed, opt-in background snapshot history */
+.persistent-watch{border:1px solid #4b6053;background:#1b2922;border-radius:13px;margin-top:20px;padding:22px}
+.persistent-watch-head{display:flex;gap:13px;align-items:flex-start}
+.persistent-watch-head h3{font-size:22px;letter-spacing:-.04em;margin:10px 0 8px}
+.persistent-watch-head p{color:#aac0af;font-size:12px;line-height:1.7;margin:0}
+.persistent-watch-note{font-size:11px;color:#9eb6a6;line-height:1.7;margin:18px 0}
+.persistent-watch-off{display:flex;align-items:flex-start;gap:10px;border:1px solid #6e5946;background:#332b22;color:#e9cdb5;padding:16px;border-radius:9px;font-size:12px;line-height:1.6;margin-top:16px}
+.persistent-watch-off svg{flex-shrink:0}
+.persistent-watch-actions{display:flex;gap:10px;flex-wrap:wrap;margin:17px 0}
+.persistent-watch-status{border:1px solid #48614b;background:#1e3324;padding:17px;border-radius:10px;display:flex;flex-direction:column;gap:8px}
+.persistent-watch-status>strong{color:#d1f7d8;font-size:14px}
+.persistent-watch-status>span{font-size:11px;color:#adc6af}
+.persistent-watch-event{background:#233529;border-top:1px solid #41604a;padding:15px}
+.persistent-watch-event>div{display:flex;justify-content:space-between;gap:12px}
+.persistent-watch-event>div strong{font-size:12px}.persistent-watch-event>div small{font-size:10px;color:#aac3b2}
+.persistent-watch-event p{font-size:11px;line-height:1.65;color:#d9e4d8}
+.persistent-watch-footer{border-top:1px solid #3a5243;padding-top:14px;margin-top:15px;display:flex;gap:9px;align-items:flex-start;font-size:10px;line-height:1.7;color:#9db7a5}
+.persistent-watch-footer svg{flex-shrink:0}
+@media(max-width:550px){.persistent-watch{padding:16px}.persistent-watch-event>div{flex-direction:column}}
