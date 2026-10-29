@@ -6,7 +6,7 @@ export function GET() {
     product: "Symb-II",
     status: "foundation",
     network: { name: ink.name, chainId: ink.id },
-    trading: "not-implemented",
+    trading: "nado-read-only-markets-and-accounts",
     lending: "not-implemented",
     ai: "not-implemented",
   }, { headers: { "Cache-Control": "no-store" } });

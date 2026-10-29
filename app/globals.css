@@ -247,3 +247,46 @@ h1,h2,h3,p { margin-top: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+/* M02: Nado live market & wallet-record dashboards */
+.nado-panels{margin-top:85px;display:grid;gap:24px}
+.nado-section-title{display:flex;align-items:center;gap:17px;margin-bottom:3px}
+.nado-section-title h2{font-size:31px;letter-spacing:-.05em;margin:0 0 5px}
+.nado-section-title p{color:#97ac9b;font-size:13px;margin:0}
+.nado-section-title>a{margin-left:auto;color:var(--accent);display:flex;gap:6px;align-items:center;font-size:12px;font-weight:700}
+.nado-ready{border:1px solid #4b7457;color:var(--accent);border-radius:8px;padding:10px 12px;letter-spacing:.07em;font-size:10px;font-weight:800;white-space:nowrap}
+.nado-section{border:1px solid #354738;border-radius:15px;background:#141e17;padding:25px;min-width:0}
+.nado-heading{display:flex;align-items:center;justify-content:space-between;gap:22px}
+.nado-heading .eyebrow{font-size:10px}
+.nado-heading h2{font-size:24px;letter-spacing:-.04em;margin:10px 0 8px}
+.nado-heading p{font-size:12px;color:#98ac9c;line-height:1.7;max-width:700px}
+.nado-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:22px 0 13px}
+.nado-search{display:flex;align-items:center;gap:7px;padding:10px 13px;min-width:160px;background:#101812;border:1px solid #304236;border-radius:9px;color:#9ab69f}
+.nado-search input{background:none;color:#e3f0e5;border:0;outline:0;font:inherit;font-size:12px;width:180px;max-width:100%}
+.nado-tabs{display:flex;align-items:center;gap:4px;background:#101912;padding:5px;border:1px solid #293c2d;border-radius:10px;overflow-x:auto}
+.nado-tabs button{border:0;white-space:nowrap;cursor:pointer;background:transparent;border-radius:7px;color:#98aa9c;font-size:11px;padding:9px 13px}
+.nado-tabs button.nado-active{background:#324c38;color:#d9ffe2;font-weight:700}
+.nado-tabs button span{color:#a6c7aa;margin-left:5px}
+.nado-scroll{overflow-x:auto;width:100%;border:1px solid #26392b;border-radius:10px}
+.nado-table{border-collapse:collapse;min-width:630px;width:100%;text-align:left;font-variant-numeric:tabular-nums}
+.nado-table th{font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;background:#1b2a1e;color:#9aae9a;padding:14px 13px}
+.nado-table td{border-top:1px solid #27372b;color:#ddeadd;font-size:12px;padding:15px 13px}
+.nado-table td strong{display:block;font-size:12px;color:#edf8ed;font-weight:650}
+.nado-table td small{display:block;font-size:10px;color:#819889;margin-top:4px}
+.nado-table .positive{color:#b2f1c5}.nado-table .negative{color:#ffa9a8}
+.nado-type{background:#2b4131;color:#b5e4c4;border-radius:6px;padding:5px 8px;font-size:10px;text-transform:uppercase}
+.nado-source{color:#819988;font-size:10px;line-height:1.6;margin-top:13px}
+.nado-state{min-height:115px;display:flex;align-items:center;justify-content:center;gap:10px;padding:30px 20px;text-align:center;color:#a1b5a6;font-size:13px;border:1px dashed #2e4132;border-radius:11px;line-height:1.65}
+.nado-state button{border:0;color:var(--accent);text-decoration:underline;background:transparent}
+.nado-error{color:#ffc1ae;border-color:#916956}
+.nado-wallet-state{flex-direction:column}
+.nado-wallet-state svg{color:#b9f3cb}
+.nado-wallet-state strong{color:#e0f2e3}
+.nado-wallet-state span{max-width:470px}
+.nado-account-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#9fb5a4;font-size:11px;margin:16px 0;flex-wrap:wrap}
+.nado-account-meta span{display:inline-flex;align-items:center;gap:8px}
+.nado-warning{display:flex;gap:11px;background:#322c1f;border:1px solid #68543b;border-radius:9px;padding:14px;color:#f8deb3;font-size:11px;line-height:1.5;margin-bottom:18px}
+.nado-warning>svg{flex-shrink:0}.nado-warning strong{display:block;margin-bottom:4px}.nado-warning p{margin:4px 0}
+.nado-account-tabs{margin-bottom:16px;width:max-content;max-width:100%}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media(max-width:750px){.nado-section-title{align-items:flex-start;flex-wrap:wrap}.nado-section-title>a{margin-left:0}.nado-section{padding:17px}.nado-toolbar{flex-direction:column;align-items:stretch}.nado-search input{width:100%}.nado-heading{align-items:flex-start;flex-direction:column}.nado-account-tabs{width:100%}.nado-tabs button{padding:9px 10px}}
