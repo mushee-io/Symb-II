@@ -5,7 +5,7 @@ import {TYDRO} from "../lib/tydro/contracts.ts";
 const wallet="0x0000000000000000000000000000000000000001";
 const now=Date.parse("2026-10-29T19:00:00Z");
 const observedAt=new Date(now-2000).toISOString();
-const rpc={status:"success",data:{chainId:57073,blockNumber:"123",blockTimestamp:observedAt,
+const rpc={status:"success",data:{chainId:57073,blockNumber:"123",blockHash:"0x"+"ab".repeat(32),blockTimestamp:observedAt,
  code:"0x",nativeBalanceWei:"0",observedAt}};
 const nado={status:"success",data:{address:wallet,chainId:57073,updatedAt:observedAt,
  source:"Nado engine + indexer",positions:[],subaccounts:[],subaccountHealth:[],openOrders:[],
@@ -55,6 +55,19 @@ test("contradictory reserve debt and account debt fail rather than pass",()=>{
 test("invalid RPC observation cannot qualify as live Ink verification",()=>{
  const x=make({rpc:{...rpc,data:{...rpc.data,observedAt:"not-a-date"}}});
  assert.equal(x.checks.find(c=>c.id==="rpc").state,"fail");
+});
+test("wallet evidence exports only valid public reference hashes, never balances",()=>{
+ const report=make();
+ assert.equal(report.checks.find(c=>c.id==="rpc").state,"pass");
+ assert.deepEqual(report.referenceBlocks.map(x=>x.source),["ink-rpc"]);
+ assert.equal(report.referenceBlocks[0].blockHash,"0x"+"ab".repeat(32));
+ assert.equal(JSON.stringify(report).includes("nativeBalanceWei"),false);
+ assert.equal(JSON.stringify(report).includes("privateKey"),false);
+});
+test("invalid block hashes fail closed and are excluded from public evidence",()=>{
+ const invalid=make({rpc:{...rpc,data:{...rpc.data,blockHash:"0xbad"}}});
+ assert.equal(invalid.checks.find(c=>c.id==="rpc").state,"fail");
+ assert.deepEqual(invalid.referenceBlocks,[]);
 });
 test("wrong chain and mismatching wallet fail closed",()=>{
  const x=make({connectionChainId:1,
@@ -119,7 +132,7 @@ test("fully cross-checked read-only active positions and borrowing can pass with
    symbol:"USDC",variableDebt:"50",stableDebt:"0",supplied:"100",
    decimals:6,liquidationThresholdBps:8000,usingAsCollateral:true,oraclePriceRaw:"100000000"}]}};
  const tydroDirect={status:"success",data:{chainId:57073,observedAt,
-  blockTimestamp:observedAt,blockNumber:"123",verifiedProviderPool:TYDRO.pool,
+  blockTimestamp:observedAt,blockNumber:"123",blockHash:"0x"+"cd".repeat(32),verifiedProviderPool:TYDRO.pool,
   oracleBaseUnit:"100000000",collateralBaseRaw:"10000000000",debtBaseRaw:"5000000000",
   availableBorrowsBaseRaw:"3000000000",healthFactorRaw:"1500000000000000000",emodeCategory:"0"}};
  const report=make({nado:account,nadoMarkets:markets,tydro:borrower,tydroDirect});
@@ -128,6 +141,8 @@ test("fully cross-checked read-only active positions and borrowing can pass with
  }
  assert.equal(report.canExecute,false);
  assert.equal(report.completeRealWalletValidation,false);
+ assert.deepEqual(report.referenceBlocks.map(x=>x.source),["ink-rpc","tydro-pool"]);
+ assert.equal(report.referenceBlocks[1].blockHash,"0x"+"cd".repeat(32));
 });
 test("a missing Nado perp product invalidates observed-position status too",()=>{
  const pos={id:"p",subaccount:"main",productId:3,marginMode:"cross",
