@@ -58,3 +58,31 @@ fall back to server-verified status if protected verification is unavailable.
 Never test with real funds or grant execution privileges merely to validate
 this endpoint. These checks require a human-controlled wallet and live
 configured infrastructure; green CI alone is not sufficient.
+
+## M8 replay and failure-mode regression gates
+
+The pure `lib/verification/server-flow.ts` adapter is now the single path used
+by the confirmation endpoint for nonce consumption, canonical challenge
+validation and signature-verifier invocation. Its tests use an injected
+single-use in-memory store and injected signature verifier. **They do not
+substitute for an actual Upstash or Ink RPC integration test.**
+
+`tests/server-proof-flow.test.mjs` exercises:
+
+- Exactly one accepted verification across repeat or concurrent attempts
+- Deliberately incorrect signature consuming the one-use nonce
+- Expired messages, wrong wallet, wrong origin and altered chain text
+- Malformed UUIDs, malformed/oversized signatures and bypass rejection
+- Redis failure reported as unavailable without a successful fallback
+- RPC rejection or thrown signature verification always failing closed
+- No raw signature included in the successful verification response
+
+The 11-check public production smoke additionally checks the wallet-proof
+configuration flags and sends **invalid-origin** requests to both M8 POST
+endpoints. This cannot issue, sign or consume a legitimate challenge. When
+the service is disabled, HTTP 503 is required; if enabled, HTTP 403 is
+required. Any unexpected success fails production acceptance.
+
+**Live gates remain blocked** until Upstash is configured and a genuine Ink
+EOA and deployed ERC-1271 wallet complete nonce replay, expiration and
+independent signature verification against the production endpoint.
