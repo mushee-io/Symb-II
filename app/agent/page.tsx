@@ -6,6 +6,7 @@ import { useAccount } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Bot, ShieldCheck, CircleHelp, RefreshCw, LockKeyhole, Send, AlertCircle } from "lucide-react";
 import { SiteHeader } from "@/components/site-header";
+import { AINarrative } from "@/components/ai-narrative";
 import { SiteFooter } from "@/components/site-footer";
 import { WalletButton } from "@/components/wallet-button";
 import { ink } from "@/lib/ink";
@@ -75,8 +76,9 @@ export default function AgentPage(){
                 <ul>{brief.lines.map((line,index)=><li key={index}>{line}</li>)}</ul>
                 {brief.limitations.length>0&&<div className="agent-limitations"><AlertCircle size={16}/><div><strong>Data limitations</strong>{brief.limitations.map((x,i)=><p key={i}>{x}</p>)}</div></div>}
                 <div className="agent-sources"><strong>Source references</strong>{brief.sources.length?brief.sources.map((s,i)=><span key={i}>{s}</span>):<span>No verified source available</span>}</div>
-                <div className="agent-guardrail"><ShieldCheck size={15}/> Deterministic account summary · No AI model inference · No trades or approvals</div>
+                <div className="agent-guardrail"><ShieldCheck size={15}/> Deterministic account summary · No trades or approvals</div>
               </div>}
+              {brief&&address&&<AINarrative key={address+":"+intent+":"+question} wallet={address} intent={intent} question={question} briefComplete={brief.complete}/>}
             </>}
         </section>
         <aside className="agent-sidebar">
@@ -89,7 +91,7 @@ export default function AgentPage(){
           <div className="agent-side-card">
             <span className="eyebrow">WHAT IS NOT ENABLED</span><h3>Clear execution boundaries</h3>
             <p>No model-generated financial instructions, unrestricted tools, position closing, automatic repayments or agent signing authority.</p>
-            <p>Generative model integration requires a separately secured API, abuse controls, evaluations and permission enforcement. It is not active in this release.</p>
+            <p>Optional model-generated explanations require a protected AI Gateway, one-time wallet authentication and server-side limits. Without these credentials, guided deterministic analysis remains available.</p>
           </div>
           <Link href="/workspace#risk" className="agent-side-link">Inspect detailed risk and simulations <ArrowRight size={16}/></Link>
         </aside>

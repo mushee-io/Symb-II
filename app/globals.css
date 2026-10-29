@@ -454,3 +454,20 @@ h1,h2,h3,p { margin-top: 0; }
 .agent-promo p{color:#a9c7b2;font-size:12px;max-width:650px;line-height:1.7;margin-bottom:0}
 @media(max-width:850px){.agent-layout{grid-template-columns:1fr}.agent-head{flex-direction:column}.agent-promo{flex-direction:column;align-items:flex-start}}
 @media(max-width:500px){.agent-main{padding-top:25px}.agent-chat-header{padding:17px}.agent-intro{padding:25px 18px 14px}.agent-intents{padding:10px 18px 19px}.agent-form{padding:17px}.agent-form>div{flex-direction:column}.agent-answer{margin:0 15px 18px}.agent-answer-head{flex-direction:column;align-items:flex-start}.agent-version{margin-top:0}}
+
+/* M05: protected AI explanation control; distinct from guided rules */
+.ai-narrative{margin:0 27px 28px;border:1px solid #47584b;background:#192920;border-radius:12px;padding:21px}
+.ai-narrative-heading{display:flex;gap:12px;align-items:flex-start}
+.ai-narrative-heading>svg{color:#b6edc6;flex:0 0 19px}
+.ai-narrative-heading strong{font-size:14px;color:#ecfaed}
+.ai-narrative-heading p{font-size:11px;color:#aac0ad;line-height:1.6;margin:8px 0}
+.ai-narrative-message{color:#93ab9a;font-size:11px;line-height:1.65;margin:15px 0 0}
+.ai-narrative-action{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:17px}
+.ai-narrative-action>span{color:#e5c3a1;font-size:11px}
+.ai-narrative-error{margin-top:15px;padding:14px;background:#3a2723;border:1px solid #854a40;color:#ffd2ae;border-radius:8px;display:flex;gap:9px;align-items:flex-start;font-size:11px;overflow-wrap:anywhere}
+.ai-narrative-output{margin-top:17px;border:1px solid #52674c;border-radius:9px;padding:17px;background:#253629;color:#d6f0da}
+.ai-narrative-output p{font-size:12px;line-height:1.8;margin:10px 0}
+.ai-narrative-note{font-size:10px;color:#b9cdb8;border-top:1px solid #4d6652;padding-top:12px}
+.ai-narrative-guard{display:flex;align-items:flex-start;gap:8px;color:#b0cbb8;font-size:10px;line-height:1.6;border-top:1px solid #38523c;padding-top:14px;margin-top:17px}
+.ai-narrative-guard svg{flex:0 0 14px}
+@media(max-width:500px){.ai-narrative{margin:0 15px 18px;padding:16px}}

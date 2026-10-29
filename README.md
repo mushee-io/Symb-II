@@ -175,3 +175,18 @@ The workspace now evaluates Nado margin health and Tydro lending health with det
 The new `/agent` route reads the **same** Nado and Tydro wallet-associated data as `/workspace` using the existing read-only account endpoints. It offers five user-triggered guided summaries: overview, risk, Nado positions, Tydro lending, and a cautious review checklist. Human-readable summaries retain their source timestamps, refuse mismatched networks and wallet addresses, call out stale/partial or failed feeds, and do not merge incomparable collateral or price units.
 
 **Model status:** no generative model is configured or called; outputs come from a deterministic rule engine. This is an **agent interface and read-only analysis foundation**, not a functioning autonomous financial agent or free-form LLM. Unsupportable/transactional requests are rejected. Later work includes model-provider connections, authenticated API limits, strict tool schemas, adversarial prompt-injection testing, independent evaluation, and user-authorized execution gates. No server-side private signing credentials are used.
+
+## M5 — Protected model explanation path (credential-gated)
+
+The guided `/agent` page remains operational with no AI credentials. New optional model support adds:
+- `GET /api/agent/config` returns **only feature flags**, no secrets;
+- `POST /api/agent/challenge` returns a short-lived **Ink-only read-only wallet message** requiring an explicit personal-wallet signature (EOA support; contract wallets need separate handling);
+- `POST /api/agent/explain` consumes that challenge **exactly once**, checks the signature against the wallet, uses a *private* Upstash Redis token store and atomic `SET ... NX EX` wallet rate limiter, re-fetches Nado/Tydro server-side, checks freshness, completeness, and wallet ownership, and then optionally asks Vercel AI Gateway to explain **only** a bounded deterministic account brief.
+- No user-supplied price, account data, prewritten model instructions, spending authorization or arbitrary model tool arguments are accepted. The model has **no tools**.
+- The model output is labelled as AI-generated and accompanied by a factual deterministic source brief. Gateway outages produce the deterministic brief instead of fabricating model success.
+
+### Enable it deliberately
+
+Configure these **server-side** secrets on your Vercel project (never `NEXT_PUBLIC_*`): `SYMB_II_AI_ENABLED=true`, `AI_GATEWAY_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`. The Redis REST endpoint must use a TLS `.upstash.io` host. `AI_GATEWAY_API_KEY` must be provisioned with a cost budget and limited access; model is pinned in code to `openai/gpt-6-luna`. Deploy again after configuring credentials, then manually test an Ink wallet signature and check production logs/costs. Without **all** required credentials, model mode is disabled and attempts return 503; the original guided rules remain available.
+
+**Production constraints:** rate limiting is by verified wallet, not by all visitors/IPs; challenge creation is rate-limited by wallet but should additionally add abuse/IP controls before a public model launch. One-shot wallet signatures are not trading authorization. Account reads are publicly queryable; the signed challenge controls model costs and attribution, not protocol access. No persistent chat history, portfolio write tools, automated strategies or wallet sessions are created. Perform real-wallet and adversarial testing before treating it as secure for broad public use.
