@@ -3,7 +3,7 @@
  * Never return env variable values, tokens, Redis endpoints or backend errors.
  * Configured != connected, tested or production-ready.
  */
-export type ServiceId="redis"|"ai"|"watch"|"proposals"|"preflight"|"cron"|"rpc";
+export type ServiceId="redis"|"ai"|"watch"|"proposals"|"preflight"|"wallet-proof"|"cron"|"rpc";
 export type GateState="configured"|"disabled"|"blocked";
 export type LaunchGate={
  id:ServiceId;title:string;status:GateState;
@@ -63,6 +63,9 @@ export function describeReadiness(env:NodeJS.ProcessEnv=process.env):{
    {ok:redis,label:"Private Redis credentials"},
  ]);
  dependent("preflight","Signed read-only chain preflight","SYMB_II_PREFLIGHT_ENABLED",[
+   {ok:redis,label:"Private Redis credentials"},
+ ]);
+ dependent("wallet-proof","One-use server wallet ownership self-test","SYMB_II_WALLET_PROOF_ENABLED",[
    {ok:redis,label:"Private Redis credentials"},
  ]);
  add("rpc","Ink public RPC",true,["Ink chain ID 57073 (runtime verification required)"],[]);
