@@ -23,9 +23,20 @@ export function WalletVerification(){
  const client=usePublicClient({chainId:ink.id});
  const {signMessageAsync}=useSignMessage();
  const [proof,setProof]=useState<{wallet:string;verifiedAt:string;expiry:string;method:string}|null>(null);
+ const [serverProof,setServerProof]=useState<{wallet:string;verifiedAt:string;expiresAt:string}|null>(null);
+ const [serverReady,setServerReady]=useState(false);
+ const [serverPending,setServerPending]=useState(false);
  const [clock,setClock]=useState(()=>Date.now());
  const [signing,setSigning]=useState(false);
- useEffect(()=>{setProof(null);setResult(null);setError("");},[address,chainId]);
+ useEffect(()=>{setProof(null);setServerProof(null);setResult(null);setError("");},[address,chainId]);
+ useEffect(()=>{
+  let active=true;
+  void fetch("/api/verification/config",{cache:"no-store",signal:AbortSignal.timeout(10000)})
+   .then(r=>r.ok?r.json():Promise.reject(Error("Config unavailable")))
+   .then((v:{enabled?:boolean})=>{if(active)setServerReady(v.enabled===true);})
+   .catch(()=>{if(active)setServerReady(false);});
+  return ()=>{active=false;};
+ },[]);
  const identityRef=useRef("");
  identityRef.current=(address?.toLowerCase()??"disconnected")+":"+(chainId??"none");
  const [busy,setBusy]=useState(false);
@@ -33,10 +44,10 @@ export function WalletVerification(){
  const [error,setError]=useState("");
  const [copied,setCopied]=useState(false);
  useEffect(()=>{
-  if(!result&&!proof)return;
+  if(!result&&!proof&&!serverProof)return;
   const id=window.setInterval(()=>setClock(Date.now()),15000);
   return ()=>window.clearInterval(id);
- },[result,proof]);
+ },[result,proof,serverProof]);
  async function run(){
   if(!address||!isConnected||busy)return;
   setBusy(true);setResult(null);setError("");setCopied(false);
@@ -140,6 +151,46 @@ export function WalletVerification(){
   }catch(e){setError(e instanceof Error?e.message:"Wallet ownership check failed.");}
   finally{setSigning(false);}
  }
+ async function verifyServerControl(){
+  if(!address||chainId!==57073||!serverReady||busy||signing||serverPending)return;
+  setServerPending(true);setServerProof(null);setError("");
+  const currentAddress=address;const currentIdentity=identityRef.current;
+  try{
+   const request=await fetch("/api/verification/challenge",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({wallet:currentAddress}),cache:"no-store",
+    signal:AbortSignal.timeout(20000),
+   });
+   if(!request.ok)throw Error("Server wallet challenge unavailable or rate limited.");
+   const challenge=await request.json() as {challengeId:string;message:string;expiresInSeconds:number};
+   if(!/^[0-9a-f-]{36}$/i.test(challenge.challengeId)||
+      typeof challenge.message!=="string"||challenge.expiresInSeconds!==120)
+     throw Error("Invalid server challenge response.");
+   if(identityRef.current!==currentIdentity)throw Error("Wallet changed during server verification.");
+   const signature=await signMessageAsync({message:challenge.message});
+   if(identityRef.current!==currentIdentity)throw Error("Wallet changed during signature request.");
+   const response=await fetch("/api/verification/verify",{
+    method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({wallet:currentAddress,challengeId:challenge.challengeId,signature}),
+    cache:"no-store",signal:AbortSignal.timeout(25000),
+   });
+   if(!response.ok)throw Error("Server rejected the signed challenge or it expired. Retry with a new challenge.");
+   const verified=await response.json() as {
+    verified:boolean;wallet:string;verifiedAt:string;expiresAt:string;
+    serverSessionIssued:boolean;permissionGranted:boolean;executionEnabled:boolean;
+   };
+   if(verified.verified!==true||verified.wallet.toLowerCase()!==currentAddress.toLowerCase()||
+     verified.serverSessionIssued!==false||verified.permissionGranted!==false||
+     verified.executionEnabled!==false||!Number.isFinite(Date.parse(verified.expiresAt))||
+     Date.parse(verified.expiresAt)<=Date.now()||
+     identityRef.current!==currentIdentity)
+     throw Error("Server returned an invalid ownership response.");
+   setClock(Date.now());
+   setServerProof({wallet:verified.wallet,verifiedAt:verified.verifiedAt,
+    expiresAt:verified.expiresAt});
+  }catch(e){setError(e instanceof Error?e.message:"Server verification failed.");}
+  finally{setServerPending(false);}
+ }
  async function copy(){
   if(!result||!address||result.wallet.toLowerCase()!==address.toLowerCase()||chainId!==57073)return;
   const now=Date.now();
@@ -155,7 +206,15 @@ export function WalletVerification(){
       ...result,
       m8Acceptance:assessM8Acceptance(result,validProof?{
         wallet:validProof.wallet,expiresAt:validProof.expiry,method:validProof.method,
-      }:null,now),
+      }:null,now,serverProof&&serverProof.wallet.toLowerCase()===result.wallet.toLowerCase()&&
+       Date.parse(serverProof.expiresAt)>now?{
+        wallet:serverProof.wallet,expiresAt:serverProof.expiresAt,verified:true,
+       }:null),
+      serverOwnershipResponse:serverProof&&Date.parse(serverProof.expiresAt)>now?{
+        verifiedAt:serverProof.verifiedAt,expiresAt:serverProof.expiresAt,
+        serverReportedVerified:true,reusableSession:false,
+        independentlySignedReceipt:false,permissionGranted:false,
+      }:{status:"not-tested"},
       clientSideOwnershipSelfTest:validProof?{
         verifiedAt:validProof.verifiedAt,expiresAt:validProof.expiry,
         verificationMethod:validProof.method,serverAuthenticated:false,
@@ -171,9 +230,14 @@ export function WalletVerification(){
   result?.wallet.toLowerCase()===address.toLowerCase()&&reportFresh?result:null;
  const validProof=proof&&address&&proof.wallet.toLowerCase()===address.toLowerCase()&&
   Date.parse(proof.expiry)>clock?proof:null;
+ const validServerProof=serverProof&&address&&
+  serverProof.wallet.toLowerCase()===address.toLowerCase()&&
+  Date.parse(serverProof.expiresAt)>clock?serverProof:null;
  const matrix=activeReport?assessM8Acceptance(activeReport,validProof?{
   wallet:validProof.wallet,expiresAt:validProof.expiry,method:validProof.method,
- }:null,clock):null;
+ }:null,clock,validServerProof?{
+  wallet:validServerProof.wallet,expiresAt:validServerProof.expiresAt,verified:true,
+ }:null):null;
  const statuses=activeReport?.checks??[];
  return <section className="ops-panel" id="wallet-verification" aria-label="Milestone eight real wallet verification">
   <div className="ops-panel-heading"><div>
@@ -191,10 +255,19 @@ export function WalletVerification(){
      <button className="btn btn-secondary" type="button" disabled={busy||signing||chainId!==57073}
        onClick={()=>void verifyControl()}><KeyRound size={15}/>
        {signing?"Checking signature…":"Test wallet signing control"}</button>
+     <button className="btn btn-secondary" type="button"
+      disabled={!serverReady||busy||signing||serverPending||chainId!==57073}
+      onClick={()=>void verifyServerControl()}><KeyRound size={15}/>
+      {serverPending?"Checking one-use server proof…":"Verify with server"}</button>
      {activeReport&&<button className="btn btn-secondary" type="button" onClick={()=>void copy()}>
        <ClipboardCopy size={15}/>{copied?"Report copied":"Copy evidence report"}</button>}
     </div>
     {chainId!==57073&&<p className="ops-alert">Switch the wallet to Ink mainnet (57073) before running this inspection.</p>}
+    {!serverReady&&<p className="ops-note">Server-verified ownership is disabled until private Redis and the explicit M8 enable flag are configured. Local signing checks remain separate and do not grant access.</p>}
+    {validServerProof&&<p className="preflight-success" role="status">
+      One-use server signature verification succeeded at {new Date(validServerProof.verifiedAt).toLocaleTimeString()}.
+      The server consumed the challenge nonce. No server session, transaction privilege or durable certificate was created.
+     </p>}
     {proof&&proof.wallet.toLowerCase()===address.toLowerCase()&&Date.parse(proof.expiry)>Date.now()&&
       <p className="preflight-success" role="status">
        Ink wallet signature verified locally on the connected RPC at {new Date(proof.verifiedAt).toLocaleTimeString()}.
@@ -212,7 +285,7 @@ export function WalletVerification(){
      <p className="ops-note">Observed {new Date(activeReport.checkedAt).toLocaleString()}. Reports expire after three minutes. This is not a wallet ownership certificate or permission to transact.</p>
      {matrix&&<div aria-label="M8 real-wallet acceptance gates">
       <h3>M8 acceptance gates — read-only</h3>
-      <p className="ops-note">An active Nado position and genuine Tydro debt must be independently reconciled. Local wallet signature checks do not authenticate server requests, and no audit or protected preflight is asserted by this lab.</p>
+      <p className="ops-note">An active Nado position and genuine Tydro debt must be independently reconciled. Local and optional one-use server signature tests are separate; neither creates a trading permission, and no audit or protected preflight is asserted by this lab.</p>
       {matrix.gates.map(g=><div className="ops-check" key={g.id}>
        <span className={"ops-check-state "+g.state}>{g.state==="pass"?"PASS":g.state==="fail"?"FAIL":"NOT TESTED"}</span>
        <div><strong>{g.title}</strong><p>{g.detail}</p></div>
@@ -227,6 +300,6 @@ export function WalletVerification(){
     </div>}
    </>}
   {error&&<p className="ops-alert" role="alert"><AlertCircle size={16}/>{error}</p>}
-  <p className="ops-note">No wallet transactions or protocol actions are submitted, and results are not saved to a database. A successful public account read does not prove that active trading, repayment or protected API workflows have been tested. The optional signature self-test is verified client-side, not authenticated by the server.</p>
+  <p className="ops-note">No wallet transactions or protocol actions are submitted, and reports are not persisted. Public account reads cannot prove successful trading or repayment. Local signature checks are browser-only. The optional separate server check consumes one Redis nonce, but grants no authenticated session or API execution permissions.</p>
  </section>;
 }
