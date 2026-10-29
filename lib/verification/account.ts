@@ -1,4 +1,5 @@
-import type {NadoAccountResponse} from "../nado/types.ts";
+import type {NadoAccountResponse,NadoMarketsResponse} from "../nado/types.ts";
+import {crosscheckNadoPositions} from "./nado-positions.ts";
 import type {TydroAccountResponse} from "../tydro/types.ts";
 import {reconcileTydroDirect,type TydroDirectObservation} from "./tydro-direct.ts";
 
@@ -27,6 +28,7 @@ export function assessWalletVerification(input:{
  wallet:string;connectionChainId:number|null;
  rpc:Source<InkRpcObservation>;
  nado:Source<NadoAccountResponse>;
+ nadoMarkets?:Source<NadoMarketsResponse>;
  tydro:Source<TydroAccountResponse>;
  tydroDirect?:Source<TydroDirectObservation>;
  now?:number;
@@ -63,6 +65,13 @@ export function assessWalletVerification(input:{
    !nValid?"No validated Nado account data.":nPositions.length>0?
      "At least one open cross-margin position was returned. Independent Nado UI comparison and execution tests are still required.":
      "No open cross-margin position found. Live position and reduce-only flow remain untested."));
+ const crosscheck=crosscheckNadoPositions(
+   nValid?n:undefined,
+   input.nadoMarkets?.status==="success"?input.nadoMarkets.data:undefined,
+   now,
+ );
+ checks.push(check("nado-position-market","Nado open-position product/market integrity",
+   crosscheck.state,crosscheck.detail));
  const t=input.tydro.status==="success"?input.tydro.data:null;
  const tValid=t&&validWallet&&t.address.toLowerCase()===wallet.toLowerCase()&&
    t.chainId===57073&&ok(t.updatedAt,now)&&!t.incomplete&&t.warnings.length===0&&

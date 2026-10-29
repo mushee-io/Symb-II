@@ -70,3 +70,19 @@ test("M8 independent Tydro Pool status is explicitly not tested without a second
  assert.equal(x.checks.find(c=>c.id==="tydro-independent-pool").state,"not-tested");
  assert.equal(x.completeRealWalletValidation,false);
 });
+
+test("Nado product consistency is separately not-tested without a market read",()=>{
+ const x=make();
+ assert.equal(x.checks.find(c=>c.id==="nado-position-market").state,"not-tested");
+});
+test("Nado cross-check does not claim a valid position when product reference is missing",()=>{
+ const pos={id:"p",subaccount:"main",productId:3,marginMode:"cross",symbol:"ETH-PERP",
+  size:"1000000000000000000",side:"long",entryPrice:"2500",openedAt:null,updatedAt:null};
+ const a={...nado,data:{...nado.data,positions:[pos],subaccounts:["main"],
+  subaccountHealth:[{subaccount:"main",exists:true,initialHealth:"100",maintenanceHealth:"100",
+   maintenanceAssets:"200",maintenanceLiabilities:"100"}]}};
+ const markets={status:"success",data:{source:"Nado indexer",chainId:57073,updatedAt:observedAt,markets:[]}};
+ const result=make({nado:a,nadoMarkets:markets});
+ assert.equal(result.checks.find(c=>c.id==="nado-position-market").state,"fail");
+ assert.equal(result.completeRealWalletValidation,false);
+});

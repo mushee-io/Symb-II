@@ -6,7 +6,7 @@ import {ink} from "@/lib/ink";
 import {TYDRO,providerAbi,poolAbi,oracleAbi} from "@/lib/tydro/contracts";
 import type {TydroDirectObservation} from "@/lib/verification/tydro-direct";
 import {isFreshOwnershipProof,ownershipMessage,type OwnershipChallenge} from "@/lib/verification/ownership";
-import type {NadoAccountResponse} from "@/lib/nado/types";
+import type {NadoAccountResponse,NadoMarketsResponse} from "@/lib/nado/types";
 import type {TydroAccountResponse} from "@/lib/tydro/types";
 import {assessWalletVerification,type InkRpcObservation,type WalletVerification,type Source} from "@/lib/verification/account";
 
@@ -40,8 +40,9 @@ export function WalletVerification(){
    const tydroUrl="/api/tydro/account?address="+encodeURIComponent(currentAddress);
    // A user-initiated, read-only inspection. No background polling, writes
    // or signatures. The independent RPC and protocol reads can fail separately.
-   const [nado,tydro,rpc,tydroDirect]=await Promise.all([
+   const [nado,nadoMarkets,tydro,rpc,tydroDirect]=await Promise.all([
     inspectAccount<NadoAccountResponse>(nadoUrl),
+    inspectAccount<NadoMarketsResponse>("/api/nado/markets"),
     inspectAccount<TydroAccountResponse>(tydroUrl),
     (async():Promise<Source<InkRpcObservation>>=>{
       if(!client)return {status:"error"};
@@ -93,7 +94,7 @@ export function WalletVerification(){
    if(identityRef.current!==currentIdentity)return;
    setResult(assessWalletVerification({
     wallet:currentAddress,connectionChainId:chainId??null,
-    rpc,nado,tydro,tydroDirect,
+    rpc,nado,nadoMarkets,tydro,tydroDirect,
    }));
   }catch{setError("Wallet inspection failed. No account result is treated as verified.");}
   finally{setBusy(false);}
