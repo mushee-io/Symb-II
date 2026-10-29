@@ -6,7 +6,7 @@ import type {VerificationState,WalletVerification} from "./account.ts";
  * API workflows or an external security review.
  */
 export type M8GateId="public-data"|"active-perp"|"active-borrow"|
- "local-wallet-signature"|"protected-preflight"|"external-security-review";
+ "local-wallet-signature"|"server-wallet-signature"|"protected-preflight"|"external-security-review";
 export type M8AcceptanceGate={
  id:M8GateId;title:string;state:VerificationState;
  evidenceScope:"public-read"|"client-local"|"separate-operator-evidence";
@@ -15,6 +15,7 @@ export type M8AcceptanceGate={
 export type LocalSignatureEvidence={
  wallet:string;expiresAt:string;method:string;
 };
+export type ServerSignatureEvidence={wallet:string;expiresAt:string;verified:true};
 export type M8Acceptance={
  kind:"m8-read-only-acceptance-matrix";wallet:string;checkedAt:string;
  gates:M8AcceptanceGate[];passed:number;failed:number;notTested:number;
@@ -30,6 +31,7 @@ export function assessM8Acceptance(
  report:WalletVerification,
  proof:LocalSignatureEvidence|null=null,
  now=Date.now(),
+ serverProof:ServerSignatureEvidence|null=null,
 ):M8Acceptance{
  const reportAt=Date.parse(report.checkedAt);
  const reportFresh=Number.isFinite(reportAt)&&reportAt<=now+5000&&now-reportAt<180000;
@@ -39,6 +41,10 @@ export function assessM8Acceptance(
  const localSigned=Boolean(proof&&proof.wallet.toLowerCase()===report.wallet.toLowerCase()&&
   Number.isFinite(proofExpiry)&&proofExpiry>now&&proofExpiry-now<=120000&&
   /^(EOA|ERC-1271)/.test(proof.method));
+ const serverExpiry=serverProof?Date.parse(serverProof.expiresAt):NaN;
+ const serverSigned=Boolean(serverProof&&serverProof.verified===true&&
+  serverProof.wallet.toLowerCase()===report.wallet.toLowerCase()&&
+  Number.isFinite(serverExpiry)&&serverExpiry>now&&serverExpiry-now<=120000);
  const gates:M8AcceptanceGate[]=[
   {id:"public-data",title:"Fresh Ink wallet and provider data",
    state:freshState(["connection","rpc","code","nado","tydro"]),
@@ -56,6 +62,9 @@ export function assessM8Acceptance(
    state:localSigned?"pass":"not-tested",
    evidenceScope:"client-local",
    detail:"A passing local EOA/ERC-1271 check is ephemeral, has no server nonce consumption, and grants no application permission."},
+  {id:"server-wallet-signature",title:"One-use server-verified Ink wallet signature",
+   state:serverSigned?"pass":"not-tested",evidenceScope:"client-local",
+   detail:"The server returned a successful nonce-consumed EOA/deployed ERC-1271 signature check. This local display is not an independently signed receipt or reusable authenticated session."},
   {id:"protected-preflight",title:"Protected Nado/Tydro preflight acceptance",
    state:"not-tested",evidenceScope:"separate-operator-evidence",
    detail:"Operator must verify private credential-backed checks and acknowledgement replay resistance; this UI does not run those actions."},
