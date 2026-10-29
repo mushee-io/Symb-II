@@ -88,6 +88,20 @@ export function PreflightPanel({wallet,tydro,nado}:{wallet:string;tydro?:TydroAc
    {response.report.amount&&<p>Exact underlying amount: {response.report.amount.value} {response.report.amount.symbol}</p>}
    {response.report.gates.map(g=><div className="preflight-gate" key={g.name}>
     <span className={g.state}>{g.state.toUpperCase()}</span><div><strong>{g.name}</strong><p>{g.detail}</p></div></div>)}
+   {response.report.snapshotEvidence&&<div className="preflight-approval">
+     <strong>PINNED INK BLOCK EVIDENCE</strong>
+     <p>Read-only token and Pool queries are bound to a single recorded block; reorg detection, formatted debt reconciliation, and latest-block freshness are checked independently.</p>
+     <div className="preflight-facts">
+       <span>Reference block: {response.report.snapshotEvidence.number}</span>
+       <span>Block hash: {response.report.snapshotEvidence.hash??"Unavailable"}</span>
+       <span>Reorg & freshness: {response.report.snapshotEvidence.verified?"Verified in snapshot":"Failed or unknown"}</span>
+       <span>Variable debt (atomic units): {response.report.snapshotEvidence.variableDebtAtomic}</span>
+       <span>Debt deviation (atomic units): {response.report.snapshotEvidence.accountDebtDeviationAtomic}</span>
+       <span>Verified token decimals: {response.report.snapshotEvidence.tokenDecimals??"Unavailable"}</span>
+     </div>
+     <p>{response.report.snapshotEvidence.explanation}</p>
+     <p>Simulation remains a momentary, read-only estimate; it does not represent settlement proof or guarantee transaction success.</p>
+   </div>}
    {response.report.approvalDiagnostics&&<div className="preflight-approval">
      <strong>ERC-20 approval diagnostics — NO APPROVAL REQUESTED</strong>
      <p>{response.report.approvalDiagnostics.description}</p>

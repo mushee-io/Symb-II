@@ -42,6 +42,7 @@ export async function preflightTydro(request:Extract<PreflightRequest,{kind:"tyd
  const debt=user?.variableDebt??"0";
  // All safety-critical contract values below are independently read at one
  // pinned Ink block, not reconstructed from UI-formatted balances.
+ const startHeader=await publicClient.getBlock({blockNumber:startBlock}).catch(()=>null);
  const pinned=await Promise.allSettled([
    publicClient.readContract({address:TYDRO.poolAddressesProvider,abi:providerAbi,
      functionName:"getPool",blockNumber:startBlock}),
@@ -159,7 +160,7 @@ export async function preflightTydro(request:Extract<PreflightRequest,{kind:"tyd
      });
      if(simulation.result<=0n)throw Error("Zero repayment simulated");
      repayGas=await publicClient.estimateContractGas({
-       account:wallet,address:TYDRO.pool,abi:repayAbi,functionName:"repay",args,
+       account:wallet,address:TYDRO.pool,abi:repayAbi,functionName:"repay",args,blockNumber:startBlock,
      });
    }catch{repayError="Repay eth_call or gas estimation reverted; no safe repay claim can be made.";}
  }
@@ -173,12 +174,11 @@ export async function preflightTydro(request:Extract<PreflightRequest,{kind:"tyd
  const endBlock=await publicClient.getBlockNumber();
  let endTimestamp:bigint|null=null;
  try{endTimestamp=(await publicClient.getBlock({blockNumber:endBlock})).timestamp;}catch{}
- let startHash:string|null=null,recheckHash:string|null=null,startTimestamp:bigint|null=null;
- try{
-   const original=await publicClient.getBlock({blockNumber:startBlock});
-   startHash=original.hash;startTimestamp=original.timestamp;
-   recheckHash=(await publicClient.getBlock({blockNumber:startBlock})).hash;
- }catch{/* No block-hash evidence: report fails closed. */}
+ const startHash=startHeader?.hash??null;
+ const startTimestamp=startHeader?.timestamp??null;
+ let recheckHash:string|null=null;
+ try{recheckHash=(await publicClient.getBlock({blockNumber:startBlock})).hash;}
+ catch{/* Missing recheck causes report to fail closed. */}
  const proof=blockEvidence({
    startNumber:startBlock,endNumber:endBlock,startHash,recheckHash,
    startTimestamp,endTimestamp,nowSeconds:BigInt(Math.floor(Date.now()/1000)),

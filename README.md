@@ -247,3 +247,11 @@ For a specific existing **Tydro variable-rate loan**, the read-only preflight no
 - Includes approval findings and fee observations in the server-digested review receipt, so modifying them invalidates the one-use signed acknowledgement.
 
 The persistent `/api/preflight/check` endpoint is **opt-in** and requires a private Redis token, a feature switch and real-wallet validation. **No ERC20 approve, allowance mutation, transaction signing, trade execution, or transaction broadcasting exists in Symb-II.** Approval diagnostics are not instructions to grant unlimited allowances.
+
+## Milestone 6 — Pinned-block Tydro verification
+
+The preflight verifier now calculates variable debt directly from Tydro's on-chain `getUserReserveData(asset, wallet)` using **integer atomic units**, rather than using the previously formatted account API response to calculate the action amount. The independently read account's formatted debt must reconcile within 0.1% of the pinned debt; larger discrepancies block the review. Pinned configuration decimals and the token's own `decimals()` must agree, and both the Pool and asset must have bytecode.
+
+Allowance, token balance, native balance, provider, reserve configuration and simulations all target the chosen Ink block. It records that block's hash **before** running the reads and rechecks it afterwards to guard against a reorganization, and tests recency and block span. Gas estimates are also requested at the pinned block; EIP-1559 fee observations remain point-in-time rather than block-pinned. These findings are included in the existing cryptographic report digest and visible under Preflight.
+
+This is a read-only diagnostic, **not** an atomic proof of cross-service consistency or guaranteed transaction outcome, and still requires a real Tydro borrower test. No execution, ERC-20 approval, delegation, transaction signing, or broadcast is introduced.

@@ -100,3 +100,27 @@ test("approval diagnostics and EIP1559 fee fields are bound to preflight digest"
     ...extended.gas,maxFeePerGasGwei:"999"
  }}),false);
 });
+
+test("pinned block hash, atomic debt and token metadata cannot be edited after review",()=>{
+ const original=report();
+ const extended=finalizePreflight({
+  version:original.version,network:original.network,chainId:original.chainId,
+  kind:original.kind,wallet:original.wallet,asset:original.asset,
+  createdAt:original.createdAt,blockNumber:original.blockNumber,
+  reviewOnly:true,executionEnabled:false,transactionPayload:null,
+  amount:original.amount,target:original.target,allowance:original.allowance,
+  gas:original.gas,gates:original.gates,
+  snapshotEvidence:{
+    number:"123",hash:"0x"+"a".repeat(64),verified:true,
+    variableDebtAtomic:"1000000",accountDebtDeviationAtomic:"0",
+    tokenDecimals:6,explanation:"Debt reconciled within tolerance.",
+  },
+ });
+ assert.equal(validatePreflightDigest(extended),true);
+ assert.equal(validatePreflightDigest({...extended,snapshotEvidence:{
+  ...extended.snapshotEvidence,hash:"0x"+"b".repeat(64),
+ }}),false);
+ assert.equal(validatePreflightDigest({...extended,snapshotEvidence:{
+  ...extended.snapshotEvidence,variableDebtAtomic:"1000000000",
+ }}),false);
+});
