@@ -106,3 +106,14 @@ the protected Redis preflight must still pass separately.
 
 Exported evidence continues to omit position sizes, balance values, private
 keys and signature bytes. The report expires after three minutes.
+
+## Challenge-bound proof lifetime
+
+M8 proof confirmation now **binds the stored signed message's UUID to the
+exact Redis GETDEL nonce key requested by the browser**. Only valid version-4
+UUID nonces are accepted. A signature verification response derives its
+`expiresAt` from the *original challenge issuance* (maximum 120 seconds),
+not from the time the RPC verifier responds. A signature checked at the end of
+the challenge lifetime therefore has only the remaining time, not a renewed
+two-minute window. This prevents an old issued challenge from appearing fresh
+in an exported report. No reusable authentication is created.
