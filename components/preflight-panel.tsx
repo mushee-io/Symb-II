@@ -88,11 +88,32 @@ export function PreflightPanel({wallet,tydro,nado}:{wallet:string;tydro?:TydroAc
    {response.report.amount&&<p>Exact underlying amount: {response.report.amount.value} {response.report.amount.symbol}</p>}
    {response.report.gates.map(g=><div className="preflight-gate" key={g.name}>
     <span className={g.state}>{g.state.toUpperCase()}</span><div><strong>{g.name}</strong><p>{g.detail}</p></div></div>)}
-   <div className="preflight-facts"><span>Pool allowance: {response.report.allowance.current??"Unavailable"}</span>
-    <span>Estimated gas: {response.report.gas.estimatedUnits??"Unavailable"}</span>
-    <span>ETH fee screening buffer*: {response.report.gas.maxEstimatedNativeFee??"Unavailable"}</span>
-    <span>Wallet ETH: {response.report.gas.nativeBalance??"Unavailable"}</span></div>
-   <small>*Based on observed gas price × estimated gas × 1.5. Not an EIP-1559 maximum or guaranteed fee quote.</small>
+   {response.report.approvalDiagnostics&&<div className="preflight-approval">
+     <strong>ERC-20 approval diagnostics — NO APPROVAL REQUESTED</strong>
+     <p>{response.report.approvalDiagnostics.description}</p>
+     <div className="preflight-facts">
+       <span>Pool: {response.report.approvalDiagnostics.spender}</span>
+       <span>Underlying: {response.report.approvalDiagnostics.tokenAddress}</span>
+       <span>Exact allowance required: {response.report.approvalDiagnostics.required??"Unknown"}</span>
+       <span>Current allowance: {response.report.approvalDiagnostics.existing??"Unknown"}</span>
+       <span>Missing allowance: {response.report.approvalDiagnostics.shortfall??"Unknown"}</span>
+       <span>Read-only approval simulation: {response.report.approvalDiagnostics.status}</span>
+     </div>
+     {response.report.approvalDiagnostics.status==="zero-reset-possible"&&
+       <p className="preflight-approval-warning">The token may require a separate allowance reset before a later approval. The two transactions have not been simulated together, and Symb-II will not submit either one.</p>}
+     {response.report.approvalDiagnostics.status!=="not-required"&&
+       <p>To change allowance in the future, use a trusted wallet and independently verified protocol interface. This app does not request or broadcast approvals.</p>}
+   </div>}
+   <div className="preflight-facts">
+     <span>Current Pool allowance: {response.report.allowance.current??"Unavailable"}</span>
+     <span>Repay gas estimate: {response.report.gas.estimatedUnits??"Unavailable"} units</span>
+     <span>Repay fee screen*: {response.report.gas.maxEstimatedNativeFee??"Unavailable"} ETH</span>
+     <span>Wallet ETH: {response.report.gas.nativeBalance??"Unavailable"} ETH</span>
+     <span>EIP-1559 maxFeePerGas: {response.report.gas.maxFeePerGasGwei??"Unavailable"} Gwei</span>
+     <span>Approval simulation gas: {response.report.gas.approvalEstimatedGasUnits??"Unavailable"} units</span>
+     <span>Approval fee screen*: {response.report.gas.approvalFeeScreeningEth??"Unavailable"} ETH</span>
+   </div>
+   <small>*EIP-1559 maxFeePerGas estimate × simulated gas × 1.5. Excludes OP Stack L1 data costs, changing fees and wallet-specific conditions. Not a guaranteed total fee or spending recommendation.</small>
    {response.report.readyForHumanReview&&response.reviewId&&
     <div className="preflight-consent"><label><input type="checkbox" checked={consent}
      onChange={e=>setConsent(e.target.checked)}/> This is a review acknowledgement only, not authorization to spend tokens.</label>

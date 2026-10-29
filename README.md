@@ -235,3 +235,15 @@ A new `/workspace#preflight` panel and protected three-endpoint API distinguish 
 Preflight is **disabled by default**: set `SYMB_II_PREFLIGHT_ENABLED=true` plus private `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in Vercel to enable the read-only checks; do not set `NEXT_PUBLIC_*` credentials. Rate limits use an atomic shared Redis store. No code path signs or broadcasts an on-chain transaction.
 
 **Not yet delivered:** native/external wallets with contract signatures (EIP-1271), ERC20 approval transaction handling, Nado authenticated order margin simulation, independent state-root/consistent-block replay, actual EIP-1559 max-fee quotes, explicit spending execution approval, multi-step action plans, and independent production security review. Simulations are snapshots, not guarantees. Test with a real funded Ink wallet and valid Tydro variable debt and compare every result with Tydro's official app before trusting the diagnostic.
+
+## Milestone 6 — ERC-20 approval diagnostics and EIP-1559 screening
+
+For a specific existing **Tydro variable-rate loan**, the read-only preflight now:
+- Calculates the exact atomic debt portion and checks the current allowance for the independently pinned Tydro Pool, not any caller-selected spender.
+- If the exact Pool allowance is insufficient and basic protocol inputs are verified, simulates `ERC20.approve(pool, exactAmount)` using **eth_call** and estimates its gas without submitting a transaction. This is only an isolated simulation, not authorization. The app never supplies approval calldata for signing.
+- Detects a possible **nonstandard zero-reset-first allowance** condition when a direct approval simulation fails against a nonzero allowance and a reset-to-zero eth_call succeeds. It reports a warning; it does not claim that both steps succeed together or automatically prepare either transaction.
+- Uses the RPC's EIP-1559 `maxFeePerGas` estimate for a 1.5x gas screening buffer instead of assuming legacy gas price is a maximum. OP Stack L1 data charges, fee changes and wallet-specific costs remain excluded, so it must never be presented as a full/guaranteed quote.
+- Checks network chain ID, source timestamps, a recent final block timestamp and block-number drift; these separate reads are **not atomic at one block** and are still not an execution-ready state proof.
+- Includes approval findings and fee observations in the server-digested review receipt, so modifying them invalidates the one-use signed acknowledgement.
+
+The persistent `/api/preflight/check` endpoint is **opt-in** and requires a private Redis token, a feature switch and real-wallet validation. **No ERC20 approve, allowance mutation, transaction signing, trade execution, or transaction broadcasting exists in Symb-II.** Approval diagnostics are not instructions to grant unlimited allowances.

@@ -76,3 +76,27 @@ test("unknown Nado execution path cannot be acknowledged",()=>{
  assert.equal(p.readyForHumanReview,false);
  assert.equal(canAcknowledgePreflight(p,wallet.address,now),false);
 });
+
+test("approval diagnostics and EIP1559 fee fields are bound to preflight digest",()=>{
+ const original=report();
+ const extended=finalizePreflight({
+   version:original.version,network:original.network,chainId:original.chainId,
+   kind:original.kind,wallet:original.wallet,asset:original.asset,
+   createdAt:original.createdAt,blockNumber:original.blockNumber,
+   reviewOnly:true,executionEnabled:false,transactionPayload:null,
+   amount:original.amount,target:original.target,
+   allowance:original.allowance,gates:original.gates,
+   gas:{...original.gas,feeModel:"eip1559",maxFeePerGasGwei:"0.1",
+    approvalEstimatedGasUnits:"45000",approvalFeeScreeningEth:"0.00001"},
+   approvalDiagnostics:{status:"not-required",description:"Existing allowance is sufficient",
+    tokenAddress:asset,spender:original.target.address,required:"1",
+    existing:"2",shortfall:"0"},
+ });
+ assert.equal(validatePreflightDigest(extended),true);
+ assert.equal(validatePreflightDigest({...extended,approvalDiagnostics:{
+    ...extended.approvalDiagnostics,spender:other.address
+ }}),false);
+ assert.equal(validatePreflightDigest({...extended,gas:{
+    ...extended.gas,maxFeePerGasGwei:"999"
+ }}),false);
+});
