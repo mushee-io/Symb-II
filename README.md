@@ -121,3 +121,14 @@ Annual rates displayed as APR use on-chain ray-denominated liquidity and borrow 
 All user-address reads are publicly inspectable and **not proof of wallet ownership**. No transaction endpoints, delegate signing, keys, token approvals or fund transfers are introduced. A 502 status and UI error indicate failed contract verification or unavailable RPC, rather than invented account or market values. Individual reserve failures produce explicit partial-data warnings.
 
 Limits: up to 32 protocol-discovered reserves; no reserve list hard-coded. Account-level lending positions are native token amounts and are not yet consolidated into a USD-denominated multi-protocol risk model. Test with a Tydro wallet and independently verify balances, current borrowing capacity and health against Tydro's own dashboard. CI compilation alone does not prove successful mainnet reads.
+
+## Milestone 4 (initial) — Risk monitor foundations
+
+The workspace adds a separate risk overview for each connected Ink wallet:
+
+- Nado's official engine subaccount summary supplies **initial and maintenance health** for each discovered cross-margin subaccount. Negative maintenance health is highlighted as adverse. This is **not** an Aave-style health-factor multiplier.
+- Tydro's Pool contract supplies a **health factor** with an explicit liquidation warning below 1.0 and a display-only caution band below 1.5.
+- Errors and limited/paginated responses are flagged. No data is combined into a single fictitious collateral balance or liquidation threshold.
+- All calculations are read-only, require zero signing or custody, and never control execution.
+
+**Not implemented yet:** risk stress simulations, isolated-margin aggregate health, numerical capital reallocation, durable risk-alert workers, automatic liquidation protection or cross-protocol execution. Current labels are basic informational heuristics, not investment advice or a verified risk engine. Compare displayed values directly against Nado and Tydro before making financial decisions.

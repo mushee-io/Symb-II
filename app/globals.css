@@ -314,3 +314,24 @@ h1,h2,h3,p { margin-top: 0; }
 .tydro-subheading p{font-size:11px;color:#9cac9d;margin-bottom:0}
 @media(max-width:950px){.tydro-account-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.tydro-account-cards{grid-template-columns:1fr}.tydro-live-tag{font-size:9px}.tydro-metric{padding:16px}.tydro-metric>strong{font-size:27px}}
+
+/* M04 foundations: protocol-independent health signals */
+#risk{margin-top:85px}
+.risk-pill{font-size:10px;white-space:nowrap;color:#baf3c9;border:1px solid #3f6c4b;border-radius:30px;padding:9px 12px;letter-spacing:.07em;font-weight:700}
+.risk-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;margin-top:28px}
+.risk-card{border:1px solid #34513a;border-radius:13px;background:#19271d;min-height:188px;padding:21px}
+.risk-card-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:20px}
+.risk-card-head>span{color:#f2fcf4;font-weight:720;font-size:17px}
+.risk-card-head>a{font-size:11px;color:var(--accent);display:inline-flex;align-items:center;gap:5px}
+.risk-condition{font-size:11px;display:inline-flex;align-items:center;padding:8px 10px;border-radius:7px;font-weight:680;margin-bottom:13px}
+.risk-urgent{background:#513022;color:#ffd2a3}.risk-caution{background:#4c4028;color:#ffe0a9}
+.risk-okay{background:#284f36;color:#cefade}.risk-unknown{background:#28362e;color:#adc0b1}
+.risk-value{font-size:29px;font-weight:700;letter-spacing:-.05em;color:#f6fdf5;font-variant-numeric:tabular-nums;margin:0 0 7px;overflow-wrap:anywhere}
+.risk-card small{font-size:11px;color:#a0b6a4;line-height:1.6;display:block}
+.risk-loading,.risk-message{font-size:12px;color:#d4c5a3;line-height:1.6}
+.risk-subaccount{margin-bottom:19px;border-bottom:1px solid #39513e;padding-bottom:12px}
+.risk-subaccount>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.risk-subaccount>div:first-child>strong{font-size:13px}
+.risk-warning{display:flex;align-items:flex-start;gap:10px;margin-top:17px;padding:16px;border:1px solid #594b35;background:#30291e;color:#dcc39c;border-radius:10px;font-size:11px;line-height:1.7}
+.risk-warning svg{flex-shrink:0}
+@media(max-width:760px){.risk-cards{grid-template-columns:1fr}.risk-pill{margin-top:12px}}

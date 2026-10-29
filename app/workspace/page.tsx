@@ -7,13 +7,14 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { NadoPanel } from "@/components/nado-panel";
 import { TydroPanel } from "@/components/tydro-panel";
+import { RiskPanel } from "@/components/risk-panel";
 import { WalletButton } from "@/components/wallet-button";
 import { ink, INK_EXPLORER } from "@/lib/ink";
 
 const steps = [
   { number:"02",title:"Nado integration",description:"Read-only markets, positions and order records",status:"Implemented" },
   { number:"03",title:"Tydro integration",description:"Read-only reserves, lending balances and health",status:"Implemented" },
-  { number:"04",title:"Risk intelligence",description:"Cross-protocol stress testing",status:"Planned" },
+  { number:"04",title:"Risk intelligence",description:"Protocol health monitor in progress; stress testing next",status:"In progress" },
   { number:"05",title:"AI capital operator",description:"Grounded suggestions and action plans",status:"Planned" },
 ];
 
@@ -57,10 +58,11 @@ export default function Workspace() {
           </section>
           <section className="workspace-card foundation-panel">
             <div className="panel-top"><span><ShieldAlert size={18}/> Protocol overview</span><span className="panel-status muted">ONCHAIN READS</span></div>
-            <div className="foundation-info"><div className="foundation-icon"><ChartNoAxesCombined size={25}/></div><h2>No simulated positions</h2><p>Nado trading and Tydro lending information appear below. They remain separate protocol accounts. Cross-protocol simulations are not implemented.</p></div>
-            <div className="foundation-rows"><div><span>Nado records</span><b>See live panel below</b></div><div><span>Tydro lending</span><b>See health below</b></div><div><span>Portfolio risk</span><b>Not available</b></div></div>
+            <div className="foundation-info"><div className="foundation-icon"><ChartNoAxesCombined size={25}/></div><h2>No simulated positions</h2><p>Nado trading and Tydro lending information appear below. They remain separate protocol accounts. A new read-only risk monitor is available below; cross-protocol simulations are not yet implemented.</p></div>
+            <div className="foundation-rows"><div><span>Nado records</span><b>See live panel below</b></div><div><span>Tydro lending</span><b>See health below</b></div><div><span>Protocol risk</span><b>See risk monitor below</b></div></div>
           </section>
         </div>
+        <RiskPanel/>
         <NadoPanel/>
         <TydroPanel/>
         <div className="workspace-roadmap-title"><div><span className="eyebrow">BUILDING THE FOUNDATION</span><h2>What comes next</h2></div><a href="https://github.com/mushee-io/Symb-II" target="_blank" rel="noreferrer">Follow development <ArrowUpRight size={16}/></a></div>

@@ -2,7 +2,7 @@ import "server-only";
 import { EngineClient, ENGINE_CLIENT_ENDPOINTS } from "@nadohq/engine-client";
 import { IndexerClient, INDEXER_CLIENT_ENDPOINTS } from "@nadohq/indexer-client";
 import { isAddress } from "viem";
-import type { NadoMarket, NadoMarketsResponse, NadoAccountResponse, NadoPosition, NadoOrder } from "./types";
+import type { NadoMarket, NadoMarketsResponse, NadoAccountResponse, NadoPosition, NadoOrder, NadoSubaccountHealth } from "./types";
 
 const chainId = 57073 as const;
 const ACCOUNT_LIMIT = 6;
@@ -56,14 +56,16 @@ export async function getNadoAccount(address: string): Promise<NadoAccountRespon
   const productIds = Array.from(names.keys()).slice(0,PRODUCT_LIMIT);
   if (names.size > PRODUCT_LIMIT) warnings.push("Open orders from some products were not queried.");
   const positions: NadoPosition[] = [], openOrders: NadoOrder[] = [], indexedOrders: NadoOrder[] = [];
+  const subaccountHealth: NadoSubaccountHealth[] = [];
 
   for (const sub of selected) {
     const id = {subaccountOwner:sub.subaccountOwner,subaccountName:sub.subaccountName};
     const label = sub.subaccountName || "(unnamed)";
-    const [p,o,h] = await Promise.allSettled([
+    const [p,o,h,accountSummary] = await Promise.allSettled([
       idx.getPositions({subaccount:id,open:true,limit:POSITION_LIMIT}),
       productIds.length ? eng.getSubaccountMultiProductOrders({...id,productIds}) : Promise.resolve({productOrders:[]}),
       idx.getPaginatedSubaccountOrders({...id,limit:ORDER_LIMIT}),
+      eng.getSubaccountSummary(id),
     ]);
     if (p.status === "fulfilled") {
       if (p.value.positions.length >= POSITION_LIMIT) warnings.push(label+": position limit reached");
@@ -90,13 +92,17 @@ export async function getNadoAccount(address: string): Promise<NadoAccountRespon
         timestamp:ts(v.lastFillTimestamp.toNumber()||v.recvTimeSeconds),kind:"indexed" as const,
       })));
     } else warnings.push(label+": indexed orders unavailable from Nado");
+    if(accountSummary.status==="fulfilled") {
+      const s=accountSummary.value;
+      subaccountHealth.push({subaccount:label,exists:s.exists,maintenanceHealth:s.health.maintenance.health.toString(),initialHealth:s.health.initial.health.toString(),maintenanceAssets:s.health.maintenance.assets.toString(),maintenanceLiabilities:s.health.maintenance.liabilities.toString()});
+    } else warnings.push(label+": Nado maintenance health unavailable");
   }
   positions.sort((a,b)=>(b.updatedAt??0)-(a.updatedAt??0));
   openOrders.sort((a,b)=>(b.timestamp??0)-(a.timestamp??0));
   indexedOrders.sort((a,b)=>(b.timestamp??0)-(a.timestamp??0));
   return {
     source:"Nado engine + indexer",chainId,address,updatedAt:new Date().toISOString(),
-    subaccounts:selected.map(s=>s.subaccountName||"(unnamed)"),
+    subaccounts:selected.map(s=>s.subaccountName||"(unnamed)"),subaccountHealth,
     positions,openOrders,indexedOrders,warnings,incomplete:warnings.length>0,
   };
 }
