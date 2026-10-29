@@ -25,13 +25,28 @@ async function handle(req:NextRequest){
 export async function GET(req:NextRequest){
  const response=await handle(req);
  if(response.status!==401){
-  const payload=await response.clone().json() as {checkedAt:string;results:{id:string;state:string}[];summary:{healthy:boolean}};
-  console.info("M7_OPS_PROBE",JSON.stringify({
-   at:payload.checkedAt,
-   services:payload.results.map(r=>({id:r.id,state:r.state})),
-   healthy:payload.summary.healthy,
-   executionEnabled:false,
-  }));
+  // The protected probe can fail before it produces a normal result payload.
+  // Logging must never mask the original 503 or turn a diagnostic into a 500.
+  try{
+   const payload=await response.clone().json() as {
+     checkedAt?:string;results?:{id:string;state:string}[];
+     summary?:{healthy:boolean};
+   };
+   const services=Array.isArray(payload.results)?
+     payload.results.map(r=>({id:r.id,state:r.state})):[];
+   console.info("M7_OPS_PROBE",JSON.stringify({
+     at:payload.checkedAt??new Date().toISOString(),
+     services,
+     healthy:response.status===200&&payload.summary?.healthy===true,
+     httpStatus:response.status,
+     executionEnabled:false,
+   }));
+  }catch{
+   console.error("M7_OPS_PROBE",JSON.stringify({
+     healthy:false,httpStatus:response.status,
+     detail:"Probe response could not be logged.",executionEnabled:false,
+   }));
+  }
  }
  return response;
 }
