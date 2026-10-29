@@ -11,7 +11,12 @@ export type PreflightReport={
   reviewOnly:true;executionEnabled:false;transactionPayload:null;
   amount:{value:string;symbol:string;decimals:number}|null;
   target:{protocol:"Tydro"|"Nado";name:string;address:string|null};
-  gas:{estimatedUnits:string|null;maxEstimatedNativeFee:string|null;nativeBalance:string|null};
+  gas:{estimatedUnits:string|null;maxEstimatedNativeFee:string|null;nativeBalance:string|null;
+    feeModel?:"eip1559"|"unavailable";maxFeePerGasGwei?:string|null;
+    approvalEstimatedGasUnits?:string|null;approvalFeeScreeningEth?:string|null};
+  approvalDiagnostics?:{status:"not-required"|"unavailable"|"single-call-simulated"|"zero-reset-possible"|"blocked";
+    description:string;tokenAddress:string;spender:string;
+    required:string|null;existing:string|null;shortfall:string|null};
   allowance:{required:string|null;current:string|null;sufficient:boolean|null};
   gates:Gate[];readyForHumanReview:boolean;digest:string;
 };
