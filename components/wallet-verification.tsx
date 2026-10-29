@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useState} from "react";
+import {useEffect,useRef,useState} from "react";
 import {useAccount,usePublicClient,useSignMessage} from "wagmi";
 import {Activity,ClipboardCopy,ShieldCheck,AlertCircle,KeyRound} from "lucide-react";
 import {ink} from "@/lib/ink";
@@ -22,6 +22,8 @@ export function WalletVerification(){
  const [proof,setProof]=useState<{wallet:string;verifiedAt:string;expiry:string;method:string}|null>(null);
  const [signing,setSigning]=useState(false);
  useEffect(()=>{setProof(null);setResult(null);setError("");},[address,chainId]);
+ const identityRef=useRef("");
+ identityRef.current=(address?.toLowerCase()??"disconnected")+":"+(chainId??"none");
  const [busy,setBusy]=useState(false);
  const [result,setResult]=useState<WalletVerification|null>(null);
  const [error,setError]=useState("");
@@ -30,6 +32,7 @@ export function WalletVerification(){
   if(!address||!isConnected||busy)return;
   setBusy(true);setResult(null);setError("");setCopied(false);
   const currentAddress=address;
+  const currentIdentity=identityRef.current;
   try{
    const nadoUrl="/api/nado/account?address="+encodeURIComponent(currentAddress);
    const tydroUrl="/api/tydro/account?address="+encodeURIComponent(currentAddress);
@@ -54,6 +57,7 @@ export function WalletVerification(){
       }catch{return {status:"error"};}
     })(),
    ]);
+   if(identityRef.current!==currentIdentity)return;
    setResult(assessWalletVerification({
     wallet:currentAddress,connectionChainId:chainId??null,
     rpc,nado,tydro,
@@ -65,6 +69,7 @@ export function WalletVerification(){
   if(!address||!client||chainId!==ink.id||signing||busy)return;
   setSigning(true);setError("");setProof(null);
   try{
+   const identityAtStart=identityRef.current;
    const challenge:OwnershipChallenge={
     wallet:address,origin:window.location.origin,nonce:crypto.randomUUID(),
     issuedAt:new Date().toISOString(),chainId:57073,
@@ -73,10 +78,12 @@ export function WalletVerification(){
    // The only wallet action is personal_sign. No calldata, permit, order or
    // delegated permission is requested. We do not persist the signature.
    const signature=await signMessageAsync({message});
+   if(identityRef.current!==identityAtStart)throw Error("Connected wallet changed during signature check.");
    if(!isFreshOwnershipProof(challenge,Date.now()))throw Error("Wallet proof expired. Try again.");
    if(await client.getChainId()!==57073)throw Error("Ink RPC mismatch.");
    const valid=await client.verifyMessage({address,message,signature});
    if(!valid)throw Error("Signature verification failed for this wallet.");
+   if(identityRef.current!==identityAtStart)throw Error("Connected wallet changed.");
    setProof({
     wallet:address,verifiedAt:new Date().toISOString(),
     expiry:new Date(Date.parse(challenge.issuedAt)+120000).toISOString(),
@@ -86,7 +93,7 @@ export function WalletVerification(){
   finally{setSigning(false);}
  }
  async function copy(){
-  if(!result)return;
+  if(!result||!address||result.wallet.toLowerCase()!==address.toLowerCase()||chainId!==57073)return;
   try{
     const validProof=proof&&proof.wallet.toLowerCase()===result.wallet.toLowerCase()&&
       Date.parse(proof.expiry)>Date.now()?proof:null;
@@ -101,7 +108,8 @@ export function WalletVerification(){
     setCopied(true);
   }catch{setError("Clipboard permission unavailable. The results remain visible below.");}
  }
- const statuses=result?.checks??[];
+ const activeReport=address&&chainId===57073&&result?.wallet.toLowerCase()===address.toLowerCase()?result:null;
+ const statuses=activeReport?.checks??[];
  return <section className="ops-panel" id="wallet-verification" aria-label="Milestone eight real wallet verification">
   <div className="ops-panel-heading"><div>
     <span className="eyebrow">M08 / REAL INK WALLET RECONCILIATION</span>
@@ -118,7 +126,7 @@ export function WalletVerification(){
      <button className="btn btn-secondary" type="button" disabled={busy||signing||chainId!==57073}
        onClick={()=>void verifyControl()}><KeyRound size={15}/>
        {signing?"Checking signature…":"Test wallet signing control"}</button>
-     {result&&<button className="btn btn-secondary" type="button" onClick={()=>void copy()}>
+     {activeReport&&<button className="btn btn-secondary" type="button" onClick={()=>void copy()}>
        <ClipboardCopy size={15}/>{copied?"Report copied":"Copy evidence report"}</button>}
     </div>
     {chainId!==57073&&<p className="ops-alert">Switch the wallet to Ink mainnet (57073) before running this inspection.</p>}
@@ -127,18 +135,18 @@ export function WalletVerification(){
        Ink wallet signature verified locally on the connected RPC at {new Date(proof.verifiedAt).toLocaleTimeString()}.
        This self-test expires at {new Date(proof.expiry).toLocaleTimeString()} and is NOT a server session, transaction approval or production end-to-end certification.
       </p>}
-    {result&&<div className="ops-verification">
+    {activeReport&&<div className="ops-verification">
      <div className="ops-scores">
-      <div><strong>{result.passed}</strong><span>Passed</span></div>
-      <div><strong>{result.failed}</strong><span>Failed</span></div>
-      <div><strong>{result.notTested}</strong><span>Not tested</span></div>
+      <div><strong>{activeReport.passed}</strong><span>Passed</span></div>
+      <div><strong>{activeReport.failed}</strong><span>Failed</span></div>
+      <div><strong>{activeReport.notTested}</strong><span>Not tested</span></div>
      </div>
      <p className="ops-note">Observed {new Date(result.checkedAt).toLocaleString()}. This report is not a wallet ownership certificate or an approval to transact.</p>
      {statuses.map(c=><div className="ops-check" key={c.id}>
       <span className={"ops-check-state "+c.state}>{c.state==="pass"?"PASS":c.state==="fail"?"FAIL":"NOT TESTED"}</span>
       <div><strong>{c.name}</strong><p>{c.detail}</p></div>
      </div>)}
-     <div className="ops-note">{result.notes.map((n,i)=><p key={i}>{n}</p>)}</div>
+     <div className="ops-note">{activeReport.notes.map((n,i)=><p key={i}>{n}</p>)}</div>
     </div>}
    </>}
   {error&&<p className="ops-alert" role="alert"><AlertCircle size={16}/>{error}</p>}
