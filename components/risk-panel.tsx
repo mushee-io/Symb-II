@@ -35,7 +35,7 @@ export function RiskPanel(){
     <div className="nado-heading"><div><span className="eyebrow">M04 / RISK MONITOR FOUNDATIONS</span><h2 id="risk-panel-title">Protocol risk monitor</h2><p>Side-by-side, separately calculated Nado margin health and Tydro lending health. No shared collateral, no fictitious combined liquidation level.</p></div>
       <span className="risk-pill">READ-ONLY SIGNALS</span>
     </div>
-    {!connected?<div className="nado-state nado-wallet-state"><Wallet size={24}/><strong>Connect an Ink wallet to inspect risk</strong><span>No signatures or private credentials required.</span></div>:
+    {!connected?<div className="nado-state nado-wallet-state"><Wallet size={24}/><strong>Connect an Ink wallet to inspect risk</strong><span>No signatures or private credentials required. The Tydro price shock simulator unlocks when your wallet is connected.</span></div>:
       <div className="risk-cards">
         <div className="risk-card">
           <div className="risk-card-head"><span>Nado</span><a href="#nado">Open positions <ArrowUpRight size={13}/></a></div>

@@ -33,7 +33,7 @@ export default function Workspace() {
         <Link href="/" className="back-link"><ArrowLeft size={15}/> Back to overview</Link>
         <div className="workspace-title-row">
           <div><span className="eyebrow">SYMB-II / WORKSPACE</span><h1>Your capital workspace<span className="title-period">.</span></h1><p>Connect your Ink wallet, inspect real Nado markets and read your wallet-associated trading activity. Tydro lending and health data are read-only. Automated actions are not available.</p></div>
-          <span className="milestone-pill"><span/> MILESTONE 03 · READ-ONLY</span>
+          <span className="milestone-pill"><span/> MILESTONE 04 · RISK PREVIEW</span>
         </div>
         <div className="workspace-grid">
           <section className="workspace-card wallet-panel">
