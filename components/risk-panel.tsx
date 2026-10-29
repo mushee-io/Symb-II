@@ -85,6 +85,16 @@ export function RiskPanel(){
         <span>No example holdings, generated trade plans or fabricated wallet data will be displayed.</span></div>
     </div>}
     {connected && address && <RescueLab wallet={address} nado={nado.data} tydro={tydro.data}/>}
+    {!connected && <div className="preflight-panel" id="preflight" aria-labelledby="preflight-disconnected-title">
+      <div className="preflight-heading"><div><span className="eyebrow">M06 / GUARDED PREFLIGHT PREVIEW</span>
+        <h2 id="preflight-disconnected-title">Inspect permissions, not just positions.</h2>
+        <p>Connect a wallet on Ink to inspect a real Tydro variable-debt asset and its existing allowance, price-independent approval diagnostic, gas screening and transaction simulation checks.</p>
+      </div><span>READ-ONLY</span></div>
+      <div className="nado-state nado-wallet-state"><Wallet size={22}/>
+        <strong>Connect to view account-specific preflight checks</strong>
+        <span>Live checking also requires its private backend security switch. No example approvals or invented costs are shown.</span>
+      </div>
+    </div>}
     {connected && address && <PreflightPanel key={address.toLowerCase()} wallet={address} nado={nado.data} tydro={tydro.data}/>}
     {connected && nado.data && tydro.data && <ExposureOverview nado={nado.data} tydro={tydro.data}/>}
     {connected && nado.data && <NadoStress account={nado.data}/>}
