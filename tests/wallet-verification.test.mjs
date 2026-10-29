@@ -26,18 +26,34 @@ test("valid empty wallet is not falsely called a full real-wallet test",()=>{
  assert.equal(x.completeRealWalletValidation,false);
  assert.equal(x.canExecute,false);
 });
-test("real positions and loans are observations, not executed authorizations",()=>{
- const n={...nado,data:{...nado.data,
-  positions:[{id:"p",subaccount:"main",productId:2,marginMode:"cross",symbol:"ETH-PERP",size:"10",side:"long",entryPrice:"100",openedAt:null,updatedAt:null}]}};
- const t={...tydro,data:{...tydro.data,userReserves:[{
+test("unreconciled positions and debt never pass on API claims alone",()=>{
+ const position={id:"p",subaccount:"main",productId:2,marginMode:"cross",
+  symbol:"ETH-PERP",size:"10",side:"long",entryPrice:"100",openedAt:null,updatedAt:null};
+ const n={...nado,data:{...nado.data,positions:[position],subaccounts:["main"],
+  subaccountHealth:[{subaccount:"main",exists:true,maintenanceHealth:"100",
+  initialHealth:"100",maintenanceAssets:"200",maintenanceLiabilities:"100"}]}};
+ const t={...tydro,data:{...tydro.data,debtBase:"1.5",userReserves:[{
   address:"0x0000000000000000000000000000000000000003",
   symbol:"USDC",variableDebt:"1.5",stableDebt:"0",supplied:"0",
   decimals:6,liquidationThresholdBps:0,usingAsCollateral:false,oraclePriceRaw:null
  }]}};
  const x=make({nado:n,tydro:t});
- assert.equal(x.checks.find(c=>c.id==="nado-open-position").state,"pass");
- assert.equal(x.checks.find(c=>c.id==="tydro-variable-debt").state,"pass");
+ assert.equal(x.checks.find(c=>c.id==="nado-open-position").state,"not-tested");
+ assert.equal(x.checks.find(c=>c.id==="tydro-variable-debt").state,"not-tested");
  assert.equal(x.completeRealWalletValidation,false);
+});
+test("contradictory reserve debt and account debt fail rather than pass",()=>{
+ const t={...tydro,data:{...tydro.data,debtBase:"0",userReserves:[{
+  address:"0x0000000000000000000000000000000000000003",
+  symbol:"USDC",variableDebt:"0.0000000000000000000000001",stableDebt:"0",supplied:"0",
+  decimals:6,liquidationThresholdBps:0,usingAsCollateral:false,oraclePriceRaw:null
+ }]}};
+ const x=make({tydro:t});
+ assert.equal(x.checks.find(c=>c.id==="tydro-variable-debt").state,"fail");
+});
+test("invalid RPC observation cannot qualify as live Ink verification",()=>{
+ const x=make({rpc:{...rpc,data:{...rpc.data,observedAt:"not-a-date"}}});
+ assert.equal(x.checks.find(c=>c.id==="rpc").state,"fail");
 });
 test("wrong chain and mismatching wallet fail closed",()=>{
  const x=make({connectionChainId:1,
