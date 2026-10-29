@@ -9,6 +9,7 @@ import {isFreshOwnershipProof,ownershipMessage,type OwnershipChallenge} from "@/
 import type {NadoAccountResponse,NadoMarketsResponse} from "@/lib/nado/types";
 import type {TydroAccountResponse} from "@/lib/tydro/types";
 import {assessWalletVerification,type InkRpcObservation,type WalletVerification,type Source} from "@/lib/verification/account";
+import {assessM8Acceptance} from "@/lib/verification/acceptance";
 
 async function inspectAccount<T>(url:string):Promise<Source<T>>{
  try{
@@ -22,6 +23,7 @@ export function WalletVerification(){
  const client=usePublicClient({chainId:ink.id});
  const {signMessageAsync}=useSignMessage();
  const [proof,setProof]=useState<{wallet:string;verifiedAt:string;expiry:string;method:string}|null>(null);
+ const [clock,setClock]=useState(()=>Date.now());
  const [signing,setSigning]=useState(false);
  useEffect(()=>{setProof(null);setResult(null);setError("");},[address,chainId]);
  const identityRef=useRef("");
@@ -30,6 +32,11 @@ export function WalletVerification(){
  const [result,setResult]=useState<WalletVerification|null>(null);
  const [error,setError]=useState("");
  const [copied,setCopied]=useState(false);
+ useEffect(()=>{
+  if(!result&&!proof)return;
+  const id=window.setInterval(()=>setClock(Date.now()),15000);
+  return ()=>window.clearInterval(id);
+ },[result,proof]);
  async function run(){
   if(!address||!isConnected||busy)return;
   setBusy(true);setResult(null);setError("");setCopied(false);
@@ -92,6 +99,7 @@ export function WalletVerification(){
     })(),
    ]);
    if(identityRef.current!==currentIdentity)return;
+   setClock(Date.now());
    setResult(assessWalletVerification({
     wallet:currentAddress,connectionChainId:chainId??null,
     rpc,nado,nadoMarkets,tydro,tydroDirect,
@@ -117,22 +125,37 @@ export function WalletVerification(){
    if(await client.getChainId()!==57073)throw Error("Ink RPC mismatch.");
    const valid=await client.verifyMessage({address,message,signature});
    if(!valid)throw Error("Signature verification failed for this wallet.");
+   // Classify the observed account at verification time; never claim that
+   // an arbitrary smart-wallet signature is an EOA signature.
+   const bytecode=await client.getCode({address});
    if(identityRef.current!==identityAtStart)throw Error("Connected wallet changed.");
+   setClock(Date.now());
    setProof({
     wallet:address,verifiedAt:new Date().toISOString(),
     expiry:new Date(Date.parse(challenge.issuedAt)+120000).toISOString(),
-    method:"Ink RPC personal-sign verification (EOA, deployed ERC-1271 or supported smart-account scheme)",
+    method:bytecode&&bytecode!=="0x"?
+     "ERC-1271-compatible deployed contract, locally verified via Ink RPC":
+     "EOA or supported counterfactual smart account, locally verified via Ink RPC",
    });
   }catch(e){setError(e instanceof Error?e.message:"Wallet ownership check failed.");}
   finally{setSigning(false);}
  }
  async function copy(){
   if(!result||!address||result.wallet.toLowerCase()!==address.toLowerCase()||chainId!==57073)return;
+  const now=Date.now();
+  const age=now-Date.parse(result.checkedAt);
+  if(!Number.isFinite(age)||age< -5000||age>=180000){
+   setError("Wallet evidence has expired. Run a new live inspection before copying.");
+   return;
+  }
   try{
     const validProof=proof&&proof.wallet.toLowerCase()===result.wallet.toLowerCase()&&
       Date.parse(proof.expiry)>Date.now()?proof:null;
     await navigator.clipboard.writeText(JSON.stringify({
       ...result,
+      m8Acceptance:assessM8Acceptance(result,validProof?{
+        wallet:validProof.wallet,expiresAt:validProof.expiry,method:validProof.method,
+      }:null,now),
       clientSideOwnershipSelfTest:validProof?{
         verifiedAt:validProof.verifiedAt,expiresAt:validProof.expiry,
         verificationMethod:validProof.method,serverAuthenticated:false,
@@ -142,7 +165,15 @@ export function WalletVerification(){
     setCopied(true);
   }catch{setError("Clipboard permission unavailable. The results remain visible below.");}
  }
- const activeReport=address&&chainId===57073&&result?.wallet.toLowerCase()===address.toLowerCase()?result:null;
+ const reportTime=result?Date.parse(result.checkedAt):NaN;
+ const reportFresh=Number.isFinite(reportTime)&&reportTime<=clock+5000&&clock-reportTime<180000;
+ const activeReport=address&&chainId===57073&&
+  result?.wallet.toLowerCase()===address.toLowerCase()&&reportFresh?result:null;
+ const validProof=proof&&address&&proof.wallet.toLowerCase()===address.toLowerCase()&&
+  Date.parse(proof.expiry)>clock?proof:null;
+ const matrix=activeReport?assessM8Acceptance(activeReport,validProof?{
+  wallet:validProof.wallet,expiresAt:validProof.expiry,method:validProof.method,
+ }:null,clock):null;
  const statuses=activeReport?.checks??[];
  return <section className="ops-panel" id="wallet-verification" aria-label="Milestone eight real wallet verification">
   <div className="ops-panel-heading"><div>
@@ -169,13 +200,25 @@ export function WalletVerification(){
        Ink wallet signature verified locally on the connected RPC at {new Date(proof.verifiedAt).toLocaleTimeString()}.
        This self-test expires at {new Date(proof.expiry).toLocaleTimeString()} and is NOT a server session, transaction approval or production end-to-end certification.
       </p>}
+    {result&&!activeReport&&chainId===57073&&<p className="ops-alert" role="alert">
+      The previous report is stale or belongs to another wallet. Run a fresh inspection.
+     </p>}
     {activeReport&&<div className="ops-verification">
      <div className="ops-scores">
       <div><strong>{activeReport.passed}</strong><span>Passed</span></div>
       <div><strong>{activeReport.failed}</strong><span>Failed</span></div>
       <div><strong>{activeReport.notTested}</strong><span>Not tested</span></div>
      </div>
-     <p className="ops-note">Observed {new Date(activeReport.checkedAt).toLocaleString()}. This report is not a wallet ownership certificate or an approval to transact.</p>
+     <p className="ops-note">Observed {new Date(activeReport.checkedAt).toLocaleString()}. Reports expire after three minutes. This is not a wallet ownership certificate or permission to transact.</p>
+     {matrix&&<div aria-label="M8 real-wallet acceptance gates">
+      <h3>M8 acceptance gates — read-only</h3>
+      <p className="ops-note">An active Nado position and genuine Tydro debt must be independently reconciled. Local wallet signature checks do not authenticate server requests, and no audit or protected preflight is asserted by this lab.</p>
+      {matrix.gates.map(g=><div className="ops-check" key={g.id}>
+       <span className={"ops-check-state "+g.state}>{g.state==="pass"?"PASS":g.state==="fail"?"FAIL":"NOT TESTED"}</span>
+       <div><strong>{g.title}</strong><p>{g.detail}</p></div>
+      </div>)}
+      <p className="ops-note">Transaction-enabled: no · Full M8 acceptance: not complete.</p>
+     </div>}
      {statuses.map(c=><div className="ops-check" key={c.id}>
       <span className={"ops-check-state "+c.state}>{c.state==="pass"?"PASS":c.state==="fail"?"FAIL":"NOT TESTED"}</span>
       <div><strong>{c.name}</strong><p>{c.detail}</p></div>

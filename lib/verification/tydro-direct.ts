@@ -1,4 +1,4 @@
-import {getAddress,parseUnits} from "viem";
+import {parseUnits} from "viem";
 import type {TydroAccountResponse} from "../tydro/types.ts";
 import {TYDRO} from "../tydro/contracts.ts";
 
@@ -55,6 +55,8 @@ export function reconcileTydroDirect(
  if(!/^\d+$/.test(direct.blockNumber))return failed("Invalid reference block number.");
  if(account.incomplete||account.warnings.length||account.userEModeCategory===null)
    return unavailable("Tydro HTTP adapter is partial; no positive reconciliation claim is possible.");
+ if(!Number.isSafeInteger(account.userEModeCategory)||account.userEModeCategory<0)
+   return failed("Tydro adapter returned an invalid eMode category.");
  let unit:bigint,collateral:bigint,debt:bigint,available:bigint,hf:bigint,emode:bigint;
  try{
    unit=BigInt(direct.oracleBaseUnit);collateral=BigInt(direct.collateralBaseRaw);

@@ -42,3 +42,9 @@ test("bounded accrued interest tolerance, no floating-point rounding",()=>{
  assert.equal(compare(a,{...d,debtBaseRaw:"5005000000"}).state,"pass");
  assert.equal(compare(a,{...d,debtBaseRaw:"5020000000"}).state,"fail");
 });
+
+test("malformed account eMode fails cleanly rather than throwing from BigInt conversion",()=>{
+ for(const invalid of [Number.NaN,-1,0.5,"not-a-number"]){
+  assert.equal(compare({...a,userEModeCategory:invalid},d).state,"fail");
+ }
+});

@@ -1,6 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {assessWalletVerification} from "../lib/verification/account.ts";
+import {TYDRO} from "../lib/tydro/contracts.ts";
 const wallet="0x0000000000000000000000000000000000000001";
 const now=Date.parse("2026-10-29T19:00:00Z");
 const observedAt=new Date(now-2000).toISOString();
@@ -26,18 +27,34 @@ test("valid empty wallet is not falsely called a full real-wallet test",()=>{
  assert.equal(x.completeRealWalletValidation,false);
  assert.equal(x.canExecute,false);
 });
-test("real positions and loans are observations, not executed authorizations",()=>{
- const n={...nado,data:{...nado.data,
-  positions:[{id:"p",subaccount:"main",productId:2,marginMode:"cross",symbol:"ETH-PERP",size:"10",side:"long",entryPrice:"100",openedAt:null,updatedAt:null}]}};
- const t={...tydro,data:{...tydro.data,userReserves:[{
+test("unreconciled positions and debt never pass on API claims alone",()=>{
+ const position={id:"p",subaccount:"main",productId:2,marginMode:"cross",
+  symbol:"ETH-PERP",size:"10",side:"long",entryPrice:"100",openedAt:null,updatedAt:null};
+ const n={...nado,data:{...nado.data,positions:[position],subaccounts:["main"],
+  subaccountHealth:[{subaccount:"main",exists:true,maintenanceHealth:"100",
+  initialHealth:"100",maintenanceAssets:"200",maintenanceLiabilities:"100"}]}};
+ const t={...tydro,data:{...tydro.data,debtBase:"1.5",userReserves:[{
   address:"0x0000000000000000000000000000000000000003",
   symbol:"USDC",variableDebt:"1.5",stableDebt:"0",supplied:"0",
   decimals:6,liquidationThresholdBps:0,usingAsCollateral:false,oraclePriceRaw:null
  }]}};
  const x=make({nado:n,tydro:t});
- assert.equal(x.checks.find(c=>c.id==="nado-open-position").state,"pass");
- assert.equal(x.checks.find(c=>c.id==="tydro-variable-debt").state,"pass");
+ assert.equal(x.checks.find(c=>c.id==="nado-open-position").state,"not-tested");
+ assert.equal(x.checks.find(c=>c.id==="tydro-variable-debt").state,"not-tested");
  assert.equal(x.completeRealWalletValidation,false);
+});
+test("contradictory reserve debt and account debt fail rather than pass",()=>{
+ const t={...tydro,data:{...tydro.data,debtBase:"0",userReserves:[{
+  address:"0x0000000000000000000000000000000000000003",
+  symbol:"USDC",variableDebt:"0.0000000000000000000000001",stableDebt:"0",supplied:"0",
+  decimals:6,liquidationThresholdBps:0,usingAsCollateral:false,oraclePriceRaw:null
+ }]}};
+ const x=make({tydro:t});
+ assert.equal(x.checks.find(c=>c.id==="tydro-variable-debt").state,"fail");
+});
+test("invalid RPC observation cannot qualify as live Ink verification",()=>{
+ const x=make({rpc:{...rpc,data:{...rpc.data,observedAt:"not-a-date"}}});
+ assert.equal(x.checks.find(c=>c.id==="rpc").state,"fail");
 });
 test("wrong chain and mismatching wallet fail closed",()=>{
  const x=make({connectionChainId:1,
@@ -85,4 +102,42 @@ test("Nado cross-check does not claim a valid position when product reference is
  const result=make({nado:a,nadoMarkets:markets});
  assert.equal(result.checks.find(c=>c.id==="nado-position-market").state,"fail");
  assert.equal(result.completeRealWalletValidation,false);
+});
+
+test("fully cross-checked read-only active positions and borrowing can pass without authorizing a transaction",()=>{
+ const position={id:"p-1",subaccount:"main",productId:2,marginMode:"cross",
+  symbol:"ETH-PERP",size:"1",side:"long",entryPrice:"2000",openedAt:null,updatedAt:null};
+ const account={...nado,data:{...nado.data,subaccounts:["main"],positions:[position],
+  subaccountHealth:[{subaccount:"main",exists:true,initialHealth:"100",
+   maintenanceHealth:"100",maintenanceAssets:"200",maintenanceLiabilities:"100"}]}};
+ const markets={status:"success",data:{chainId:57073,source:"Nado indexer",updatedAt:observedAt,
+  markets:[{productId:2,symbol:"ETH-PERP",type:"perp",base:"ETH",quote:"USD",
+   lastPrice:2000,volume24h:100,change24h:1}]}};
+ const borrower={...tydro,data:{...tydro.data,pool:TYDRO.pool,
+  collateralBase:"100",debtBase:"50",availableBorrowsBase:"30",healthFactor:"1.5",
+  userReserves:[{address:"0x0000000000000000000000000000000000000003",
+   symbol:"USDC",variableDebt:"50",stableDebt:"0",supplied:"100",
+   decimals:6,liquidationThresholdBps:8000,usingAsCollateral:true,oraclePriceRaw:"100000000"}]}};
+ const tydroDirect={status:"success",data:{chainId:57073,observedAt,
+  blockTimestamp:observedAt,blockNumber:"123",verifiedProviderPool:TYDRO.pool,
+  oracleBaseUnit:"100000000",collateralBaseRaw:"10000000000",debtBaseRaw:"5000000000",
+  availableBorrowsBaseRaw:"3000000000",healthFactorRaw:"1500000000000000000",emodeCategory:"0"}};
+ const report=make({nado:account,nadoMarkets:markets,tydro:borrower,tydroDirect});
+ for(const id of ["nado-open-position","nado-position-market","tydro-variable-debt","tydro-independent-pool"]){
+  assert.equal(report.checks.find(c=>c.id===id).state,"pass",id);
+ }
+ assert.equal(report.canExecute,false);
+ assert.equal(report.completeRealWalletValidation,false);
+});
+test("a missing Nado perp product invalidates observed-position status too",()=>{
+ const pos={id:"p",subaccount:"main",productId:3,marginMode:"cross",
+  symbol:"ETH-PERP",size:"1",side:"long",entryPrice:"2500",openedAt:null,updatedAt:null};
+ const a={...nado,data:{...nado.data,positions:[pos],subaccounts:["main"],
+  subaccountHealth:[{subaccount:"main",exists:true,initialHealth:"1",
+  maintenanceHealth:"1",maintenanceAssets:"2",maintenanceLiabilities:"1"}]}};
+ const markets={status:"success",data:{source:"Nado indexer",chainId:57073,
+  updatedAt:observedAt,markets:[]}};
+ const r=make({nado:a,nadoMarkets:markets});
+ assert.equal(r.checks.find(c=>c.id==="nado-position-market").state,"fail");
+ assert.equal(r.checks.find(c=>c.id==="nado-open-position").state,"fail");
 });
