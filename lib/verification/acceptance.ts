@@ -9,7 +9,7 @@ export type M8GateId="public-data"|"active-perp"|"active-borrow"|
  "local-wallet-signature"|"server-wallet-signature"|"protected-preflight"|"external-security-review";
 export type M8AcceptanceGate={
  id:M8GateId;title:string;state:VerificationState;
- evidenceScope:"public-read"|"client-local"|"separate-operator-evidence";
+ evidenceScope:"public-read"|"client-local"|"server-response"|"separate-operator-evidence";
  detail:string;
 };
 export type LocalSignatureEvidence={
@@ -63,7 +63,7 @@ export function assessM8Acceptance(
    evidenceScope:"client-local",
    detail:"A passing local EOA/ERC-1271 check is ephemeral, has no server nonce consumption, and grants no application permission."},
   {id:"server-wallet-signature",title:"One-use server-verified Ink wallet signature",
-   state:serverSigned?"pass":"not-tested",evidenceScope:"client-local",
+   state:serverSigned?"pass":"not-tested",evidenceScope:"server-response",
    detail:"The server returned a successful nonce-consumed EOA/deployed ERC-1271 signature check. This local display is not an independently signed receipt or reusable authenticated session."},
   {id:"protected-preflight",title:"Protected Nado/Tydro preflight acceptance",
    state:"not-tested",evidenceScope:"separate-operator-evidence",
