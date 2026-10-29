@@ -8,6 +8,7 @@ export function GET(){
     maxAccountsPerRun:3,
     notificationsDelivered:false,
     signatureRequired:true,
+    signerSupport:"EOA or deployed ERC-1271 contract wallet on Ink; no ERC-6492",
     executionEnabled:false,
     retention:"At most 40 minimal alert events per subscribed wallet, expiring after 90 days without further monitoring",
   },{headers:{"Cache-Control":"no-store"}});

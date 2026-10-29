@@ -1,7 +1,7 @@
 import {readBoundedJSON,PayloadTooLargeError} from "@/lib/security/request";
 import {NextRequest,NextResponse} from "next/server";
 import {getAddress,isAddress} from "viem";
-import {isValidSignedChallenge} from "@/lib/agent/auth";
+import {isAcceptableSignature,isValidSignedChallenge} from "@/lib/agent/auth";
 import {consumeNonce,acquireLimit} from "@/lib/agent/redis";
 import {isWatchAction,isWatchConfigured,validActionMessage} from "@/lib/watch/policy";
 import {watchSubscribe,watchUnsubscribe,watchStatus} from "@/lib/watch/store";
@@ -19,7 +19,7 @@ export async function POST(req:NextRequest){
   if(typeof p.wallet!=="string"||!isAddress(p.wallet,{strict:false})||
     typeof p.challengeId!=="string"||!/^[0-9a-f-]{36}$/i.test(p.challengeId)||
     typeof p.message!=="string"||p.message.length>1200||
-    typeof p.signature!=="string"||!isWatchAction(p.action))
+    !isAcceptableSignature(p.signature)||!isWatchAction(p.action))
     return fail("Invalid signed watch request.",400);
   const wallet=getAddress(p.wallet);
   let expected:string|null;

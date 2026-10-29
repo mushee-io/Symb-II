@@ -7,6 +7,7 @@ export function GET(){
    supported:["Tydro: one-asset variable debt repay checks"],
    blocked:["Nado execution signatures","Tydro stable debt","Transaction signing/broadcast"],
    walletSignatureRequiredForAcknowledgement:true,
+   signerSupport:"EOA or deployed ERC-1271 contract wallet on Ink; no ERC-6492",
    supportsExecution:false,approvalMeans:"Preflight reviewed, not permission to spend",
  },{headers:{"Cache-Control":"no-store"}});
 }

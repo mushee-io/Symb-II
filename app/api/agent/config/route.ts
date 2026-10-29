@@ -6,6 +6,7 @@ export function GET(){
     network:"Ink",chainId:57073,
     guided:true,modelEnabled:isAIConfigured(),
     walletSignatureRequired:true,tradingEnabled:false,
+    signerSupport:"EOA and deployed ERC-1271 contracts on Ink",
     persistentAlerts:isWatchConfigured(),
   },{headers:{"Cache-Control":"no-store"}});
 }

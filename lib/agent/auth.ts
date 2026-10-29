@@ -25,7 +25,7 @@ const client=createPublicClient({
 });
 const runtime:InkSignatureRuntime={
  chainId:()=>client.getChainId(),
- code:address=>client.getCode({address}),
+ code:async address=>(await client.getCode({address}))??"0x",
  contractSignature:(address,hash,signature)=>client.readContract({
    address,abi:erc1271Abi,functionName:"isValidSignature",args:[hash,signature],
  }),

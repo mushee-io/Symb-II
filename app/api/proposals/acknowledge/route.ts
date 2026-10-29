@@ -1,7 +1,7 @@
 import {NextRequest,NextResponse} from "next/server";
 import {randomUUID} from "node:crypto";
 import {isAddress,getAddress} from "viem";
-import {isValidSignedChallenge} from "@/lib/agent/auth";
+import {isAcceptableSignature,isValidSignedChallenge} from "@/lib/agent/auth";
 import {readBoundedJSON,PayloadTooLargeError} from "@/lib/security/request";
 import {isProposalsConfigured,packetValidForAcknowledgement,reviewSignatureMessage,type ProposalReceipt} from "@/lib/proposals/policy";
 import {consumeProposal,persistReceipt} from "@/lib/proposals/store";
@@ -18,7 +18,7 @@ export async function POST(req:NextRequest){
   const b=body as Record<string,unknown>;
   if(typeof b.wallet!=="string"||!isAddress(b.wallet,{strict:false})||
      typeof b.id!=="string"||!/^[0-9a-f-]{36}$/i.test(b.id)||
-     typeof b.signature!=="string"||!/^0x[0-9a-f]{130}$/i.test(b.signature))
+     !isAcceptableSignature(b.signature))
     return fail("Invalid acknowledgement data.",400);
   const wallet=getAddress(b.wallet);
   let packet;

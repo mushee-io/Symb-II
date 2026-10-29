@@ -6,7 +6,7 @@ import { getNadoAccount } from "@/lib/nado/queries";
 import { getTydroAccount } from "@/lib/tydro/queries";
 import { buildReadOnlyBrief } from "@/lib/agent/brief";
 import { allowedIntent, buildModelInput, isAIConfigured, validateNarrative, AI_DEFAULT_MODEL } from "@/lib/agent/generation-policy";
-import { isValidSignedChallenge } from "@/lib/agent/auth";
+import { isAcceptableSignature,isValidSignedChallenge } from "@/lib/agent/auth";
 import { acquireLimit,consumeNonce } from "@/lib/agent/redis";
 
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=60;
@@ -23,7 +23,7 @@ export async function POST(req:NextRequest){
   if(typeof b.wallet!=="string"||!isAddress(b.wallet,{strict:false})||
     typeof b.challengeId!=="string"||!/^[0-9a-f-]{36}$/i.test(b.challengeId)||
     typeof b.message!=="string"||b.message.length>800||
-    typeof b.signature!=="string")return reply("Invalid authentication request.",400);
+    !isAcceptableSignature(b.signature))return reply("Invalid authentication request.",400);
   const intent=allowedIntent(b.question,b.intent);
   if(intent===null)return reply("Only the five guided read-only analysis questions are supported.",400);
   const wallet=getAddress(b.wallet);

@@ -2,7 +2,7 @@ import {randomUUID} from "node:crypto";
 import {NextRequest,NextResponse} from "next/server";
 import {getAddress,isAddress} from "viem";
 import {readBoundedJSON,PayloadTooLargeError} from "@/lib/security/request";
-import {isValidSignedChallenge} from "@/lib/agent/auth";
+import {isAcceptableSignature,isValidSignedChallenge} from "@/lib/agent/auth";
 import {canAcknowledgePreflight,preflightApprovalMessage} from "@/lib/preflight/policy";
 import {consumePreflight,isPreflightConfigured,recordPreflightAcknowledgement} from "@/lib/preflight/store";
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=15;
@@ -18,7 +18,7 @@ export async function POST(req:NextRequest){
  const b=data as Record<string,unknown>;
  if(typeof b.wallet!=="string"||!isAddress(b.wallet,{strict:false})||
   typeof b.reviewId!=="string"||!/^[0-9a-f-]{36}$/i.test(b.reviewId)||
-  typeof b.signature!=="string"||!/^0x[0-9a-f]{130}$/i.test(b.signature))
+  !isAcceptableSignature(b.signature))
   return fail("Invalid wallet signature request.",400);
  const wallet=getAddress(b.wallet);
  let report;

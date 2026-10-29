@@ -9,6 +9,6 @@ export function GET(){
     supportsBroadcast:false,
     expirationSeconds:120,
     receiptRetention:"30 days (maximum 20 most recent receipts)",
-    signerSupport:"EOA wallet message signatures only",
+    signerSupport:"Ink EOAs and deployed EIP-1271 contract wallets (no counterfactual signatures)",
   },{headers:{"Cache-Control":"no-store"}});
 }

@@ -255,3 +255,14 @@ The preflight verifier now calculates variable debt directly from Tydro's on-cha
 Allowance, token balance, native balance, provider, reserve configuration and simulations all target the chosen Ink block. It records that block's hash **before** running the reads and rechecks it afterwards to guard against a reorganization, and tests recency and block span. Gas estimates are also requested at the pinned block; EIP-1559 fee observations remain point-in-time rather than block-pinned. These findings are included in the existing cryptographic report digest and visible under Preflight.
 
 This is a read-only diagnostic, **not** an atomic proof of cross-service consistency or guaranteed transaction outcome, and still requires a real Tydro borrower test. No execution, ERC-20 approval, delegation, transaction signing, or broadcast is introduced.
+
+## Milestone 6 — Deployed contract-wallet signature verification
+
+All signed **read-only** requests (agent explanation, watch subscription/status, proposal review acknowledgement and preflight acknowledgement) use one centralized Ink-chain verifier:
+- Require that the message exactly matches its original, one-use server challenge or digest-locked review.
+- Query the actual Ink RPC for chain ID 57073 and wallet contract code. For an EOA with no deployed code, verify a normal 65-byte EIP-191 signature. For a deployed smart wallet, use `isValidSignature(hashMessage(message), signature)` and require the **exact EIP-1271 0x1626ba7e magic value**. The contract itself decides which signers are authorized.
+- Reject wrong-chain RPCs, unresponsive RPCs, malformed/oversized signatures, unsuccessful or reverting contract verification, wallet mismatches and any attempt to accept an EOA signature in place of a contract's own validation.
+- Limit contract-wallet signatures to 768 bytes. The application does not support ERC-6492 counterfactual or ERC-8010 delegated/predeployed signatures yet. Some smart wallets use signature formats that will not fit this limit or do not implement standard EIP-1271; they will be refused rather than guessed.
+- No signing credentials, transaction signatures or secret keys are stored, and neither kind of verification grants execution rights.
+
+Dedicated mocked-contract regression tests check deployed EIP-1271 success/failure, bad magic, RPC failures, wrong chain and EOA/contract-confusion cases. Live verification against a real deployed Ink smart wallet is still outstanding.
