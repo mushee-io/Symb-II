@@ -3,9 +3,9 @@
  * Usage: SMOKE_URL=https://symb-ii.vercel.app npm run smoke
  */
 const root=(process.env.SMOKE_URL||"https://symb-ii.vercel.app").replace(/\/$/,"");
-const parsed=new URL(root);
-if(!["https:"].includes(parsed.protocol))throw Error("Use HTTPS");
-if(parsed.username||parsed.password)throw Error("Credentials in URLs are prohibited");
+import {releaseMatches,validatedProductionUrl} from "./release-policy.mjs";
+const parsed=validatedProductionUrl(root);
+// URL was checked before requesting production data; no secrets are sent.
 async function read(path){
  const response=await fetch(root+path,{
   headers:{"Accept":"application/json"},signal:AbortSignal.timeout(25000),cache:"no-store",
@@ -17,6 +17,8 @@ const checks=[
  ["health",async()=>{
    const v=await read("/api/health");
    if(v.product!=="Symb-II"||v.network?.chainId!==57073)throw Error("Incorrect Ink deployment");
+   if(!releaseMatches(v.release,process.env.EXPECTED_COMMIT_SHA))
+     throw Error("Production revision differs from the triggering successful Build");
    return "Ink 57073 · release "+(v.release||"unknown");
  }],
  ["readiness",async()=>{
@@ -51,14 +53,31 @@ const checks=[
  }],
  ["Nado public markets",async()=>{
    const v=await read("/api/nado/markets");
-   if(v.chainId!==57073||!Array.isArray(v.markets)||!v.markets.length)
+   if(v.chainId!==57073||v.source!=="Nado indexer"||!Array.isArray(v.markets)||!v.markets.length)
      throw Error("No verified Ink Nado markets");
+   const ids=new Set();
+   for(const m of v.markets){
+    if(!Number.isSafeInteger(m.productId)||ids.has(m.productId)||
+       !Number.isFinite(m.lastPrice)||m.lastPrice<=0)
+      throw Error("Invalid or duplicate Nado product");
+    ids.add(m.productId);
+   }
+   if(!v.markets.some(m=>m.type==="perp"))throw Error("No Nado perpetual product");
    return v.markets.length+" public markets observed";
  }],
  ["Tydro public reserves",async()=>{
    const v=await read("/api/tydro/markets");
-   if(v.chainId!==57073||!Array.isArray(v.reserves)||!v.reserves.length)
+   if(v.chainId!==57073||v.pool?.toLowerCase()!=="0x2816cf15f6d2a220e789aa011d5ee4eb6c47feba"||
+      v.incomplete||v.warnings?.length||!Array.isArray(v.reserves)||!v.reserves.length)
      throw Error("No verified Ink Tydro reserves");
+   const ids=new Set();
+   for(const r of v.reserves){
+     const token=r.address?.toLowerCase();
+     if(!/^0x[a-f0-9]{40}$/.test(token??"")||ids.has(token)||
+        !Number.isInteger(r.decimals)||r.decimals<0||r.decimals>36)
+       throw Error("Invalid or duplicate Tydro token");
+     ids.add(token);
+   }
    return v.reserves.length+" public reserves observed";
  }],
 ];
