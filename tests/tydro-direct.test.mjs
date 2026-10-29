@@ -7,7 +7,7 @@ const a={chainId:57073,updatedAt,source:"Tydro",address:"0x000000000000000000000
  collateralBase:"100",debtBase:"50",availableBorrowsBase:"30",baseCurrency:"Oracle base units",
  healthFactor:"1.5",userEModeCategory:0,oraclePriceDecimals:8,
  liquidationThresholdPct:70,ltvPct:65,userReserves:[],warnings:[],incomplete:false};
-const d={chainId:57073,observedAt:updatedAt,blockTimestamp:updatedAt,blockNumber:"123",
+const d={chainId:57073,observedAt:updatedAt,blockTimestamp:updatedAt,blockNumber:"123",blockHash:"0x"+"cd".repeat(32),
  verifiedProviderPool:TYDRO.pool,oracleBaseUnit:"100000000",
  collateralBaseRaw:"10000000000",debtBaseRaw:"5000000000",availableBorrowsBaseRaw:"3000000000",
  healthFactorRaw:"1500000000000000000",emodeCategory:"0"};
@@ -26,6 +26,12 @@ test("fails wrong pool, oracle unit, chain and stale block",()=>{
  assert.equal(compare(a,{...d,oracleBaseUnit:"1000000"}).state,"fail");
  assert.equal(compare(a,{...d,chainId:1}).state,"fail");
  assert.equal(reconcileTydroDirect(a,d,now+600000).state,"fail");
+});
+test("missing or malformed Ink block hashes never validate pinned Pool reads",()=>{
+ for(const blockHash of ["","0x1234","0x"+"gg".repeat(32)]){
+  assert.equal(compare(a,{...d,blockHash}).state,"fail");
+ }
+ assert.equal(compare(a,{...d,blockHash:"0x"+"ef".repeat(32)}).state,"pass");
 });
 test("partial adapter and missing contract observation cannot claim reconciliation",()=>{
  assert.equal(compare({...a,incomplete:true},d).state,"not-tested");
