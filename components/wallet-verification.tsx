@@ -1,8 +1,9 @@
 "use client";
-import {useState} from "react";
-import {useAccount,usePublicClient} from "wagmi";
-import {Activity,ClipboardCopy,ShieldCheck,AlertCircle} from "lucide-react";
+import {useEffect,useState} from "react";
+import {useAccount,usePublicClient,useSignMessage} from "wagmi";
+import {Activity,ClipboardCopy,ShieldCheck,AlertCircle,KeyRound} from "lucide-react";
 import {ink} from "@/lib/ink";
+import {isFreshOwnershipProof,ownershipMessage,type OwnershipChallenge} from "@/lib/verification/ownership";
 import type {NadoAccountResponse} from "@/lib/nado/types";
 import type {TydroAccountResponse} from "@/lib/tydro/types";
 import {assessWalletVerification,type InkRpcObservation,type WalletVerification,type Source} from "@/lib/verification/account";
@@ -17,6 +18,10 @@ async function inspectAccount<T>(url:string):Promise<Source<T>>{
 export function WalletVerification(){
  const {address,chainId,isConnected}=useAccount();
  const client=usePublicClient({chainId:ink.id});
+ const {signMessageAsync}=useSignMessage();
+ const [proof,setProof]=useState<{wallet:string;verifiedAt:string;expiry:string;method:string}|null>(null);
+ const [signing,setSigning]=useState(false);
+ useEffect(()=>{setProof(null);setResult(null);setError("");},[address,chainId]);
  const [busy,setBusy]=useState(false);
  const [result,setResult]=useState<WalletVerification|null>(null);
  const [error,setError]=useState("");
@@ -56,10 +61,43 @@ export function WalletVerification(){
   }catch{setError("Wallet inspection failed. No account result is treated as verified.");}
   finally{setBusy(false);}
  }
+ async function verifyControl(){
+  if(!address||!client||chainId!==ink.id||signing||busy)return;
+  setSigning(true);setError("");setProof(null);
+  try{
+   const challenge:OwnershipChallenge={
+    wallet:address,origin:window.location.origin,nonce:crypto.randomUUID(),
+    issuedAt:new Date().toISOString(),chainId:57073,
+   };
+   const message=ownershipMessage(challenge);
+   // The only wallet action is personal_sign. No calldata, permit, order or
+   // delegated permission is requested. We do not persist the signature.
+   const signature=await signMessageAsync({message});
+   if(!isFreshOwnershipProof(challenge,Date.now()))throw Error("Wallet proof expired. Try again.");
+   if(await client.getChainId()!==57073)throw Error("Ink RPC mismatch.");
+   const valid=await client.verifyMessage({address,message,signature});
+   if(!valid)throw Error("Signature verification failed for this wallet.");
+   setProof({
+    wallet:address,verifiedAt:new Date().toISOString(),
+    expiry:new Date(Date.parse(challenge.issuedAt)+120000).toISOString(),
+    method:"Ink RPC personal-sign verification (EOA, deployed ERC-1271 or supported smart-account scheme)",
+   });
+  }catch(e){setError(e instanceof Error?e.message:"Wallet ownership check failed.");}
+  finally{setSigning(false);}
+ }
  async function copy(){
   if(!result)return;
   try{
-    await navigator.clipboard.writeText(JSON.stringify(result,null,2));
+    const validProof=proof&&proof.wallet.toLowerCase()===result.wallet.toLowerCase()&&
+      Date.parse(proof.expiry)>Date.now()?proof:null;
+    await navigator.clipboard.writeText(JSON.stringify({
+      ...result,
+      clientSideOwnershipSelfTest:validProof?{
+        verifiedAt:validProof.verifiedAt,expiresAt:validProof.expiry,
+        verificationMethod:validProof.method,serverAuthenticated:false,
+        permissionGranted:false,
+      }:{status:"not-tested"},
+    },null,2));
     setCopied(true);
   }catch{setError("Clipboard permission unavailable. The results remain visible below.");}
  }
@@ -73,14 +111,22 @@ export function WalletVerification(){
   {!isConnected||!address?<div className="ops-alert">Connect a wallet on Ink to inspect its live account data. This does not require a signature.</div>:
    <>
     <p className="ops-note">Connected wallet: <code>{address}</code>. Connector chain: {chainId??"unknown"}.
-      A wallet connection does not prove signing control; owner authentication requires a separate explicit challenge.</p>
+      Connecting does not prove signing control. Use the separate signature self-test only if you choose to; it creates no server login or transaction permission.</p>
     <div className="ops-toolbar">
      <button className="btn btn-primary" type="button" disabled={busy||chainId!==57073}
        onClick={()=>void run()}><Activity size={15}/>{busy?"Inspecting live wallet…":"Run wallet verification"}</button>
+     <button className="btn btn-secondary" type="button" disabled={busy||signing||chainId!==57073}
+       onClick={()=>void verifyControl()}><KeyRound size={15}/>
+       {signing?"Checking signature…":"Test wallet signing control"}</button>
      {result&&<button className="btn btn-secondary" type="button" onClick={()=>void copy()}>
        <ClipboardCopy size={15}/>{copied?"Report copied":"Copy evidence report"}</button>}
     </div>
     {chainId!==57073&&<p className="ops-alert">Switch the wallet to Ink mainnet (57073) before running this inspection.</p>}
+    {proof&&proof.wallet.toLowerCase()===address.toLowerCase()&&Date.parse(proof.expiry)>Date.now()&&
+      <p className="preflight-success" role="status">
+       Ink wallet signature verified locally on the connected RPC at {new Date(proof.verifiedAt).toLocaleTimeString()}.
+       This self-test expires at {new Date(proof.expiry).toLocaleTimeString()} and is NOT a server session, transaction approval or production end-to-end certification.
+      </p>}
     {result&&<div className="ops-verification">
      <div className="ops-scores">
       <div><strong>{result.passed}</strong><span>Passed</span></div>
@@ -96,6 +142,6 @@ export function WalletVerification(){
     </div>}
    </>}
   {error&&<p className="ops-alert" role="alert"><AlertCircle size={16}/>{error}</p>}
-  <p className="ops-note">No wallet transactions or protocol actions are submitted, and results are not saved to a database. A successful public account read does not prove that active trading, repayment, smart-wallet signing or protected API workflows have been tested.</p>
+  <p className="ops-note">No wallet transactions or protocol actions are submitted, and results are not saved to a database. A successful public account read does not prove that active trading, repayment or protected API workflows have been tested. The optional signature self-test is verified client-side, not authenticated by the server.</p>
  </section>;
 }
