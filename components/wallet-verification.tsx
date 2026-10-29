@@ -141,7 +141,7 @@ export function WalletVerification(){
       <div><strong>{activeReport.failed}</strong><span>Failed</span></div>
       <div><strong>{activeReport.notTested}</strong><span>Not tested</span></div>
      </div>
-     <p className="ops-note">Observed {new Date(result.checkedAt).toLocaleString()}. This report is not a wallet ownership certificate or an approval to transact.</p>
+     <p className="ops-note">Observed {new Date(activeReport.checkedAt).toLocaleString()}. This report is not a wallet ownership certificate or an approval to transact.</p>
      {statuses.map(c=><div className="ops-check" key={c.id}>
       <span className={"ops-check-state "+c.state}>{c.state==="pass"?"PASS":c.state==="fail"?"FAIL":"NOT TESTED"}</span>
       <div><strong>{c.name}</strong><p>{c.detail}</p></div>
