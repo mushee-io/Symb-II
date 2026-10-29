@@ -8,6 +8,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { NadoPanel } from "@/components/nado-panel";
 import { TydroPanel } from "@/components/tydro-panel";
 import { RiskPanel } from "@/components/risk-panel";
+import {LaunchReadiness} from "@/components/launch-readiness";
+import {WalletVerification} from "@/components/wallet-verification";
 import { WalletButton } from "@/components/wallet-button";
 import { ink, INK_EXPLORER } from "@/lib/ink";
 
@@ -17,6 +19,8 @@ const steps = [
   { number:"04",title:"Risk intelligence",description:"Separate Nado PnL, Tydro health sensitivity and exposure inventory",status:"In progress" },
   { number:"05",title:"AI capital operator",description:"Read-only, source-linked capital analysis preview",status:"Preview" },
   { number:"06",title:"Portfolio Rescue + Preflight",description:"Read-only Nado/Tydro scenarios and guarded single-asset repay preflight",status:"Preview" },
+  { number:"07",title:"Production service readiness",description:"Credential gates, protected connectivity probes and deployment checks",status:"Implementation" },
+  { number:"08",title:"Real-wallet verification",description:"Opt-in Ink RPC, Nado and Tydro reconciliation with evidence export",status:"Implementation" },
 ];
 
 export default function Workspace() {
@@ -34,7 +38,7 @@ export default function Workspace() {
         <Link href="/" className="back-link"><ArrowLeft size={15}/> Back to overview</Link>
         <div className="workspace-title-row">
           <div><span className="eyebrow">SYMB-II / WORKSPACE</span><h1>Your capital workspace<span className="title-period">.</span></h1><p>Connect your Ink wallet, inspect real Nado markets and read your wallet-associated trading activity. Tydro lending and health data are read-only. Automated actions are not available.</p></div>
-          <span className="milestone-pill"><span/> MILESTONE 04 · RISK PREVIEW</span>
+          <span className="milestone-pill"><span/> MILESTONES 07–08 · VALIDATION</span>
         </div>
         <div className="workspace-grid">
           <section className="workspace-card wallet-panel">
@@ -64,6 +68,8 @@ export default function Workspace() {
           </section>
         </div>
         <div className="agent-promo"><div><span className="eyebrow">M05 / AGENT PREVIEW</span><h2>Ask your capital, not a dashboard.</h2><p>Explore source-grounded read-only explanations of your Nado positions, Tydro lending and risk alerts. No model calls, trading or delegated execution.</p></div><Link href="/agent" className="btn btn-primary">Open capital assistant <ArrowRight size={16}/></Link></div>
+        <LaunchReadiness/>
+        <WalletVerification/>
         <RiskPanel/>
         <NadoPanel/>
         <TydroPanel/>

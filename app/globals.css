@@ -589,3 +589,39 @@ h1,h2,h3,p { margin-top: 0; }
 .preflight-approval>p{font-size:11px;line-height:1.7;color:#bdd2ba;margin:11px 0}
 .preflight-approval>.preflight-facts span{overflow-wrap:anywhere}
 .preflight-approval>.preflight-approval-warning{color:#ffdca7;background:#463525;border:1px solid #8a6640;padding:11px;border-radius:7px}
+
+/* Milestones 7–8: production readiness and genuine read-only wallet evidence */
+.ops-panel{background:#18231c;border:1px solid #455c49;border-radius:15px;padding:27px;margin:24px 0;scroll-margin-top:100px}
+.ops-panel-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:22px}
+.ops-panel-heading h2{font-size:clamp(26px,3.8vw,38px);letter-spacing:-.05em;margin:9px 0}
+.ops-panel-heading p{font-size:12px;color:#a7beaa;line-height:1.75;max-width:720px}
+.ops-readonly{color:#c8ead0;display:flex;align-items:center;gap:7px;padding:10px 12px;background:#2d4734;border:1px solid #4f7857;border-radius:30px;white-space:nowrap;font-size:10px}
+.ops-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:17px 0}
+.ops-toolbar>span{font-size:11px;color:#aec8b5}
+.ops-toolbar .btn{font-size:11px}
+.ops-gates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}
+.ops-gate{border:1px solid #3f5945;background:#223127;border-radius:10px;padding:15px;min-width:0}
+.ops-gate-heading{display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
+.ops-gate-heading strong{font-size:13px;color:#eff9ee}
+.ops-gate-state{display:inline-flex;align-items:center;gap:5px;border-radius:12px;padding:5px 8px;font-size:9px;white-space:nowrap}
+.ops-gate-state.configured{background:#2f553a;color:#d4f6d5}
+.ops-gate-state.disabled{background:#4b4933;color:#e8dab6}
+.ops-gate-state.blocked{background:#603a30;color:#ffcebb}
+.ops-gate>p{font-size:10px;line-height:1.6;color:#abc4ad;margin:10px 0 0}
+.ops-gate>.ops-gate-issues{color:#f1c9b4}
+.ops-note{font-size:11px;line-height:1.7;color:#a8c1ae;margin:18px 0 6px;overflow-wrap:anywhere}
+.ops-note code{font-size:10px;overflow-wrap:anywhere;color:#c6e7cc}
+.ops-alert{display:flex;align-items:flex-start;gap:9px;background:#352d23;border:1px solid #785c3c;color:#f1cfad;font-size:12px;line-height:1.65;padding:14px;border-radius:8px}
+.ops-verification{border:1px solid #405c49;background:#1c2b20;border-radius:10px;margin:20px 0;padding:18px}
+.ops-scores{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ops-scores>div{display:flex;flex-direction:column;gap:6px;border:1px solid #3f5a45;border-radius:8px;padding:13px;background:#263d2b}
+.ops-scores strong{font-size:24px;font-variant-numeric:tabular-nums;color:#e3f9e6}
+.ops-scores span{font-size:10px;color:#a5c1ac}
+.ops-check{display:flex;align-items:flex-start;gap:12px;padding:13px 0;border-bottom:1px solid #3a5240}
+.ops-check-state{min-width:83px;flex:0 0 83px;text-align:center;border-radius:6px;padding:6px 4px;font-size:9px;font-weight:700}
+.ops-check-state.pass{background:#305740;color:#d5f7dd}
+.ops-check-state.fail{background:#593429;color:#ffe1cf}
+.ops-check-state.not-tested{background:#514730;color:#f2dfb4}
+.ops-check strong{font-size:12px;color:#e7f5e8}
+.ops-check p{font-size:11px;line-height:1.65;color:#afc1b2;margin:7px 0 0}
+@media(max-width:720px){.ops-panel{padding:17px}.ops-panel-heading{flex-direction:column}.ops-gates{grid-template-columns:1fr}.ops-gate-heading{flex-wrap:wrap}.ops-check{gap:8px}}

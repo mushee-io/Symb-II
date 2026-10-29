@@ -286,3 +286,23 @@ The authenticated and rate-limited preflight path now uses the official Nado SDK
 - Observed reduce-only size, engine price reference, subaccount verification and explanatory warnings are included in the server-digested preflight report. **Nado's final executable/acknowledgement gate remains failed even when all size checks pass**. No signed orders or autonomous trading have been enabled.
 
 The feature remains disabled unless the existing private `SYMB_II_PREFLIGHT_ENABLED` and Redis credentials are enabled. Verify with a real, authorised Nado Ink account before treating even the observational figures as production-proven.
+
+## M7 — Production activation and operational gates
+
+An opt-in **production readiness panel** is now integrated into `/workspace#launch-readiness`, backed by `GET /api/ops/readiness`. It **never returns secret values**. It distinguishes disabled, configured-but-untested and misconfigured services; no green configured badge means that live credentials have been validated. Feature switches remain default-off. The service checks include private Redis, a 32+ character cron secret, AI Gateway, watch, review receipts, preflight and Ink RPC.
+
+A dedicated **operator-only** `POST /api/ops/probe` performs actual, bounded connectivity checks to Upstash Redis, Ink RPC chain 57073 and a recent block, Nado live markets and Tydro live reserves. It requires the exact `Authorization: Bearer <CRON_SECRET>` header and is denied when the 32+ character secret is absent. This route is never a public bulk-RPC trigger; it returns only pass/fail, not provider errors, secrets or balances. If not activated, the readiness dashboard shows missing infrastructure rather than pretending it works.
+
+Activation order:
+1. Configure `UPSTASH_REDIS_REST_URL` (the TLS Upstash REST endpoint) and `UPSTASH_REDIS_REST_TOKEN` privately on the **correct** Symb-II Vercel project, and provision a random 32+ character `CRON_SECRET`; never commit or share secrets in public chat.
+2. Redeploy; run the authenticated operator probe and inspect real Redis PING, Ink RPC, Nado and Tydro results. Test fail-closed behavior with invalid store credentials and expired/nonexistent signatures.
+3. Enable `SYMB_II_PROPOSALS_ENABLED`, `SYMB_II_PREFLIGHT_ENABLED`, `SYMB_II_WATCH_ENABLED` or `SYMB_II_AI_ENABLED` **individually**, after their independent production tests; the last needs `AI_GATEWAY_API_KEY` and a cost budget. Feature flag presence is not a security review. Do not claim 24/7 alert delivery: the current cron is daily, capacity 3 wallets/run, with no push/email delivery.
+4. Verify real-wallet signing and EIP-1271 contract-wallet use, rollback each switch on anomalies, and monitor logs/rate limits, provider reliability and operational costs.
+
+## M8 — Read-only real-wallet verification lab
+
+`/workspace#wallet-verification` is a user-triggered, connected-wallet check suite. It reads Ink wallet state, chain ID, block timestamp, EOA/contract code, the live wallet-associated Nado account and Tydro Pool account. It refuses stale, partial, wrong-chain and wallet-mismatched records, and distinguishes **not tested** from genuinely observed **open Nado positions** or **outstanding Tydro variable debt**. No testnet balances, example holdings or generated account numbers are used.
+
+The UI shows pass/fail/not-tested per test and can copy a minimal evidence report containing a public address, source-integrity statuses and timestamps. It does **not** store the report, balances, open position sizes or raw protocol responses. Wallet connection does not prove control: a dedicated one-use EOA or deployed ERC-1271 challenge needs separate, explicit testing. This is public account inspection only, not protected preflight activation or a full E2E financial scenario.
+
+**M8 outstanding live acceptance gates:** perform a genuine Ink wallet proof-of-control, compare Nado positions/health/orders with the official Nado interface, compare Tydro lending and debt/health with Tydro's official UI and pinned contracts, run read-only Tydro repay eth_call, verify a real deployed ERC-1271 wallet and one-use signature, verify secure subscription/unsubscription, and complete a manual security/regression review. Never sign arbitrary transactions or share private keys for verification.

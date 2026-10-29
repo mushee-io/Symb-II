@@ -22,6 +22,7 @@ export function SiteHeader() {
           <Link className={isAgent ? "nav-active" : ""} href="/agent">Agent</Link>
           <Link href="/workspace#portfolio-rescue">Rescue Lab</Link>
           <Link href="/workspace#preflight">Preflight</Link>
+          <Link href="/workspace#launch-readiness">Readiness</Link>
           <Link href="/#integrations">Integrations</Link>
           <a href="https://github.com/mushee-io/Symb-II" target="_blank" rel="noreferrer">GitHub <ArrowUpRight size={13} /></a>
         </nav>
