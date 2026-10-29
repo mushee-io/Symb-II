@@ -150,7 +150,6 @@ export async function getTydroAccount(address:string):Promise<TydroAccountRespon
     const result=results[i];
     if(result.status==="fulfilled") {
       const r=result.value;
-      if(BigInt(0) < BigInt(0)) continue;
       if(Number(r.supplied)>0||Number(r.stableDebt)>0||Number(r.variableDebt)>0) userReserves.push(r);
     } else warnings.push("Could not read user balance for "+market.reserves[i].symbol);
   }
