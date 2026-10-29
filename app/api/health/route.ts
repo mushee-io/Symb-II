@@ -7,7 +7,7 @@ export function GET() {
     status: "foundation",
     network: { name: ink.name, chainId: ink.id },
     trading: "nado-read-only-markets-and-accounts",
-    lending: "not-implemented",
+    lending: "tydro-read-only-markets-and-accounts",
     ai: "not-implemented",
   }, { headers: { "Cache-Control": "no-store" } });
 }

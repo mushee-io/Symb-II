@@ -6,12 +6,13 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, ChartNoAxesCombined, CircleCheck, 
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { NadoPanel } from "@/components/nado-panel";
+import { TydroPanel } from "@/components/tydro-panel";
 import { WalletButton } from "@/components/wallet-button";
 import { ink, INK_EXPLORER } from "@/lib/ink";
 
 const steps = [
   { number:"02",title:"Nado integration",description:"Read-only markets, positions and order records",status:"Implemented" },
-  { number:"03",title:"Tydro integration",description:"Supply, debt and health factors",status:"Planned" },
+  { number:"03",title:"Tydro integration",description:"Read-only reserves, lending balances and health",status:"Implemented" },
   { number:"04",title:"Risk intelligence",description:"Cross-protocol stress testing",status:"Planned" },
   { number:"05",title:"AI capital operator",description:"Grounded suggestions and action plans",status:"Planned" },
 ];
@@ -30,8 +31,8 @@ export default function Workspace() {
       <main className="shell workspace-main">
         <Link href="/" className="back-link"><ArrowLeft size={15}/> Back to overview</Link>
         <div className="workspace-title-row">
-          <div><span className="eyebrow">SYMB-II / WORKSPACE</span><h1>Your capital workspace<span className="title-period">.</span></h1><p>Connect your Ink wallet, inspect real Nado markets and read your wallet-associated trading activity. Tydro and automated actions are not available yet.</p></div>
-          <span className="milestone-pill"><span/> MILESTONE 02 · READ-ONLY</span>
+          <div><span className="eyebrow">SYMB-II / WORKSPACE</span><h1>Your capital workspace<span className="title-period">.</span></h1><p>Connect your Ink wallet, inspect real Nado markets and read your wallet-associated trading activity. Tydro lending and health data are read-only. Automated actions are not available.</p></div>
+          <span className="milestone-pill"><span/> MILESTONE 03 · READ-ONLY</span>
         </div>
         <div className="workspace-grid">
           <section className="workspace-card wallet-panel">
@@ -55,15 +56,16 @@ export default function Workspace() {
             <div className="panel-footnote"><LockKeyhole size={15}/> Read-only wallet data. No transaction signing requested.</div>
           </section>
           <section className="workspace-card foundation-panel">
-            <div className="panel-top"><span><ShieldAlert size={18}/> Protocol overview</span><span className="panel-status muted">COMING SOON</span></div>
-            <div className="foundation-info"><div className="foundation-icon"><ChartNoAxesCombined size={25}/></div><h2>No simulated positions</h2><p>Nado trading records are available in the panel below. Tydro lending and cross-protocol risk modelling are not yet implemented.</p></div>
-            <div className="foundation-rows"><div><span>Nado records</span><b>See live panel below</b></div><div><span>Tydro lending</span><b>Not connected</b></div><div><span>Portfolio risk</span><b>Not available</b></div></div>
+            <div className="panel-top"><span><ShieldAlert size={18}/> Protocol overview</span><span className="panel-status muted">ONCHAIN READS</span></div>
+            <div className="foundation-info"><div className="foundation-icon"><ChartNoAxesCombined size={25}/></div><h2>No simulated positions</h2><p>Nado trading and Tydro lending information appear below. They remain separate protocol accounts. Cross-protocol simulations are not implemented.</p></div>
+            <div className="foundation-rows"><div><span>Nado records</span><b>See live panel below</b></div><div><span>Tydro lending</span><b>See health below</b></div><div><span>Portfolio risk</span><b>Not available</b></div></div>
           </section>
         </div>
         <NadoPanel/>
+        <TydroPanel/>
         <div className="workspace-roadmap-title"><div><span className="eyebrow">BUILDING THE FOUNDATION</span><h2>What comes next</h2></div><a href="https://github.com/mushee-io/Symb-II" target="_blank" rel="noreferrer">Follow development <ArrowUpRight size={16}/></a></div>
         <div className="roadmap-grid">{steps.map(step=><div className="roadmap-card" key={step.number}><span className="roadmap-number">M{step.number}</span><Clock3 size={18}/><h3>{step.title}</h3><p>{step.description}</p><span className="roadmap-status">{step.status} <ArrowRight size={13}/></span></div>)}</div>
-        <div className="workspace-disclaimer"><CircleCheck size={17}/><span>Symb-II does not custody assets or operate an exchange. The app offers wallet balance inspection and read-only Nado market/account records only. Some account results may be incomplete; no order placement, AI execution, lending actions or permissions are enabled.</span></div>
+        <div className="workspace-disclaimer"><CircleCheck size={17}/><span>Symb-II does not custody assets or operate an exchange. The app offers wallet balance inspection and read-only Nado and Tydro market/account records only. Some account results may be incomplete; no order placement, AI execution, lending actions or permissions are enabled.</span></div>
       </main>
       <SiteFooter/>
     </div>

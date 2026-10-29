@@ -290,3 +290,27 @@ h1,h2,h3,p { margin-top: 0; }
 .nado-account-tabs{margin-bottom:16px;width:max-content;max-width:100%}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 @media(max-width:750px){.nado-section-title{align-items:flex-start;flex-wrap:wrap}.nado-section-title>a{margin-left:0}.nado-section{padding:17px}.nado-toolbar{flex-direction:column;align-items:stretch}.nado-search input{width:100%}.nado-heading{align-items:flex-start;flex-direction:column}.nado-account-tabs{width:100%}.nado-tabs button{padding:9px 10px}}
+
+/* M03 read-only Tydro dashboard */
+.tydro-panels{margin-top:85px}
+.tydro-explain{display:flex;align-items:flex-start;gap:12px;border:1px solid #37533e;background:#1d2b20;border-radius:12px;color:#b4d4bb;padding:17px 19px;font-size:12px;line-height:1.65}
+.tydro-explain svg{color:var(--accent);flex-shrink:0}
+.tydro-live-tag{font-size:10px;color:var(--accent);letter-spacing:.08em;font-weight:700;display:inline-flex;gap:8px;align-items:center;white-space:nowrap}
+.tydro-table{min-width:970px}
+.tydro-status{display:inline-block;font-size:10px;border-radius:7px;padding:6px 9px;background:#244831;color:#c2f5ce;white-space:nowrap}
+.tydro-status.tydro-paused{background:#433523;color:#ebc2a0}
+.tydro-account-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:25px 0 17px}
+.tydro-metric{border:1px solid #2c4533;background:#1b2a20;border-radius:11px;padding:20px 16px;min-width:0;display:flex;flex-direction:column;gap:11px}
+.tydro-metric>span{color:#a1b7a6;font-size:11px;display:flex;align-items:center;gap:7px}
+.tydro-metric>strong{font-size:28px;letter-spacing:-.06em;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.tydro-metric>small{font-size:10px;color:#8ba190;line-height:1.5}
+.tydro-metric .tydro-risk{color:#ffc39c}
+.tydro-health{background:#23382a;border-color:#3a6c47}
+.tydro-parameters{display:flex;flex-wrap:wrap;gap:16px;font-size:11px;color:#93ac9a;margin:0 0 29px}
+.tydro-parameters span{display:inline-flex;gap:6px;align-items:center}
+.tydro-parameters strong{color:#e6f5e6}
+.tydro-subheading{margin:18px 0}
+.tydro-subheading h3{font-size:18px;letter-spacing:-.03em;margin-bottom:6px}
+.tydro-subheading p{font-size:11px;color:#9cac9d;margin-bottom:0}
+@media(max-width:950px){.tydro-account-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){.tydro-account-cards{grid-template-columns:1fr}.tydro-live-tag{font-size:9px}.tydro-metric{padding:16px}.tydro-metric>strong{font-size:27px}}

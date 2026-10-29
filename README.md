@@ -2,7 +2,7 @@
 
 **Your AI Capital Operator for Ink.** An independent, Ink-exclusive application. **Not a decentralized exchange.**
 
-## Current milestone: M2 — Nado read-only integration
+## Current milestone: M3 — Tydro on-chain read-only integration
 
 This repository contains a responsive Next.js application with:
 
@@ -14,7 +14,7 @@ This repository contains a responsive Next.js application with:
 - No fabricated balances, positions, AI responses or transaction receipts
 - No automatic transaction signing, custody or autonomous trading
 
-**Milestone 2 is implemented in code:** Nado live market tickers, publicly discoverable wallet-associated subaccounts, indexed open positions, open orders and paginated order records. No order placement or signing. **Not yet implemented:** Tydro, cross-protocol risk, AI agent, order execution, lending transactions, mobile WalletConnect or notifications.
+**Milestone 2 is implemented in code:** Nado live market tickers, publicly discoverable wallet-associated subaccounts, indexed open positions, open orders and paginated order records. No order placement or signing. **Milestone 3 is implemented in code:** direct Ink mainnet Tydro reserve/rate queries and wallet-specific supply/borrowing/health views. **Not yet implemented:** cross-protocol risk, AI agent, order execution, lending transactions, mobile WalletConnect or notifications.
 
 ## Ink network
 
@@ -54,14 +54,14 @@ M1 uses injected EIP-1193 wallets. It works when a compatible extension/in-app b
 ## Planned milestones
 
 - **M2 (implemented):** Nado read-only markets, wallet-associated positions, open orders, indexed order activity
-- **M3:** Tydro read-only connector (supply, loans and health)
+- **M3 (implemented in code):** direct Ink mainnet Tydro reserve data and wallet borrowing/health views
 - **M4:** Deterministic risk engine and verified portfolio aggregation
 - **M5:** AI analysis grounded in actual account state and approved tools
 - **M6:** Explicit user-approved transactions, complete audit trails
 - **M7:** Mobile wallet connectivity, notifications, deeper responsive workflows
 - **M8+:** Security-reviewed constrained automation, native apps and developer API
 
-Do not treat upcoming milestones as deployed capabilities. No smart contracts are required for M1 or M2.
+Do not treat upcoming milestones as deployed capabilities. No new smart contracts are required for M1–M3. Tydro's existing audited protocol is used read-only.
 
 ## Architecture
 
@@ -71,13 +71,14 @@ components/          Brand, navigation, wallet controls and live Nado panels
 lib/ink.ts           Canonical chain ID, RPC and explorer
 lib/wagmi.ts         Strict Ink-only wallet configuration
 lib/nado/            Read-only Nado engine/indexer adapters and JSON types
+lib/tydro/           Verified on-chain Tydro Pool/data-provider readers and JSON types
 .github/workflows/   Typecheck and production build checks
 ```
 
 ## Security boundaries
 
 - Never ask users for seed phrases or private keys.
-- M1 and M2 only connect wallets and inspect publicly queryable Ink and Nado data. Nado queries do not use or store private keys.
+- M1–M3 only connect wallets and inspect publicly queryable Ink, Nado and Tydro data. Nado queries do not use or store private keys.
 - The UI refuses to describe itself as executing trades or lending operations.
 - Keep keys and third-party service credentials out of client bundles.
 - Any future permissioned automation must have enforceable, revocable limits and separate security review.
@@ -98,3 +99,25 @@ Official API source: https://github.com/nadohq/nado-typescript-sdk
 ## M2 verification
 
 Run `npm run typecheck` and `npm run build`, then manually verify with a wallet that has a Nado account and with an unused wallet. Confirm market timestamps, correct account isolation, empty states, pagination warnings and no signing prompt. The CI build does not by itself prove successful live Nado API responses.
+
+## Milestone 3 — Tydro integration
+
+Symb-II is **not** a lending pool or decentralised exchange. M3 queries Tydro's existing Pool and Aave v3-compatible PoolDataProvider on **Ink mainnet (57073)**.
+
+- `GET /api/tydro/markets`: reads Tydro's current reserve list, per-reserve configuration, live liquidity and variable borrow APR. Exposes active/frozen flags, collateral LTV, supplied and borrowed amounts. It does **not** manufacture TVL or price-feed conversions.
+- `GET /api/tydro/account?address=0x...`: reads a wallet address's protocol-level collateral, debt, current borrowing capacity, health factor, and per-asset aToken/variable debt balances, without signing.
+
+The adapter verifies the current Pool returned by the official PoolAddressesProvider against the address pinned in the Aave address book; if different, it fails closed. Other known addresses are referenced from the same published address-book deployment:
+
+- Pool: `0x2816cf15F6d2A220E789aA011D5EE4eB6c47FEbA`
+- PoolAddressesProvider: `0x4172E6aAEC070ACB31aaCE343A58c93E4C70f44D`
+- PoolDataProvider: `0x96086C25d13943C80Ff9a19791a40Df6aFC08328`
+- Oracle: `0x4758213271BFdC72224A7a8742dC865fC97756e1`
+
+Source: https://github.com/aave-dao/aave-address-book/blob/main/src/ts/AaveV3InkWhitelabel.ts
+
+Annual rates displayed as APR use on-chain ray-denominated liquidity and borrow rates; actual realized APY differs, rates vary and there are no guaranteed yields. Pool account summary values are formatted using the actual oracle `BASE_CURRENCY_UNIT()`, but deliberately labelled **oracle base units**, not a fabricated USD quote. When total debt is zero, health factor is represented as *no debt*, not an arbitrary huge number. Tydro margin and liquidation rules are independent from Nado's.
+
+All user-address reads are publicly inspectable and **not proof of wallet ownership**. No transaction endpoints, delegate signing, keys, token approvals or fund transfers are introduced. A 502 status and UI error indicate failed contract verification or unavailable RPC, rather than invented account or market values. Individual reserve failures produce explicit partial-data warnings.
+
+Limits: up to 32 protocol-discovered reserves; no reserve list hard-coded. Account-level lending positions are native token amounts and are not yet consolidated into a USD-denominated multi-protocol risk model. Test with a Tydro wallet and independently verify balances, current borrowing capacity and health against Tydro's own dashboard. CI compilation alone does not prove successful mainnet reads.

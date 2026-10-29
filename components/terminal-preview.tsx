@@ -30,7 +30,7 @@ export function TerminalPreview() {
         </div>
         <div className="terminal-three">
           <div><ChartNoAxesCombined size={18}/><span>Nado positions</span><b>View in workspace</b></div>
-          <div><Layers3 size={18}/><span>Tydro lending</span><b>Planned</b></div>
+          <div><Layers3 size={18}/><span>Tydro lending</span><b>View in workspace</b></div>
           <div><ShieldCheck size={18}/><span>Portfolio risk</span><b>Planned</b></div>
         </div>
         <div className="terminal-agent"><Activity size={17}/><span>Live Nado account data is in the workspace; agent and execution are not yet available.</span><ArrowUpRight size={16}/></div>
