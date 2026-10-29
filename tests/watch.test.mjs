@@ -21,7 +21,7 @@ test("watch actions fail closed on unexpected values",()=>{
 });
 test("watch configuration needs Redis, explicit enablement and long secret",()=>{
   const valid={SYMB_II_WATCH_ENABLED:"true",UPSTASH_REDIS_REST_URL:"https://example.upstash.io",
-    UPSTASH_REDIS_REST_TOKEN:"token",CRON_SECRET:"a".repeat(24)};
+    UPSTASH_REDIS_REST_TOKEN:"token",CRON_SECRET:"a".repeat(64)};
   assert.equal(isWatchConfigured(valid),true);
   assert.equal(isWatchConfigured({...valid,CRON_SECRET:"1234"}),false);
   assert.equal(isWatchConfigured({...valid,SYMB_II_WATCH_ENABLED:"false"}),false);

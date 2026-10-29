@@ -1,3 +1,4 @@
+import {hasValidRedisConfiguration} from "../ops/readiness.ts";
 import { getAddress, isAddress, keccak256, stringToHex } from "viem";
 import type { RescueOutcome } from "../risk/rescue.ts";
 
@@ -43,8 +44,7 @@ export type ProposalReceipt={
 const validPk=(x:string)=>x.length>0&&x.length<=180&&/^[\w.:()-]+$/.test(x);
 export function isProposalsConfigured(env:NodeJS.ProcessEnv=process.env):boolean{
   return env.SYMB_II_PROPOSALS_ENABLED==="true" &&
-    Boolean(env.UPSTASH_REDIS_REST_URL)&&
-    Boolean(env.UPSTASH_REDIS_REST_TOKEN);
+    hasValidRedisConfiguration(env);
 }
 export function parseReviewRequest(value:unknown):ReviewRequest|null{
   if(!value||typeof value!=="object"||Array.isArray(value))return null;

@@ -1,3 +1,4 @@
+import {hasValidRedisConfiguration} from "../ops/readiness.ts";
 import type { RiskAlert } from "../risk/alerts.ts";
 
 export type WatchAction = "subscribe" | "unsubscribe" | "status";
@@ -59,8 +60,7 @@ export function createWatchEvent(alerts:RiskAlert[],previous:string|null,at:stri
 }
 export function isWatchConfigured(env:NodeJS.ProcessEnv=process.env):boolean {
   return env.SYMB_II_WATCH_ENABLED==="true" &&
-    Boolean(env.UPSTASH_REDIS_REST_URL) &&
-    Boolean(env.UPSTASH_REDIS_REST_TOKEN) &&
+    hasValidRedisConfiguration(env) &&
     typeof env.CRON_SECRET==="string" &&
-    env.CRON_SECRET.length>=16;
+    env.CRON_SECRET.length>=32;
 }

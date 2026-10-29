@@ -1,10 +1,11 @@
+import {hasValidRedisConfiguration} from "../ops/readiness";
 import "server-only";
 import {redis} from "@/lib/agent/redis";
 import type {PreflightReport} from "./policy";
 
 export function isPreflightConfigured(env:NodeJS.ProcessEnv=process.env):boolean{
  return env.SYMB_II_PREFLIGHT_ENABLED==="true"&&
-  Boolean(env.UPSTASH_REDIS_REST_URL)&&Boolean(env.UPSTASH_REDIS_REST_TOKEN);
+  hasValidRedisConfiguration(env);
 }
 export async function storePreflight(id:string,report:PreflightReport):Promise<boolean>{
  return await redis(["SET","symb-ii:preflight:packet:"+id,JSON.stringify(report),"EX",90,"NX"])==="OK";

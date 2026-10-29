@@ -18,13 +18,16 @@ const secureUrl=(value:string|undefined)=>{
     !url.username&&!url.password&&!url.port&&(url.pathname==="/"||url.pathname==="");
  }catch{return false;}
 };
+export function hasValidRedisConfiguration(env:NodeJS.ProcessEnv=process.env):boolean{
+ return secureUrl(env.UPSTASH_REDIS_REST_URL)&&set(env.UPSTASH_REDIS_REST_TOKEN);
+}
 export function describeReadiness(env:NodeJS.ProcessEnv=process.env):{
  network:"Ink";chainId:57073;services:LaunchGate[];allServicesConfigured:boolean;
  liveCredentialsValidated:false;executionEnabled:false;
 }{
  const redisUrl=secureUrl(env.UPSTASH_REDIS_REST_URL);
  const redisToken=set(env.UPSTASH_REDIS_REST_TOKEN);
- const redis=redisUrl&&redisToken;
+ const redis=hasValidRedisConfiguration(env);
  const cron=set(env.CRON_SECRET)&&(env.CRON_SECRET?.length??0)>=32;
  const rows:LaunchGate[]=[];
  const add=(id:ServiceId,title:string,enabled:boolean,requirements:string[],missing:string[])=>{

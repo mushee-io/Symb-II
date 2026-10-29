@@ -1,3 +1,4 @@
+import {hasValidRedisConfiguration} from "../ops/readiness.ts";
 import { classifyBriefIntent, type CapitalBrief, type BriefIntent } from "./brief.ts";
 
 export const INK_CHAIN_ID = 57073;
@@ -6,8 +7,7 @@ export const AI_DEFAULT_MODEL = "openai/gpt-6-luna";
 export function isAIConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
   return env.SYMB_II_AI_ENABLED === "true"
     && Boolean(env.AI_GATEWAY_API_KEY)
-    && Boolean(env.UPSTASH_REDIS_REST_URL)
-    && Boolean(env.UPSTASH_REDIS_REST_TOKEN);
+    && hasValidRedisConfiguration(env);
 }
 export function allowedIntent(text: unknown, intent: unknown): BriefIntent | null {
   if (typeof text !== "string" || text.length > 300 || typeof intent !== "string") return null;

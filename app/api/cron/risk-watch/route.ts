@@ -11,7 +11,7 @@ const MAX_WALLETS=3;
 const headers={"Cache-Control":"no-store"};
 export async function GET(req:NextRequest){
   const secret=process.env.CRON_SECRET;
-  if(!secret||secret.length<16||req.headers.get("authorization")!=="Bearer "+secret)
+  if(!secret||secret.length<32||req.headers.get("authorization")!=="Bearer "+secret)
     return NextResponse.json({error:"Unauthorized"},{status:401,headers});
   if(!isWatchConfigured())return NextResponse.json({error:"Watch worker not configured."},{status:503,headers});
   try{
