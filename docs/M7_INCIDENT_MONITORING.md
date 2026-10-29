@@ -101,3 +101,20 @@ cannot be misrepresented as a production release; the SHA must match. A
 Vercel deployment quota, team restriction, or Git integration failure still
 requires an authorized operator to resolve it. Scheduled GitHub Actions are
 best effort, and real pager delivery must be independently configured.
+
+## Automatic Vercel deployment volume control
+
+The repository's `vercel.json` explicitly keeps `main` eligible for
+automatic **production** deployment but disables **automatic preview
+deployments** for branches matching `feat/**`. This reduces repeated builds
+during code development, where several commits in one feature branch would
+otherwise each spend a Vercel deployment. Other branch types retain their
+default Vercel behavior, and GitHub CI still validates pull requests.
+
+This is based on Vercel's supported `git.deploymentEnabled` per-branch
+minimatch configuration. It **does not** bypass Vercel quotas, restore a
+blocked production build, create an alternative deployment, or disable
+automatic production releases. An operator must still resolve any existing
+Vercel billing/plan or deployment-cap limit. Preview deployments for
+`feat/**` can be intentionally made manually with authorized tooling if
+needed once deployment capacity is available.
