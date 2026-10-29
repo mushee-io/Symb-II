@@ -127,3 +127,33 @@ test("pinned block hash, atomic debt and token metadata cannot be edited after r
   ...extended.snapshotEvidence,variableDebtAtomic:"1000000000",
  }}),false);
 });
+
+test("Nado market provenance is sealed into the signed digest while trading stays blocked",()=>{
+ const previous=report();
+ const nado=finalizePreflight({
+  version:1,network:"Ink",chainId:57073,kind:"nado-position-reduce",
+  wallet:wallet.address,asset:null,createdAt:issuedAt,blockNumber:null,
+  reviewOnly:true,executionEnabled:false,transactionPayload:null,
+  amount:null,target:{protocol:"Nado",name:"Official engine, no trading",address:null},
+  allowance:{required:null,current:null,sufficient:null},
+  gas:{estimatedUnits:null,maxEstimatedNativeFee:null,nativeBalance:null},
+  gates:[{name:"Read-only BBO",state:"pass",detail:"BBO recorded"},
+    {name:"Execution",state:"fail",detail:"No signing"}],
+  nadoMarketEvidence:{
+    productId:3,symbol:"ETH-PERP",subaccount:"main",side:"long",
+    sourceObservedAt:issuedAt,sdkObservedAt:issuedAt,
+    engineEndpoint:"0x0000000000000000000000000000000000000001",
+    engineOracle:"2490",tickerLast:"2500",bestBid:"2498",bestAsk:"2502",
+    priceIncrement:"0.1",sizeIncrement:"100000000000000000",minimumBookSize:"100000000000000000",
+    spreadPercent:"0.16",tickerOracleDivergencePercent:"0.401",
+    priceSource:"indexer-last-trade-vs-engine-oracle",
+    limitations:["Execution intentionally unavailable"],
+  },
+ });
+ assert.equal(nado.readyForHumanReview,false);
+ assert.equal(validatePreflightDigest(nado),true);
+ assert.equal(validatePreflightDigest({...nado,nadoMarketEvidence:{
+  ...nado.nadoMarketEvidence,engineOracle:"9999"
+ }}),false);
+ assert.equal(canAcknowledgePreflight(nado,wallet.address,now),false);
+});

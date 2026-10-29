@@ -67,7 +67,7 @@ export function PreflightPanel({wallet,tydro,nado}:{wallet:string;tydro?:TydroAc
     onClick={()=>{setProtocol(name);reset();}}>{name}</button>)}</div>
   <p className="preflight-explainer">{protocol==="Tydro"?
    "This checks ONE existing variable-rate debt token, not an aggregate debt repayment. The verified Pool, token balance, allowance, simulated repay and gas are read where possible.":
-   "Nado order signing, mark-price margin requirements and execution constraints are not independently verified. Its execution preflight will remain blocked."}</p>
+   "Nado engine product metadata, top-of-book quotes, oracle reference and ticker divergence can now be checked independently. Reduce-only authorization, order validation, post-trade margin and execution remain blocked."}</p>
   <div className="preflight-fields"><label>{protocol==="Tydro"?"Variable-debt asset":"Open Nado position"}
    <select value={protocol==="Tydro"?asset??"":selected??""}
     onChange={e=>{protocol==="Tydro"?setToken(e.target.value):setPosition(e.target.value);reset();}}>
@@ -88,6 +88,26 @@ export function PreflightPanel({wallet,tydro,nado}:{wallet:string;tydro?:TydroAc
    {response.report.amount&&<p>Exact underlying amount: {response.report.amount.value} {response.report.amount.symbol}</p>}
    {response.report.gates.map(g=><div className="preflight-gate" key={g.name}>
     <span className={g.state}>{g.state.toUpperCase()}</span><div><strong>{g.name}</strong><p>{g.detail}</p></div></div>)}
+   {response.report.nadoMarketEvidence&&<div className="preflight-approval">
+     <strong>NADO ENGINE EVIDENCE · NO ORDER SIGNED</strong>
+     <p>Product configuration and prices are read independently from the official Nado engine and indexer. These are not fill quotes, liquidation marks or permission to trade.</p>
+     <div className="preflight-facts">
+       <span>Position: {response.report.nadoMarketEvidence.symbol} · {response.report.nadoMarketEvidence.side} · {response.report.nadoMarketEvidence.subaccount}</span>
+       <span>Product ID: {response.report.nadoMarketEvidence.productId}</span>
+       <span>Indexer last-trade reference: {response.report.nadoMarketEvidence.tickerLast}</span>
+       <span>Engine oracle reference: {response.report.nadoMarketEvidence.engineOracle??"Unavailable"}</span>
+       <span>Best bid: {response.report.nadoMarketEvidence.bestBid??"Unavailable"}</span>
+       <span>Best ask: {response.report.nadoMarketEvidence.bestAsk??"Unavailable"}</span>
+       <span>Top-of-book spread: {response.report.nadoMarketEvidence.spreadPercent??"Unavailable"}%</span>
+       <span>Last trade/oracle divergence: {response.report.nadoMarketEvidence.tickerOracleDivergencePercent??"Unavailable"}%</span>
+       <span>Engine price increment (SDK): {response.report.nadoMarketEvidence.priceIncrement??"Unavailable"}</span>
+       <span>Engine size increment (SDK): {response.report.nadoMarketEvidence.sizeIncrement??"Unavailable"}</span>
+       <span>Minimum resting-order size (SDK): {response.report.nadoMarketEvidence.minimumBookSize??"Unavailable"}</span>
+       <span>Engine endpoint: {response.report.nadoMarketEvidence.engineEndpoint??"Unavailable"}</span>
+     </div>
+     {response.report.nadoMarketEvidence.limitations.map((reason,i)=><p key={i}>{reason}</p>)}
+     <p>**Trading remains blocked:** no signed order, order-size simulation, margin-after-trade validation or guaranteed execution price is produced.</p>
+   </div>}
    {response.report.snapshotEvidence&&<div className="preflight-approval">
      <strong>PINNED INK BLOCK EVIDENCE</strong>
      <p>Read-only token and Pool queries are bound to a single recorded block; reorg detection, formatted debt reconciliation, and latest-block freshness are checked independently.</p>
