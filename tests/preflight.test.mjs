@@ -1,10 +1,13 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {privateKeyToAccount} from "viem/accounts";
-import {isValidSignedChallenge} from "../lib/agent/auth.ts";
+import {isValidSignedChallenge as verifySignedChallenge} from "../lib/agent/auth.ts";
 import {parsePreflightRequest,finalizePreflight,validatePreflightDigest,
  canAcknowledgePreflight,preflightApprovalMessage} from "../lib/preflight/policy.ts";
 
+// Unit tests use a deterministic Ink EOA-state fixture. No public RPC is needed.
+const authRuntime={chainId:async()=>57073,code:async()=>"0x",contractSignature:async()=>"0xffffffff"};
+const isValidSignedChallenge=(args)=>verifySignedChallenge(args,authRuntime);
 const wallet=privateKeyToAccount("0x"+"3".repeat(64));
 const other=privateKeyToAccount("0x"+"4".repeat(64));
 const asset="0x0000000000000000000000000000000000000002";

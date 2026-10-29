@@ -1,9 +1,12 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {privateKeyToAccount} from "viem/accounts";
-import {createChallenge,isValidSignedChallenge} from "../lib/agent/auth.ts";
+import {createChallenge,isValidSignedChallenge as verifySignedChallenge} from "../lib/agent/auth.ts";
 import {allowedIntent,isAIConfigured,buildModelInput,validateNarrative} from "../lib/agent/generation-policy.ts";
 
+// Unit tests use a deterministic Ink EOA-state fixture. No public RPC is needed.
+const authRuntime={chainId:async()=>57073,code:async()=>"0x",contractSignature:async()=>"0xffffffff"};
+const isValidSignedChallenge=(args)=>verifySignedChallenge(args,authRuntime);
 const signer=privateKeyToAccount("0x"+"1".repeat(64));
 const nonce="550e8400-e29b-41d4-a716-446655440000";
 const message=createChallenge({address:signer.address,id:nonce,issuedAt:"2026-10-29T15:00:00Z",origin:"https://symb-ii.vercel.app"});
