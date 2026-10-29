@@ -15,7 +15,7 @@ const steps = [
   { number:"02",title:"Nado integration",description:"Read-only markets, positions and order records",status:"Implemented" },
   { number:"03",title:"Tydro integration",description:"Read-only reserves, lending balances and health",status:"Implemented" },
   { number:"04",title:"Risk intelligence",description:"Separate Nado PnL, Tydro health sensitivity and exposure inventory",status:"In progress" },
-  { number:"05",title:"AI capital operator",description:"Grounded suggestions and action plans",status:"Planned" },
+  { number:"05",title:"AI capital operator",description:"Read-only, source-linked capital analysis preview",status:"Preview" },
 ];
 
 export default function Workspace() {
@@ -62,6 +62,7 @@ export default function Workspace() {
             <div className="foundation-rows"><div><span>Nado records</span><b>See live panel below</b></div><div><span>Tydro lending</span><b>See health below</b></div><div><span>Protocol risk</span><b>See risk monitor below</b></div></div>
           </section>
         </div>
+        <div className="agent-promo"><div><span className="eyebrow">M05 / AGENT PREVIEW</span><h2>Ask your capital, not a dashboard.</h2><p>Explore source-grounded read-only explanations of your Nado positions, Tydro lending and risk alerts. No model calls, trading or delegated execution.</p></div><Link href="/agent" className="btn btn-primary">Open capital assistant <ArrowRight size={16}/></Link></div>
         <RiskPanel/>
         <NadoPanel/>
         <TydroPanel/>

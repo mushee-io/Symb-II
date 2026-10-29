@@ -56,7 +56,7 @@ M1 uses injected EIP-1193 wallets. It works when a compatible extension/in-app b
 - **M2 (implemented):** Nado read-only markets, wallet-associated positions, open orders, indexed order activity
 - **M3 (implemented in code):** direct Ink mainnet Tydro reserve data and wallet borrowing/health views
 - **M4 (in progress):** Nado position PnL sensitivity, Tydro health scenarios and cross-protocol exposure inventory; full protocol risk simulation pending
-- **M5:** AI analysis grounded in actual account state and approved tools
+- **M5 (initial guided preview):** source-grounded deterministic Nado/Tydro capital briefs; no generative model connected yet
 - **M6:** Explicit user-approved transactions, complete audit trails
 - **M7:** Mobile wallet connectivity, notifications, deeper responsive workflows
 - **M8+:** Security-reviewed constrained automation, native apps and developer API
@@ -169,3 +169,9 @@ The workspace now evaluates Nado margin health and Tydro lending health with det
 - Browser notifications are **opt-in** and request permission only on explicit user interaction. Dedupe prevents repeated notifications for unchanged conditions; users can disable notifications.
 - **No promise of 24/7 delivery.** Browser throttling, tab close, sleep, disconnection and network errors may stop updates. The alert engine does not place trades, liquidate accounts or initiate rescue actions.
 - A persistent server worker, authenticated wallet subscriptions, a durable database, retries, rate limits and outgoing delivery infrastructure remain **not implemented**. Do not advertise always-on risk alerts until those components are actually operational and tested.
+
+## M5 — Guided capital assistant (first implementation)
+
+The new `/agent` route reads the **same** Nado and Tydro wallet-associated data as `/workspace` using the existing read-only account endpoints. It offers five user-triggered guided summaries: overview, risk, Nado positions, Tydro lending, and a cautious review checklist. Human-readable summaries retain their source timestamps, refuse mismatched networks and wallet addresses, call out stale/partial or failed feeds, and do not merge incomparable collateral or price units.
+
+**Model status:** no generative model is configured or called; outputs come from a deterministic rule engine. This is an **agent interface and read-only analysis foundation**, not a functioning autonomous financial agent or free-form LLM. Unsupportable/transactional requests are rejected. Later work includes model-provider connections, authenticated API limits, strict tool schemas, adversarial prompt-injection testing, independent evaluation, and user-authorized execution gates. No server-side private signing credentials are used.
