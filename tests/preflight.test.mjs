@@ -25,7 +25,7 @@ function report(gates=[{name:"Ink",state:"pass",detail:"Verified"}]){
 test("only Ink wallet and bounded single-token variable debt or Nado position accepted",()=>{
  assert.deepEqual(parsePreflightRequest(valid),{...valid,asset});
  assert.equal(parsePreflightRequest({...valid,percent:100}),null);
- assert.equal(parsePreflightRequest({...valid,spender:other.address}),null===null?parsePreflightRequest({...valid,spender:other.address}):null); // parser ignores unknown fields; no spender authority is exposed
+ assert.equal(parsePreflightRequest({...valid,spender:other.address}),null);
  assert.equal(parsePreflightRequest({...valid,asset:"0x1"}),null);
  assert.equal(parsePreflightRequest({...valid,kind:"tydro-stable-repay"}),null);
  assert.deepEqual(parsePreflightRequest({wallet:wallet.address,kind:"nado-position-reduce",positionKey:"main:4:leg-1",percent:50}),

@@ -21,10 +21,10 @@ export function parsePreflightRequest(value:unknown):PreflightRequest|null{
  if(typeof r.wallet!=="string"||!isAddress(r.wallet,{strict:false})||
     ![10,25,50,75].includes(r.percent as number))return null;
  const wallet=getAddress(r.wallet);const percent=r.percent as 10|25|50|75;
- if(r.kind==="tydro-variable-repay"&&typeof r.asset==="string"&&
+ if(r.kind==="tydro-variable-repay"&&Object.keys(r).every(k=>["kind","wallet","asset","percent"].includes(k))&&typeof r.asset==="string"&&
     isAddress(r.asset,{strict:false})&&r.positionKey===undefined)
     return {kind:r.kind,wallet,asset:getAddress(r.asset),percent};
- if(r.kind==="nado-position-reduce"&&typeof r.positionKey==="string"&&
+ if(r.kind==="nado-position-reduce"&&Object.keys(r).every(k=>["kind","wallet","positionKey","percent"].includes(k))&&typeof r.positionKey==="string"&&
     r.positionKey.length>0&&r.positionKey.length<=180&&
     /^[\w.:()-]+$/.test(r.positionKey)&&r.asset===undefined)
     return {kind:r.kind,wallet,positionKey:r.positionKey,percent};
