@@ -35,7 +35,7 @@ export function simulateNadoPosition(
   if(!recent(snapshots.marketUpdatedAt,now,MAX_SNAPSHOT_AGE_MS)||
      !recent(snapshots.accountUpdatedAt,now,MAX_POSITION_AGE_MS))
     return {ok:false,reason:"Market or position snapshot is stale. Refresh Nado data to continue."};
-  if(!/^(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:[eE][+-]?\\d+)?$/.test(position.size) ||
+  if(!/^(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(position.size) ||
      !Number.isFinite(market.lastPrice) || !["long","short"].includes(position.side))
     return {ok:false,reason:"Invalid position size, side or Nado market price."};
   const size=new BigNumber(position.size);
