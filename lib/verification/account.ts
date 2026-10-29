@@ -120,7 +120,7 @@ export function assessWalletVerification(input:{
      "Nonzero variable debt agrees with a separate pinned Tydro Pool account comparison. Repayment remains untested.":
    borrowerState==="fail"?
      "Debt is observed but independent Tydro Pool reconciliation disagrees.":
-     "Variable debt is observed, but independent Pool reconciliation was not completed.");
+     "Variable debt is observed, but independent Pool reconciliation was not completed."));
  checks.push(check("wallet-signature","Owner signature and smart-wallet control",
   "not-tested",
   "This inspection does not request a signature. Use a separate, explicit one-use challenge to validate EOA or ERC-1271 control."));
