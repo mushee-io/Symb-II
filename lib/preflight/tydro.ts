@@ -1,6 +1,6 @@
 import "server-only";
 import {
-  createPublicClient,formatEther,formatUnits,formatGwei,http,parseAbi,parseUnits,type Address,
+  createPublicClient,formatEther,formatUnits,formatGwei,http,parseAbi,type Address,
 } from "viem";
 import {ink} from "@/lib/ink";
 import {getTydroAccount,getTydroMarkets} from "@/lib/tydro/queries";
@@ -155,7 +155,7 @@ export async function preflightTydro(request:Extract<PreflightRequest,{kind:"tyd
    const args=[asset,atomic,2n,wallet] as const;
    try{
      const simulation=await publicClient.simulateContract({
-       account:wallet,address:TYDRO.pool,abi:repayAbi,functionName:"repay",args,blockNumber:startBlock,blockNumber:startBlock,
+       account:wallet,address:TYDRO.pool,abi:repayAbi,functionName:"repay",args,blockNumber:startBlock,
      });
      if(simulation.result<=0n)throw Error("Zero repayment simulated");
      repayGas=await publicClient.estimateContractGas({
