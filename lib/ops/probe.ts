@@ -11,7 +11,9 @@ async function probe(label:ProbeResult["id"],f:()=>Promise<boolean>):Promise<Pro
  try{return {id:label,state:(await f())?"pass":"fail",detail:"Verified at request time (snapshot only)."};}
  catch{return {id:label,state:"fail",detail:"Connectivity or integrity check failed; no secrets exposed."};}
 }
-export async function probeServices():Promise<{checkedAt:string;results:ProbeResult[];executionEnabled:false}>{
+import {summariseProbes,type ProbeSummary} from "./probe-summary";
+
+export async function probeServices():Promise<{checkedAt:string;results:ProbeResult[];summary:ProbeSummary;executionEnabled:false}>{
  const r=describeReadiness();
  const enabledRedis=r.services.find(x=>x.id==="redis")?.status==="configured";
  const checks=await Promise.all([
@@ -37,5 +39,5 @@ export async function probeServices():Promise<{checkedAt:string;results:ProbeRes
      t<=Date.now()+5000&&Date.now()-t<180000;
   }),
  ]);
- return {checkedAt:new Date().toISOString(),results:checks,executionEnabled:false};
+ return {checkedAt:new Date().toISOString(),results:checks,summary:summariseProbes(checks),executionEnabled:false};
 }
