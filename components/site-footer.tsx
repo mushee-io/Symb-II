@@ -6,7 +6,7 @@ export function SiteFooter() {
       <div className="shell footer-inner">
         <Brand />
         <p>Built for Ink. Non-custodial by design. Independent from any DEX.</p>
-        <span className="footer-version">M03 LIVE / M04 IN PROGRESS</span>
+        <span className="footer-version">M05 GUIDED / M06 READ-ONLY PREVIEW</span>
       </div>
     </footer>
   );

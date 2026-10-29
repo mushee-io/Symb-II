@@ -20,6 +20,7 @@ export function SiteHeader() {
           <Link className={pathname === "/" ? "nav-active" : ""} href="/">Overview</Link>
           <Link className={isWorkspace ? "nav-active" : ""} href="/workspace">Workspace</Link>
           <Link className={isAgent ? "nav-active" : ""} href="/agent">Agent</Link>
+          <Link href="/workspace#portfolio-rescue">Rescue Lab</Link>
           <Link href="/#integrations">Integrations</Link>
           <a href="https://github.com/mushee-io/Symb-II" target="_blank" rel="noreferrer">GitHub <ArrowUpRight size={13} /></a>
         </nav>
@@ -32,7 +33,7 @@ export function SiteHeader() {
         </div>
       </div>
       {menuOpen && <nav className="mobile-nav" aria-label="Mobile navigation" onClick={() => setMenuOpen(false)}>
-        <Link href="/">Overview</Link><Link href="/workspace">Workspace</Link><Link href="/agent">Agent</Link><Link href="/#integrations">Integrations</Link>
+        <Link href="/">Overview</Link><Link href="/workspace">Workspace</Link><Link href="/agent">Agent</Link><Link href="/workspace#portfolio-rescue">Rescue Lab</Link><Link href="/#integrations">Integrations</Link>
         <a href="https://github.com/mushee-io/Symb-II" target="_blank" rel="noreferrer">GitHub ↗</a>
       </nav>}
     </header>

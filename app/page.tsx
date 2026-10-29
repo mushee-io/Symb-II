@@ -5,8 +5,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { TerminalPreview } from "@/components/terminal-preview";
 
 const capabilities = [
-  { icon: ChartNoAxesCombined, title: "One capital view", description: "A unified interface for trading exposure, collateral and lending health—once our protocol connectors are ready." },
-  { icon: BrainCircuit, title: "Intelligence, not guesswork", description: "An AI operator designed to use verified account information and deterministic risk calculations." },
+  { icon: ChartNoAxesCombined, title: "One capital view", description: "A read-only capital workspace with live Nado position views, Tydro lending health and separate risk sensitivities." },
+  { icon: BrainCircuit, title: "Intelligence, not guesswork", description: "Guided account analysis and deterministic risk calculations now available; generative AI remains opt-in and disabled until configured." },
   { icon: LockKeyhole, title: "Your wallet. Your call.", description: "Non-custodial access. Future actions will require clear, user-controlled authorisation." },
 ];
 
@@ -18,7 +18,7 @@ export default function HomePage() {
         <section className="hero">
           <div className="hero-grid shell">
             <div className="hero-left">
-              <div className="hero-kicker"><span className="kicker-dot"/> BUILT EXCLUSIVELY ON INK <span className="kicker-slash">/</span> MILESTONE 03 LIVE · M04 BUILDING</div>
+              <div className="hero-kicker"><span className="kicker-dot"/> BUILT EXCLUSIVELY ON INK <span className="kicker-slash">/</span> M05 GUIDED LIVE · M06 LAB PREVIEW</div>
               <h1>Your capital.<br/><span>Clearer than ever.</span></h1>
               <p className="hero-description">Meet Symb-II, the AI capital operator built for Ink. One intelligent workspace to understand your positions, protect your downside and act with confidence.</p>
               <div className="hero-actions">
@@ -49,8 +49,8 @@ export default function HomePage() {
             <div className="closing-orbit"><Sparkles size={31}/></div>
             <span className="eyebrow">EARLY FOUNDATION RELEASE</span>
             <h2>Built for how capital<br/><span>should move.</span></h2>
-            <p>Wallet connection is live in the first milestone. AI analysis, risk calculations and protocol operations are scheduled for later builds.</p>
-            <Link href="/workspace" className="btn btn-primary btn-large">Open the workspace <ArrowRight size={17}/></Link>
+            <p>Read-only Nado and Tydro integrations, guided analysis, risk monitoring and a Portfolio Rescue Lab preview are available. Trading and borrowing actions are not enabled.</p>
+            <Link href="/workspace#portfolio-rescue" className="btn btn-primary btn-large">Explore Rescue Lab <ArrowRight size={17}/></Link>
             <div className="closing-tags"><span><Smartphone size={13}/> Responsive web</span><span><ShieldCheck size={13}/> Explicit approvals</span><span><Network size={13}/> Ink only</span></div>
           </div>
         </section>
