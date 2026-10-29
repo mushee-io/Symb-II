@@ -4,7 +4,8 @@ import {validatedProductionUrl} from "./release-policy.mjs";
 
 // GitHub Actions checkout's HEAD is the actual default-branch release target.
 // The default production URL is fixed; no Vercel credentials or build API.
-const origin=(process.env.SMOKE_URL||"https://symb-ii.vercel.app").replace(/\\/$/,"");
+const configuredOrigin=process.env.SMOKE_URL||"https://symb-ii.vercel.app";
+const origin=configuredOrigin.endsWith("/")?configuredOrigin.slice(0,-1):configuredOrigin;
 validatedProductionUrl(origin);
 const expectedSha=execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim();
 const rawDate=execFileSync("git",["show","-s","--format=%ct","HEAD"],{encoding:"utf8"}).trim();
