@@ -16,3 +16,9 @@ test("required provider omitted or unknown remains unhealthy",()=>{
  assert.equal(summariseProbes(checks({redis:"not-configured",rpc:"pass",nado:"pass"})).healthy,false);
  assert.equal(summariseProbes(checks({redis:"pass",rpc:"not-configured",nado:"pass",tydro:"pass"})).healthy,false);
 });
+
+test("an omitted Redis diagnostic is not a healthy protected probe",()=>{
+ const s=summariseProbes(checks({rpc:"pass",nado:"pass",tydro:"pass"}));
+ assert.equal(s.healthy,false);
+ assert.ok(s.requiredFailures.includes("redis"));
+});
