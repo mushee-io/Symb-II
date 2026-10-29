@@ -64,3 +64,9 @@ test("export excludes raw positions, balances, permissions and private keys",()=
  assert.equal(serialized.includes("privateKey"),false);
  assert.equal(serialized.includes('"canExecute":false'),true);
 });
+
+test("M8 independent Tydro Pool status is explicitly not tested without a second contract read",()=>{
+ const x=make();
+ assert.equal(x.checks.find(c=>c.id==="tydro-independent-pool").state,"not-tested");
+ assert.equal(x.completeRealWalletValidation,false);
+});

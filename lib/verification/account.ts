@@ -1,5 +1,6 @@
 import type {NadoAccountResponse} from "../nado/types.ts";
 import type {TydroAccountResponse} from "../tydro/types.ts";
+import {reconcileTydroDirect,type TydroDirectObservation} from "./tydro-direct.ts";
 
 export type VerificationState="pass"|"fail"|"not-tested";
 export type VerificationCheck={
@@ -27,6 +28,7 @@ export function assessWalletVerification(input:{
  rpc:Source<InkRpcObservation>;
  nado:Source<NadoAccountResponse>;
  tydro:Source<TydroAccountResponse>;
+ tydroDirect?:Source<TydroDirectObservation>;
  now?:number;
 }):WalletVerification{
  const now=input.now??Date.now();
@@ -69,6 +71,14 @@ export function assessWalletVerification(input:{
    tValid?"pass":"fail",
    tValid?"Tydro verified Pool account read matches this wallet and is recent/complete.":
      "Tydro query failed, was stale/partial, or did not match the connected Ink wallet."));
+ const direct=reconcileTydroDirect(
+   tValid?t:undefined,
+   input.tydroDirect?.status==="success"?input.tydroDirect.data:undefined,
+   now,
+ );
+ checks.push(check("tydro-independent-pool","Independent pinned Tydro Pool reconciliation",
+   direct.state,direct.detail+
+     (direct.blockNumber?" Reference Ink block "+direct.blockNumber+".":"")));
  const variableDebt=tValid?t.userReserves.filter(r=>{
    // Non-numeric values never count as verified borrowing.
    return /^\d+(?:\.\d+)?$/.test(r.variableDebt)&&Number(r.variableDebt)>0;

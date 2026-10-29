@@ -3,6 +3,8 @@ import {useEffect,useRef,useState} from "react";
 import {useAccount,usePublicClient,useSignMessage} from "wagmi";
 import {Activity,ClipboardCopy,ShieldCheck,AlertCircle,KeyRound} from "lucide-react";
 import {ink} from "@/lib/ink";
+import {TYDRO,providerAbi,poolAbi,oracleAbi} from "@/lib/tydro/contracts";
+import type {TydroDirectObservation} from "@/lib/verification/tydro-direct";
 import {isFreshOwnershipProof,ownershipMessage,type OwnershipChallenge} from "@/lib/verification/ownership";
 import type {NadoAccountResponse} from "@/lib/nado/types";
 import type {TydroAccountResponse} from "@/lib/tydro/types";
@@ -38,7 +40,7 @@ export function WalletVerification(){
    const tydroUrl="/api/tydro/account?address="+encodeURIComponent(currentAddress);
    // A user-initiated, read-only inspection. No background polling, writes
    // or signatures. The independent RPC and protocol reads can fail separately.
-   const [nado,tydro,rpc]=await Promise.all([
+   const [nado,tydro,rpc,tydroDirect]=await Promise.all([
     inspectAccount<NadoAccountResponse>(nadoUrl),
     inspectAccount<TydroAccountResponse>(tydroUrl),
     (async():Promise<Source<InkRpcObservation>>=>{
@@ -56,11 +58,42 @@ export function WalletVerification(){
        }};
       }catch{return {status:"error"};}
     })(),
+    (async():Promise<Source<TydroDirectObservation>>=>{
+      if(!client)return {status:"error"};
+      try{
+       const block=await client.getBlock();
+       const number=block.number;
+       const [chain,pool,accountData,unit,emode]=await Promise.all([
+         client.getChainId(),
+         client.readContract({address:TYDRO.poolAddressesProvider,abi:providerAbi,
+           functionName:"getPool",blockNumber:number}),
+         client.readContract({address:TYDRO.pool,abi:poolAbi,
+           functionName:"getUserAccountData",args:[currentAddress],blockNumber:number}),
+         client.readContract({address:TYDRO.oracle,abi:oracleAbi,
+           functionName:"BASE_CURRENCY_UNIT",blockNumber:number}),
+         client.readContract({address:TYDRO.pool,abi:poolAbi,
+           functionName:"getUserEMode",args:[currentAddress],blockNumber:number}),
+       ]);
+       const again=await client.getBlock({blockNumber:number});
+       if(block.hash!==again.hash)throw Error("Pinned Ink block reorganized");
+       return {status:"success",data:{
+         observedAt:new Date().toISOString(),
+         blockTimestamp:new Date(Number(block.timestamp)*1000).toISOString(),
+         blockNumber:number.toString(),chainId:chain,
+         verifiedProviderPool:pool,oracleBaseUnit:unit.toString(),
+         collateralBaseRaw:accountData[0].toString(),
+         debtBaseRaw:accountData[1].toString(),
+         availableBorrowsBaseRaw:accountData[2].toString(),
+         healthFactorRaw:accountData[5].toString(),
+         emodeCategory:emode.toString(),
+       }};
+      }catch{return {status:"error"};}
+    })(),
    ]);
    if(identityRef.current!==currentIdentity)return;
    setResult(assessWalletVerification({
     wallet:currentAddress,connectionChainId:chainId??null,
-    rpc,nado,tydro,
+    rpc,nado,tydro,tydroDirect,
    }));
   }catch{setError("Wallet inspection failed. No account result is treated as verified.");}
   finally{setBusy(false);}
@@ -114,7 +147,7 @@ export function WalletVerification(){
   <div className="ops-panel-heading"><div>
     <span className="eyebrow">M08 / REAL INK WALLET RECONCILIATION</span>
     <h2>Wallet verification lab.</h2>
-    <p>Run independent public RPC, Nado and Tydro account checks against the wallet you actually connected. Missing positions and loans remain explicitly untested.</p>
+    <p>Run independent public RPC, Nado and Tydro account checks against the wallet you actually connected. Reconcile reported Tydro debt, collateral, borrow availability and health factor with separate block-pinned Pool reads. Missing positions and loans remain explicitly untested.</p>
    </div><div className="ops-readonly"><ShieldCheck size={15}/> READ ONLY</div></div>
   {!isConnected||!address?<div className="ops-alert">Connect a wallet on Ink to inspect its live account data. This does not require a signature.</div>:
    <>
