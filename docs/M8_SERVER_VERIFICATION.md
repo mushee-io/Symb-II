@@ -186,3 +186,24 @@ and actual connected RPC are required to establish live M8 acceptance.
 This pins a historical observation; it cannot promise that an ERC-1271
 contract's owner set will not change after verification. No session or
 spending permission is granted, so the outcome remains informational only.
+
+## Recheck expiry after live signature verification
+
+Ink RPC and deployed ERC-1271 lookups are asynchronous. A valid message at
+the start of an RPC request must not become a newly valid server proof if
+the original 120-second challenge expires during the RPC call.
+
+The one-use confirmation now samples the **server clock again after the
+signature-verifier result**, before returning any positive response. If the
+nonce expires during RPC work, the clock fails, or time goes backwards,
+the API rejects the attempt and does not issue a self-test success.
+The original Redis GETDEL nonce was already atomically consumed; there is
+no retry or fallback that could reuse it.
+
+`tests/m8-crypto-replay-integration.test.mjs` adds deterministic
+cryptographic EOA signing using viem, an atomic in-memory nonce-store
+adapter, exact origin checks, replay/race tests, and a mocked deployed
+ERC-1271 runtime at a pinned block. This is stronger than a fabricated
+signature-string fixture, but **still not a genuine connected mainnet
+wallet or real Upstash test**. Real M8 acceptance and independent
+security review remain outstanding.
