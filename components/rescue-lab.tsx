@@ -85,13 +85,13 @@ export function RescueLab({nado,tydro,wallet}:{
             <div className="rescue-field">Review reduction in position size
               <div className="rescue-presets">{nadoSizes.map(s=><button key={s} type="button" aria-pressed={reduction===s} onClick={()=>setReduction(s)} className={reduction===s?"selected":""}>{s}%</button>)}</div>
             </div>
-            {tradeScenario?.ok?<div className="rescue-scenario">
+            {tradeScenario?.ok && tradeScenario.kind==="position-reduction"?<div className="rescue-scenario">
               <div><span>Original price-shock PnL sensitivity</span><strong>{showQuantity(tradeScenario.originalPositionSensitivity)} {tradeScenario.quote}</strong></div>
               <ArrowDownRight size={20} aria-hidden="true"/>
               <div><span>After hypothetical {tradeScenario.reductionPct}% size reduction</span><strong>{showQuantity(tradeScenario.remainingPositionSensitivity)} {tradeScenario.quote}</strong></div>
               <p>Illustrative remaining base quantity: {showQuantity(tradeScenario.remainingSize,6)}. This is not projected net profit, savings or margin health.</p>
             </div>:<div className="rescue-empty"><AlertTriangle size={16}/>{tradeScenario?.reason??"Unable to calculate the Nado what-if."}</div>}
-            {tradeScenario?.ok&&<Assumptions items={tradeScenario.assumptions}/>}
+            {tradeScenario?.ok && tradeScenario.kind==="position-reduction"&&<Assumptions items={tradeScenario.assumptions}/>}
           </>}
       </div>
       <div className="rescue-protocol">
@@ -102,13 +102,13 @@ export function RescueLab({nado,tydro,wallet}:{
             <div className="rescue-field">Hypothetical proportional reduction in total debt
               <div className="rescue-presets">{debtSizes.map(s=><button key={s} type="button" aria-pressed={repayment===s} onClick={()=>setRepayment(s)} className={repayment===s?"selected":""}>{s}%</button>)}</div>
             </div>
-            {lendingScenario?.ok?<div className="rescue-scenario">
+            {lendingScenario?.ok && lendingScenario.kind==="proportional-debt-reduction"?<div className="rescue-scenario">
               <div><span>Current Tydro-reported health factor</span><strong>{showQuantity(lendingScenario.currentHealthFactor,3)}×</strong></div>
               <ArrowRight size={20} aria-hidden="true"/>
               <div><span>Mathematical health-factor sensitivity</span><strong>{showQuantity(lendingScenario.estimatedHealthFactor,3)}×</strong></div>
               <p>Baseline: {lendingScenario.currentRisk}. Scenario: {lendingScenario.estimatedRisk}. This does not establish repay feasibility, remaining borrowing capacity or liquidation protection.</p>
             </div>:<div className="rescue-empty"><AlertTriangle size={16}/>{lendingScenario?.reason??"Unable to calculate this Tydro scenario."}</div>}
-            {lendingScenario?.ok&&<Assumptions items={lendingScenario.assumptions}/>}
+            {lendingScenario?.ok && lendingScenario.kind==="proportional-debt-reduction"&&<Assumptions items={lendingScenario.assumptions}/>}
           </>}
       </div>
     </div>
