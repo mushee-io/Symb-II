@@ -18,7 +18,7 @@ export default function HomePage() {
         <section className="hero">
           <div className="hero-grid shell">
             <div className="hero-left">
-              <div className="hero-kicker"><span className="kicker-dot"/> BUILT EXCLUSIVELY ON INK <span className="kicker-slash">/</span> MILESTONE 01</div>
+              <div className="hero-kicker"><span className="kicker-dot"/> BUILT EXCLUSIVELY ON INK <span className="kicker-slash">/</span> MILESTONE 03 LIVE · M04 BUILDING</div>
               <h1>Your capital.<br/><span>Clearer than ever.</span></h1>
               <p className="hero-description">Meet Symb-II, the AI capital operator built for Ink. One intelligent workspace to understand your positions, protect your downside and act with confidence.</p>
               <div className="hero-actions">
