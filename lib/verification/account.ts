@@ -10,12 +10,16 @@ export type VerificationCheck={
 };
 export type Source<T>={status:"success";data:T}|{status:"error";data?:never};
 export type InkRpcObservation={
- chainId:number;blockNumber:string;blockTimestamp:string;
+ chainId:number;blockNumber:string;blockHash:string;blockTimestamp:string;
  code:string;nativeBalanceWei:string;observedAt:string;
+};
+export type PublicBlockReference={
+ source:"ink-rpc"|"tydro-pool";chainId:57073;
+ blockNumber:string;blockHash:string;observedAt:string;
 };
 export type WalletVerification={
  kind:"manual-public-wallet-inspection";wallet:string;chainId:57073;
- checkedAt:string;checks:VerificationCheck[];
+ checkedAt:string;checks:VerificationCheck[];referenceBlocks:PublicBlockReference[];
  passed:number;failed:number;notTested:number;
  canExecute:false;ownerProved:false;completeRealWalletValidation:false;
  notes:string[];
@@ -44,11 +48,12 @@ export function assessWalletVerification(input:{
  const rpc=input.rpc.status==="success"?input.rpc.data:null;
  const rpcTime=rpc?Date.parse(rpc.blockTimestamp):NaN;
  const rpcValid=rpc&&rpc.chainId===57073&&/^\d+$/.test(rpc.blockNumber)&&
+   /^0x[0-9a-f]{64}$/i.test(rpc.blockHash)&&
    ok(rpc.observedAt,now)&&/^\d+$/.test(rpc.nativeBalanceWei)&&
    Number.isFinite(rpcTime)&&rpcTime<=now+5000&&now-rpcTime<180000;
  checks.push(check("rpc","Independent Ink RPC observation",
    rpcValid?"pass":"fail",
-   rpcValid?"Live RPC returned an Ink block timestamp within 3 minutes.":"Ink chain ID, RPC block or recent timestamp unavailable."));
+   rpcValid?"Live RPC returned an Ink block hash and timestamp within 3 minutes.":"Ink chain ID, block hash or recent timestamp unavailable."));
  checks.push(check("code","EOA / deployed contract detection",rpcValid&&rpc&&
    /^0x(?:[0-9a-f]{2})*$/i.test(rpc.code)?"pass":"fail",
    rpc&&rpc.code!=="0x"?"RPC returned deployed contract bytecode. ERC-1271 signing is NOT verified by this read.":
@@ -130,16 +135,27 @@ export function assessWalletVerification(input:{
  checks.push(check("security","Independent adversarial security review",
   "not-tested",
   "Automated unit tests cannot substitute for security audit or real-wallet adversarial testing."));
+ const referenceBlocks:PublicBlockReference[]=[];
+ if(rpcValid&&rpc)referenceBlocks.push({
+  source:"ink-rpc",chainId:57073,blockNumber:rpc.blockNumber,
+  blockHash:rpc.blockHash,observedAt:rpc.observedAt,
+ });
+ const pinned=input.tydroDirect?.status==="success"?input.tydroDirect.data:null;
+ if(direct.state==="pass"&&pinned)referenceBlocks.push({
+  source:"tydro-pool",chainId:57073,blockNumber:pinned.blockNumber,
+  blockHash:pinned.blockHash,observedAt:pinned.observedAt,
+ });
  const passed=checks.filter(x=>x.state==="pass").length;
  const failed=checks.filter(x=>x.state==="fail").length;
  return {
   kind:"manual-public-wallet-inspection",wallet,chainId:57073,
-  checkedAt:new Date(now).toISOString(),checks,passed,failed,
+  checkedAt:new Date(now).toISOString(),checks,referenceBlocks,passed,failed,
   notTested:checks.length-passed-failed,
   canExecute:false,ownerProved:false,completeRealWalletValidation:false,
   notes:[
    "This is an opt-in read-only inspection; it proves neither control of the wallet nor ability to execute.",
    "A no-position or no-debt wallet cannot satisfy active-position and active-borrow test cases.",
+   "The report includes public block hashes for reproducibility, not transaction or ownership proof.",
    "The report records statuses and a public wallet address, not position amounts or private credentials.",
    "Nado and Tydro remain separate protocols; no cross-margin netting is inferred.",
   ]
