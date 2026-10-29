@@ -48,3 +48,11 @@ test("reports never include secret signatures, token balances or execution appro
  assert.equal(exported.includes("signatureBytes"),false);
  assert.equal(exported.includes('"transactionEnabled":false'),true);
 });
+
+test("expired public evidence never passes, regardless of previous green checks",()=>{
+ const x=assessM8Acceptance(sample(),null,now+180000);
+ for(const id of ["public-data","active-perp","active-borrow"]){
+  assert.equal(x.gates.find(g=>g.id===id).state,"fail");
+ }
+ assert.equal(x.transactionEnabled,false);
+});
