@@ -42,3 +42,12 @@ test("changes and recovery create distinct persistent events",()=>{
   assert.equal(recovered.event?.critical,0);
   assert.equal(createWatchEvent([],recovered.fingerprint,"2026-10-29T16:00:00Z").event,null);
 });
+
+test("watch consent never accepts appended fields, duplicated actions or embedded wallets",()=>{
+ const original=make("subscribe");
+ assert.equal(validActionMessage(original+"\nAction: unsubscribe","subscribe",wallet,origin),false);
+ assert.equal(validActionMessage(original.replace("Action: subscribe","Action: unsubscribe"),"subscribe",wallet,origin),false);
+ assert.equal(validActionMessage(original.replace("Chain ID: 57073","Chain ID: 1"),"subscribe",wallet,origin),false);
+ assert.equal(validActionMessage(original+"\nWallet: "+wallet.toLowerCase(),"subscribe",wallet,origin),false);
+ assert.equal(validActionMessage(original.replace("Expires In: 120 seconds","Expires In: 7200 seconds"),"subscribe",wallet,origin),false);
+});

@@ -27,13 +27,19 @@ export function watchChallengeMessage(args:{
   ].join("\n");
 }
 export function validActionMessage(message:string,action:WatchAction,wallet:string,origin:string):boolean {
-  let hostname:string;
-  try{hostname=new URL(origin).host;}catch{return false;}
-  return message.startsWith("Symb-II read-only background watch consent\n")&&
-    message.includes("\nDomain: "+hostname+"\n")&&
-    message.includes("\nWallet: "+wallet.toLowerCase()+"\n")&&
-    message.includes("\nChain ID: 57073\n")&&
-    message.includes("\nAction: "+action+"\n");
+  if(typeof message!=="string"||message.length>800||!isWatchAction(action))return false;
+  // Reconstruct the ENTIRE canonical server challenge rather than accepting
+  // substring matches. Unknown fields, duplicate actions and suffixes fail.
+  const lines=message.split("\n");
+  if(lines.length!==10)return false;
+  const nonce=lines[5]?.startsWith("Nonce: ")?lines[5].slice(7):"";
+  const issuedAt=lines[6]?.startsWith("Issued At: ")?lines[6].slice(11):"";
+  if(!/^[0-9a-f-]{36}$/i.test(nonce)||!Number.isFinite(Date.parse(issuedAt)))return false;
+  try{
+    return message===watchChallengeMessage({
+      address:wallet,action,id:nonce,origin,issuedAt,
+    });
+  }catch{return false;}
 }
 
 export type WatchEvent = {
