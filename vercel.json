@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/ops/probe",
+      "schedule": "0 8 * * *"
+    },
+    {
       "path": "/api/cron/risk-watch",
       "schedule": "0 9 * * *"
     }

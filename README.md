@@ -311,3 +311,11 @@ The UI shows pass/fail/not-tested per test and can copy a minimal evidence repor
 The GitHub Actions workflow **Production smoke (manual)** runs eight bounded, public, read-only checks against an HTTPS deployment. It validates chain 57073, private-feature safety flags, readiness and the existing public Nado/Tydro feeds. Run it manually from Actions or execute `npm run smoke` locally; it does not use or transmit private environment variables.
 
 A strong 32+ character `CRON_SECRET` may be set in Vercel Production to authenticate the operator-only `POST /api/ops/probe`. This only permits safe diagnostic reads, not trading, watch subscriptions or model access. The endpoint must be tested after redeployment; configuring the secret does not activate Redis, AI, proposal signing, wallet actions or monitoring.
+
+### Daily protected live-provider heartbeat
+
+Vercel Cron now invokes `GET /api/ops/probe` once daily around 08:00 UTC; this endpoint is authenticated by Vercel's `Authorization: Bearer CRON_SECRET` header and rejects missing or weak secrets. An operator can also call authenticated `POST /api/ops/probe` manually.
+
+The probe tests Redis PING if configured, Ink RPC chain ID and recent block, Nado market availability, and Tydro reserve availability. It writes a single short runtime log line containing service IDs and pass/fail statuses **only**. There are no wallet addresses, balances, tokens, API credentials, signatures, transactions or notifications in the log. On Hobby, daily execution is not precise within the scheduled hour. Logs are an observation, not a managed 24/7 on-call alerting system.
+
+The existing watch cron at 09:00 UTC remains separately configured and deliberately disabled pending Redis + explicit opt-in. Neither cron enables any spending permissions.
