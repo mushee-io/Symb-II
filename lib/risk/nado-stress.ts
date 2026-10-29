@@ -74,7 +74,7 @@ export function simulateNadoFromFeeds(
   now=Date.now(),
 ): NadoStressResult {
   if(account.chainId!==57073||markets.chainId!==57073||
-    account.incomplete||markets.markets.length===0)
+    account.positionCoverageComplete!==true||markets.markets.length===0)
     return {ok:false,reason:"Nado account or market coverage is incomplete."};
   if(!Array.isArray(account.positions)||!Array.isArray(markets.markets))
     return {ok:false,reason:"Invalid Nado response shape."};

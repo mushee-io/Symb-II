@@ -45,10 +45,12 @@ test("reject old or future-dated market and account snapshots",()=>{
   assert.equal(simulateNadoPosition(p(),market(),-10,{marketUpdatedAt:snapshots.marketUpdatedAt,accountUpdatedAt:"2026-10-29T16:01:00Z"},now).ok,false);
 });
 test("feed selector rejects partial accounts and positions that are absent",()=>{
-  const account={chainId:57073,updatedAt:snapshots.accountUpdatedAt,incomplete:false,warnings:[],positions:[p()]};
+  const account={chainId:57073,updatedAt:snapshots.accountUpdatedAt,incomplete:false,positionCoverageComplete:true,warnings:[],positions:[p()]};
   const markets={chainId:57073,updatedAt:snapshots.marketUpdatedAt,markets:[market()]};
   assert.equal(expected(simulateNadoFromFeeds(account,markets,nadoPositionKey(p()),-10,now)).pnlChange,"-500.00000000");
-  assert.equal(simulateNadoFromFeeds({...account,incomplete:true},markets,nadoPositionKey(p()),-10,now).ok,false);
+  assert.equal(simulateNadoFromFeeds({...account,positionCoverageComplete:false},markets,nadoPositionKey(p()),-10,now).ok,false);
+  // Older orders being paginated is unrelated to the completeness of current positions.
+  assert.equal(simulateNadoFromFeeds({...account,incomplete:true,warnings:["older orders not loaded"]},markets,nadoPositionKey(p()),-10,now).ok,true);
   assert.equal(simulateNadoFromFeeds(account,{...markets,chainId:1},nadoPositionKey(p()),-10,now).ok,false);
   assert.equal(simulateNadoFromFeeds(account,markets,"not-present",-10,now).ok,false);
 });

@@ -50,8 +50,10 @@ export async function getNadoAccount(address: string): Promise<NadoAccountRespon
   const crossAccounts = discovered.filter(s=>!s.isolated);
   const selected = crossAccounts.slice(0,ACCOUNT_LIMIT);
   const warnings: string[] = [];
-  if (discovered.length === 50) warnings.push("Nado subaccount discovery reached its page limit.");
-  if (crossAccounts.length > ACCOUNT_LIMIT) warnings.push("Additional subaccounts are not included in this first-page view.");
+  let positionCoverageComplete=true;
+  if (discovered.length === 50) { warnings.push("Nado subaccount discovery reached its page limit."); positionCoverageComplete=false; }
+  if (crossAccounts.length > ACCOUNT_LIMIT) { warnings.push("Additional subaccounts are not included in this first-page view."); positionCoverageComplete=false; }
+  if (discovered.some(s=>s.isolated)) { warnings.push("Isolated Nado subaccounts are not included in the cross-margin position view."); positionCoverageComplete=false; }
   const names = new Map(Object.values(symbols.symbols).map(s=>[s.productId,s.symbol]));
   const productIds = Array.from(names.keys()).slice(0,PRODUCT_LIMIT);
   if (names.size > PRODUCT_LIMIT) warnings.push("Open orders from some products were not queried.");
@@ -68,14 +70,14 @@ export async function getNadoAccount(address: string): Promise<NadoAccountRespon
       eng.getSubaccountSummary(id),
     ]);
     if (p.status === "fulfilled") {
-      if (p.value.positions.length >= POSITION_LIMIT) warnings.push(label+": position limit reached");
+      if (p.value.positions.length >= POSITION_LIMIT) { warnings.push(label+": position limit reached"); positionCoverageComplete=false; }
       positions.push(...p.value.positions.filter(v=>!v.amount.isZero()).map(v=>({
         id:v.openId,subaccount:label,productId:v.productId,symbol:names.get(v.productId)??"Product #"+v.productId,
         side:v.direction?"long" as const:"short" as const,marginMode:v.isolated?"isolated" as const:"cross" as const,
         size:v.amount.toString(),entryPrice:v.averageEntryPrice.toString(),
         openedAt:ts(v.openTimestamp.toNumber()),updatedAt:ts(v.updateTimestamp.toNumber()),
       })));
-    } else warnings.push(label+": positions unavailable from Nado");
+    } else { warnings.push(label+": positions unavailable from Nado"); positionCoverageComplete=false; }
     if (o.status === "fulfilled") {
       for (const row of o.value.productOrders) for (const v of row.orders) openOrders.push({
         id:v.digest,subaccount:label,productId:row.productId,symbol:names.get(row.productId)??"Product #"+row.productId,
@@ -103,6 +105,6 @@ export async function getNadoAccount(address: string): Promise<NadoAccountRespon
   return {
     source:"Nado engine + indexer",chainId,address,updatedAt:new Date().toISOString(),
     subaccounts:selected.map(s=>s.subaccountName||"(unnamed)"),subaccountHealth,
-    positions,openOrders,indexedOrders,warnings,incomplete:warnings.length>0,
+    positions,openOrders,indexedOrders,warnings,incomplete:warnings.length>0,positionCoverageComplete,
   };
 }

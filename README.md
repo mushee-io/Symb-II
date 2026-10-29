@@ -156,3 +156,7 @@ The read-only `/workspace#risk` view now provides:
 Ticker prices are not guaranteed Nado margin mark prices, settlement values or execution quotes. PnL sensitivity omits funding, fees, slippage, spread, collateral, liquidation tiers and correlated exposures. Tydro simulations remain separate and subject to their own reconciliation checks. The feature does **not** trade or provide a fully verified cross-protocol risk engine.
 
 Manual acceptance still requires a wallet with genuine Nado open perp positions and Tydro balances, plus independent comparison against the respective official protocol interfaces.
+
+### M4 Nado coverage boundary
+
+The Nado account API includes `positionCoverageComplete` independently of the generic `incomplete` flag. Market/position sensitivity refuses missing position pages, truncated subaccount discovery, non-retrieved cross-margin positions and isolated-subaccount omissions. Incomplete *order history alone* no longer blocks a position-only calculation. This is intentionally a per-position linear price PnL sensitivity, not a position aggregation or liquidation forecast.
