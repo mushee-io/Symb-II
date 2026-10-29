@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import type {NadoAccountResponse,NadoMarketsResponse} from "../nado/types.ts";
 import {crosscheckNadoPositions} from "./nado-positions.ts";
 import type {TydroAccountResponse} from "../tydro/types.ts";
@@ -43,6 +44,7 @@ export function assessWalletVerification(input:{
  const rpc=input.rpc.status==="success"?input.rpc.data:null;
  const rpcTime=rpc?Date.parse(rpc.blockTimestamp):NaN;
  const rpcValid=rpc&&rpc.chainId===57073&&/^\d+$/.test(rpc.blockNumber)&&
+   ok(rpc.observedAt,now)&&/^\d+$/.test(rpc.nativeBalanceWei)&&
    Number.isFinite(rpcTime)&&rpcTime<=now+5000&&now-rpcTime<180000;
  checks.push(check("rpc","Independent Ink RPC observation",
    rpcValid?"pass":"fail",
@@ -60,16 +62,24 @@ export function assessWalletVerification(input:{
    nValid?"Nado account read matches the wallet and has complete, recent indexer/engine observations.":
     "Nado query failed, was stale/partial, or did not match the connected Ink wallet."));
  const nPositions=nValid?n.positions.filter(p=>p.marginMode==="cross"):[];
- checks.push(check("nado-open-position","Real Nado open-position reconciliation",
-   !nValid?"not-tested":nPositions.length>0?"pass":"not-tested",
-   !nValid?"No validated Nado account data.":nPositions.length>0?
-     "At least one open cross-margin position was returned. Independent Nado UI comparison and execution tests are still required.":
-     "No open cross-margin position found. Live position and reduce-only flow remain untested."));
  const crosscheck=crosscheckNadoPositions(
    nValid?n:undefined,
    input.nadoMarkets?.status==="success"?input.nadoMarkets.data:undefined,
    now,
  );
+ // An indexed position alone is evidence of a claimed position, not a PASS:
+ // missing market data is untested; contradictory market data is a failure.
+ const positionState:VerificationState=!nValid||nPositions.length===0?
+   "not-tested":crosscheck.state;
+ checks.push(check("nado-open-position","Real Nado open-position reconciliation",
+   positionState,
+   !nValid?"No validated Nado account data.":nPositions.length===0?
+     "No open cross-margin position found. Live position and reduce-only flow remain untested.":
+     positionState==="pass"?
+     "Active cross-margin position matched a separate Nado perpetual-product and subaccount-health read. Execution remains untested.":
+     positionState==="fail"?
+     "Indexed position conflicts with Nado market or health evidence. Do not accept as verified.":
+     "Open position observed, but the independent market cross-check is unavailable."));
  checks.push(check("nado-position-market","Nado open-position product/market integrity",
    crosscheck.state,crosscheck.detail));
  const t=input.tydro.status==="success"?input.tydro.data:null;
@@ -88,15 +98,29 @@ export function assessWalletVerification(input:{
  checks.push(check("tydro-independent-pool","Independent pinned Tydro Pool reconciliation",
    direct.state,direct.detail+
      (direct.blockNumber?" Reference Ink block "+direct.blockNumber+".":"")));
- const variableDebt=tValid?t.userReserves.filter(r=>{
-   // Non-numeric values never count as verified borrowing.
-   return /^\d+(?:\.\d+)?$/.test(r.variableDebt)&&Number(r.variableDebt)>0;
- }):[];
+ const validAmount=(v:string)=>typeof v==="string"&&/^\d+(?:\.\d+)?$/.test(v);
+ const debtFieldsValid=Boolean(tValid&&validAmount(t.debtBase)&&
+   t.userReserves.every(r=>validAmount(r.variableDebt)));
+ const variableDebt=tValid&&debtFieldsValid?t.userReserves.filter(r=>
+   new BigNumber(r.variableDebt).gt(0)):[];
+ const baseDebtPositive=Boolean(tValid&&debtFieldsValid&&new BigNumber(t.debtBase).gt(0));
+ const contradictoryDebt=Boolean(tValid&&debtFieldsValid&&
+   (variableDebt.length>0)!==baseDebtPositive);
+ const borrowerState:VerificationState=!tValid?"not-tested":
+   !debtFieldsValid||contradictoryDebt?"fail":
+   variableDebt.length===0?"not-tested":direct.state;
  checks.push(check("tydro-variable-debt","Real Tydro variable-debt account",
-   !tValid?"not-tested":variableDebt.length>0?"pass":"not-tested",
-   !tValid?"No validated Tydro account data.":variableDebt.length>0?
-    "A real variable-debt reserve was returned. Independent contract comparison and simulated repay are still outstanding.":
-    "No variable-rate borrowing recorded, so borrower-specific preflight remains untested."));
+   borrowerState,
+   !tValid?"No validated Tydro account data.":
+   !debtFieldsValid||contradictoryDebt?
+     "Borrowing reserve amounts are malformed or conflict with account-level debt. Do not treat this as verified.":
+   variableDebt.length===0?
+     "No variable-rate borrowing recorded, so borrower-specific preflight remains untested.":
+   borrowerState==="pass"?
+     "Nonzero variable debt agrees with a separate pinned Tydro Pool account comparison. Repayment remains untested.":
+   borrowerState==="fail"?
+     "Debt is observed but independent Tydro Pool reconciliation disagrees.":
+     "Variable debt is observed, but independent Pool reconciliation was not completed.");
  checks.push(check("wallet-signature","Owner signature and smart-wallet control",
   "not-tested",
   "This inspection does not request a signature. Use a separate, explicit one-use challenge to validate EOA or ERC-1271 control."));
