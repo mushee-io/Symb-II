@@ -1,3 +1,4 @@
+import {readBoundedJSON,PayloadTooLargeError} from "@/lib/security/request";
 import { NextRequest,NextResponse } from "next/server";
 import { getAddress,isAddress } from "viem";
 import { generateText } from "ai";
@@ -14,9 +15,9 @@ function reply(error:string,status:number){return NextResponse.json({error},{sta
 export async function POST(req:NextRequest){
   if(!isAIConfigured())return reply("AI model not configured; use guided analysis.",503);
   if(req.headers.get("origin")!==new URL(req.url).origin)return reply("Origin mismatch.",403);
-  if(Number(req.headers.get("content-length")||0)>4096)return reply("Payload too large.",413);
   let data:unknown;
-  try{data=await req.json();}catch{return reply("Invalid JSON.",400);}
+  try{data=await readBoundedJSON(req,4096);}
+  catch(err){return reply(err instanceof PayloadTooLargeError?"Payload too large.":"Invalid JSON.",err instanceof PayloadTooLargeError?413:400);}
   if(!data||typeof data!=="object")return reply("Invalid request.",400);
   const b=data as Record<string,unknown>;
   if(typeof b.wallet!=="string"||!isAddress(b.wallet,{strict:false})||

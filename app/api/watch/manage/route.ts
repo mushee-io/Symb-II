@@ -1,3 +1,4 @@
+import {readBoundedJSON,PayloadTooLargeError} from "@/lib/security/request";
 import {NextRequest,NextResponse} from "next/server";
 import {getAddress,isAddress} from "viem";
 import {isValidSignedChallenge} from "@/lib/agent/auth";
@@ -11,8 +12,8 @@ export async function POST(req:NextRequest){
   if(!isWatchConfigured())return fail("Persistent watch is not configured.",503);
   if(req.headers.get("origin")!==new URL(req.url).origin)return fail("Origin mismatch.",403);
   let payload:unknown;
-  try{const body=await req.text();if(body.length>4096)return fail("Request too large.",413);payload=JSON.parse(body);}
-  catch{return fail("Invalid JSON.",400);}
+  try{payload=await readBoundedJSON(req,4096);}
+  catch(err){return fail(err instanceof PayloadTooLargeError?"Request too large.":"Invalid JSON.",err instanceof PayloadTooLargeError?413:400);}
   if(!payload||typeof payload!=="object")return fail("Invalid request.",400);
   const p=payload as Record<string,unknown>;
   if(typeof p.wallet!=="string"||!isAddress(p.wallet,{strict:false})||
@@ -30,7 +31,7 @@ export async function POST(req:NextRequest){
   if(!await isValidSignedChallenge({wallet,challenge:p.message,expectedMessage:expected,signature:p.signature}))
     return fail("Signature does not match this wallet.",401);
   try{
-    if(!await acquireLimit("watch-manage:"+wallet.toLowerCase(),3))
+    if(!await acquireLimit("watch-manage:"+p.action+":"+wallet.toLowerCase(),3))
       return fail("Watch updates are rate-limited.",429);
     if(p.action==="subscribe"){await watchSubscribe(wallet);return NextResponse.json({subscribed:true},{headers});}
     if(p.action==="unsubscribe"){await watchUnsubscribe(wallet);return NextResponse.json({subscribed:false,events:[]},{headers});}
