@@ -1,5 +1,5 @@
 import "server-only";
-import { EngineQueryClient, ENGINE_CLIENT_ENDPOINTS } from "@nadohq/engine-client";
+import { EngineClient, ENGINE_CLIENT_ENDPOINTS } from "@nadohq/engine-client";
 import { IndexerClient, INDEXER_CLIENT_ENDPOINTS } from "@nadohq/indexer-client";
 import { isAddress } from "viem";
 import type { NadoMarket, NadoMarketsResponse, NadoAccountResponse, NadoPosition, NadoOrder } from "./types";
@@ -16,7 +16,7 @@ function indexer() {
   return c;
 }
 function engine() {
-  const c = new EngineQueryClient({ url: ENGINE_CLIENT_ENDPOINTS.inkMainnet, clientType: "symb-ii-readonly" });
+  const c = new EngineClient({ url: ENGINE_CLIENT_ENDPOINTS.inkMainnet, clientType: "symb-ii-readonly" });
   c.axiosInstance.defaults.timeout = 10000;
   return c;
 }

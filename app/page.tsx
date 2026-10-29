@@ -37,9 +37,9 @@ export default function HomePage() {
         </section>
         <section id="integrations" className="section integrations-section">
           <div className="shell">
-            <div className="section-heading section-heading-split"><div><span className="eyebrow section-label">02 — NATIVE ECOSYSTEM</span><h2>Made for Ink.<br/><span>Connected by design.</span></h2></div><p>Two cornerstone integrations on the roadmap. Protocol connectivity and transaction functionality are not shipped in this foundation release.</p></div>
+            <div className="section-heading section-heading-split"><div><span className="eyebrow section-label">02 — NATIVE ECOSYSTEM</span><h2>Made for Ink.<br/><span>Connected by design.</span></h2></div><p>Nado read-only market and account lookup is now integrated. Tydro data and transaction execution are planned for later milestones.</p></div>
             <div className="integration-grid">
-              <div className="integration-card"><div className="integration-icon nado-icon">N</div><div className="integration-meta">TRADING / ROADMAP M2</div><h3>Nado</h3><p>Trading positions, order history, funding and market data—planned through the official integration surface.</p><a href="https://nado.finance/" target="_blank" rel="noreferrer">Visit Nado <ArrowUpRight size={15}/></a></div>
+              <div className="integration-card"><div className="integration-icon nado-icon">N</div><div className="integration-meta">TRADING / READ-ONLY M2</div><h3>Nado</h3><p>Real Nado tickers, wallet-linked positions and order records, available in the Symb-II workspace without signing.</p><a href="https://nado.finance/" target="_blank" rel="noreferrer">Visit Nado <ArrowUpRight size={15}/></a></div>
               <div className="integration-card"><div className="integration-icon tydro-icon">T</div><div className="integration-meta">LENDING / ROADMAP M3</div><h3>Tydro</h3><p>Collateral, supply, borrow, repay and health-factor monitoring, powered by Ink-native lending infrastructure.</p><a href="https://tydro.com/" target="_blank" rel="noreferrer">Visit Tydro <ArrowUpRight size={15}/></a></div>
             </div>
           </div>
