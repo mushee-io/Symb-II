@@ -35,7 +35,7 @@ export async function POST(req:NextRequest){
  const wallet=outcome.wallet;
  const verifiedAt=new Date().toISOString();
  return NextResponse.json({
-  verified:true,wallet,verifiedAt,expiresAt:new Date(Date.now()+120000).toISOString(),
+  verified:true,wallet,verifiedAt,expiresAt:outcome.expiresAt,
   signerSupport:"EOA or deployed ERC-1271 on Ink (57073)",
   oneUseNonceConsumed:true,
   scope:"ephemeral-read-only-control-check",
