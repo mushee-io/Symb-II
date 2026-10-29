@@ -51,6 +51,44 @@ const checks=[
      throw Error("Unexpected watch permissions or delivery");
    return v.enabled?"watch configured (not real-time)":"watch safely disabled";
  }],
+ ["M8 wallet verification config",async()=>{
+   const v=await read("/api/verification/config");
+   if(v.chainId!==57073||typeof v.enabled!=="boolean"||
+      v.serverSessionIssued!==false||v.permissionGranted!==false||
+      v.executionEnabled!==false||v.redisOneUseNonce!==true)
+     throw Error("M8 server proof configuration exposes unsafe behavior");
+   return v.enabled?"opt-in proof configured (private acceptance untested)":"one-use server proof safely disabled";
+ }],
+ ["M8 proof challenge cross-origin rejection",async()=>{
+   const v=await read("/api/verification/config");
+   const response=await fetch(root+"/api/verification/challenge",{
+    method:"POST",headers:{"Origin":"https://cross-origin-probe.invalid",
+     "Content-Type":"application/json"},
+    body:JSON.stringify({wallet:"0x0000000000000000000000000000000000000001"}),
+    cache:"no-store",signal:AbortSignal.timeout(15000),
+   });
+   const expected=v.enabled?403:503;
+   if(response.status!==expected)throw Error("M8 cross-origin challenge response "+response.status+" (expected "+expected+")");
+   const body=await response.json();
+   if(body.challengeId||body.message||body.permissionGranted||body.executionEnabled)
+     throw Error("M8 cross-origin challenge returned private or unsafe fields");
+   return "cross-origin request rejected without consuming a nonce";
+ }],
+ ["M8 proof confirmation cross-origin rejection",async()=>{
+   const v=await read("/api/verification/config");
+   const response=await fetch(root+"/api/verification/verify",{
+    method:"POST",headers:{"Origin":"https://cross-origin-probe.invalid",
+     "Content-Type":"application/json"},
+    body:JSON.stringify({wallet:"0x0000000000000000000000000000000000000001"}),
+    cache:"no-store",signal:AbortSignal.timeout(15000),
+   });
+   const expected=v.enabled?403:503;
+   if(response.status!==expected)throw Error("M8 cross-origin verify response "+response.status+" (expected "+expected+")");
+   const body=await response.json();
+   if(body.verified||body.oneUseNonceConsumed||body.permissionGranted||body.executionEnabled)
+     throw Error("M8 cross-origin verification granted permissions");
+   return "cross-origin proof refused before signature verification";
+ }],
  ["Nado public markets",async()=>{
    const v=await read("/api/nado/markets");
    if(v.chainId!==57073||v.source!=="Nado indexer"||!Array.isArray(v.markets)||!v.markets.length)
