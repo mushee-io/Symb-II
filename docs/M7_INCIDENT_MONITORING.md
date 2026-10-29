@@ -1,10 +1,10 @@
 # M7 — production incident monitoring and activation
 
-## Public outage notifications (code present, activation requires merge)
+## Public outage notifications (deployed)
 
 The [Production incident monitor](../.github/workflows/production-incident-monitor.yml)
-is an independent, scheduled GitHub Actions check of the **eight public read-only
-production endpoints** validated by `scripts/smoke.mjs`. It runs twice per
+is an independent, scheduled GitHub Actions check of the **11 public read-only and safe origin-rejection
+production checks** validated by `scripts/smoke.mjs`. It runs twice per
 hour (at UTC minutes 17 and 47) and supports manual workflow dispatch.
 
 - A failed smoke produces a **failing Actions run** and opens one deduplicated
@@ -31,7 +31,19 @@ A malformed/incomplete diagnostic cannot change a genuine 503 into a success.
 
 The protected endpoint is **not** pinged by the GitHub public monitor.
 Its existing schedule and Vercel logs should be inspected separately.
-Successful public smoke does not establish protected probe readiness.
+Successful public smoke does not establish protected probe readiness. The
+protected probe now performs a **real ephemeral one-use Redis drill** if Redis
+credentials are configured: create a fresh randomly keyed value using `SET NX
+EX 30`, check the TTL, consume it atomically with `GETDEL`, and require a
+subsequent replay attempt to return null. A private `DEL` cleanup is attempted
+regardless of the test outcome. The probe never returns the ephemeral value or
+private endpoint; it returns HTTP 503 if configured Redis fails the drill.
+If Redis is intentionally unconfigured, this stage is marked
+`not-configured`, not passed. A missing Redis diagnostic is unhealthy.
+
+This protected synthetic nonce test **does not verify a real wallet
+signature**, but establishes that the configured storage primitives can
+support one-use M8 challenges.
 
 ## Missing production activation
 
@@ -46,7 +58,8 @@ their values to Git or browser-exposed `NEXT_PUBLIC_` configuration):
   generative model support is required
 
 After a production redeployment, validate the protected probe against each
-provider, confirm Redis `PING` succeeds, then enable and test
+provider, confirm Redis `PING`, one-use `SET NX EX`, `TTL`, first `GETDEL` and replay
+`GETDEL` succeed in the protected diagnostic, then enable and test
 `SYMB_II_WATCH_ENABLED`, `SYMB_II_PROPOSALS_ENABLED`,
 `SYMB_II_PREFLIGHT_ENABLED` and `SYMB_II_AI_ENABLED` **one at a time**.
 Do not switch them on until credentials and their service-specific behavior
