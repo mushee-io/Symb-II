@@ -7,7 +7,12 @@ import {
   reviewSignatureMessage,packetValidForAcknowledgement,PROPOSAL_TTL_MS,
 } from "../lib/proposals/policy.ts";
 // Unit tests use a deterministic Ink EOA-state fixture. No public RPC is needed.
-const authRuntime={chainId:async()=>57073,code:async()=>"0x",contractSignature:async()=>"0xffffffff"};
+const authRuntime={
+ chainId:async()=>57073,
+ block:async number=>({number:number??123456n,hash:"0x"+"ab".repeat(32)}),
+ code:async(_wallet,number)=>{assert.equal(number,123456n);return "0x";},
+ contractSignature:async()=>"0xffffffff",
+};
 const isValidSignedChallenge=(args)=>verifySignedChallenge(args,authRuntime);
 const signer=privateKeyToAccount("0x"+"2".repeat(64));
 const another=privateKeyToAccount("0x"+"3".repeat(64));
