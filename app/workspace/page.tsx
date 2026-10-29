@@ -16,6 +16,7 @@ const steps = [
   { number:"03",title:"Tydro integration",description:"Read-only reserves, lending balances and health",status:"Implemented" },
   { number:"04",title:"Risk intelligence",description:"Separate Nado PnL, Tydro health sensitivity and exposure inventory",status:"In progress" },
   { number:"05",title:"AI capital operator",description:"Read-only, source-linked capital analysis preview",status:"Preview" },
+  { number:"06",title:"Portfolio Rescue Lab",description:"Non-executable Nado and Tydro size/debt sensitivity",status:"Preview" },
 ];
 
 export default function Workspace() {

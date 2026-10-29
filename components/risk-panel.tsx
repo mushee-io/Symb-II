@@ -8,6 +8,7 @@ import { NadoStress } from "@/components/nado-stress";
 import { ExposureOverview } from "@/components/exposure-overview";
 import { RiskAlerts } from "@/components/risk-alerts";
 import { PersistentWatch } from "@/components/persistent-watch";
+import { RescueLab } from "@/components/rescue-lab";
 import type { NadoAccountResponse } from "@/lib/nado/types";
 import type { TydroAccountResponse } from "@/lib/tydro/types";
 import { nadoRiskState, tydroRiskState, type RiskState } from "@/lib/risk/status";
@@ -74,6 +75,7 @@ export function RiskPanel(){
       </div>}
     {connected && address && <RiskAlerts wallet={address} nado={{status:nado.isPending?"loading":nado.isError?"error":"success",data:nado.data}} tydro={{status:tydro.isPending?"loading":tydro.isError?"error":"success",data:tydro.data}} fetching={nado.isFetching||tydro.isFetching}/>}
     {connected && address && <PersistentWatch key={address.toLowerCase()} wallet={address}/>}
+    {connected && address && <RescueLab wallet={address} nado={nado.data} tydro={tydro.data}/>}
     {connected && nado.data && tydro.data && <ExposureOverview nado={nado.data} tydro={tydro.data}/>}
     {connected && nado.data && <NadoStress account={nado.data}/>}
     {connected && tydro.data && <TydroStress account={tydro.data}/>}

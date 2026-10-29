@@ -491,3 +491,42 @@ h1,h2,h3,p { margin-top: 0; }
 .persistent-watch-footer{border-top:1px solid #3a5243;padding-top:14px;margin-top:15px;display:flex;gap:9px;align-items:flex-start;font-size:10px;line-height:1.7;color:#9db7a5}
 .persistent-watch-footer svg{flex-shrink:0}
 @media(max-width:550px){.persistent-watch{padding:16px}.persistent-watch-event>div{flex-direction:column}}
+
+/* M06 preview: Portfolio Rescue Lab. Protocol-separated, no transaction signing */
+.rescue-lab{background:linear-gradient(145deg,#202c23 0%,#151f1a 100%);border:1px solid #527056;border-radius:16px;padding:27px;margin-top:22px}
+.rescue-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:23px}
+.rescue-head h2{font-size:clamp(25px,3.1vw,37px);line-height:1.14;letter-spacing:-.05em;margin:10px 0 12px}
+.rescue-head p{font-size:12px;color:#a7baa9;line-height:1.75;max-width:760px}
+.rescue-lock{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-size:10px;color:#cbf7d5;border-radius:25px;background:#304d39;border:1px solid #5a8561;padding:10px 12px}
+.rescue-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.rescue-protocol{border:1px solid #385340;background:#18261d;border-radius:12px;padding:20px;min-width:0}
+.rescue-protocol-header{display:flex;align-items:center;gap:10px}
+.rescue-protocol-header strong{color:#f0fbf1;font-size:18px}
+.rescue-protocol-header small{display:block;color:#9eb4a4;font-size:10px;margin-top:4px}
+.rescue-indicator{width:12px;height:12px;border-radius:50%;background:#b9c4fa}
+.rescue-indicator.tydro{background:#a9e8bf}
+.rescue-description{font-size:11px;line-height:1.7;color:#9cb3a1;margin:16px 0 19px}
+.rescue-field{font-size:11px;color:#b5cdbb;font-weight:650;display:flex;flex-direction:column;gap:8px;margin-top:17px}
+.rescue-field select{width:100%;color:#e5f7e8;background:#102016;border-radius:8px;border:1px solid #4e6955;padding:11px;font:inherit;font-size:12px}
+.rescue-presets{display:flex;flex-wrap:wrap;gap:7px}
+.rescue-presets button{background:#213529;border:1px solid #4b6450;border-radius:8px;color:#bdd7c3;padding:8px 10px;cursor:pointer;font-size:11px}
+.rescue-presets button.selected{background:#446c4e;border-color:#8cbd92;color:#f4fff4;font-weight:700}
+.rescue-scenario{border:1px solid #41624a;border-radius:10px;background:#23392a;padding:17px;margin-top:21px}
+.rescue-scenario>div{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rescue-scenario>div span{font-size:11px;color:#abc9b2;max-width:210px;line-height:1.5}
+.rescue-scenario>div strong{font-size:16px;color:#f6fff6;overflow-wrap:anywhere;text-align:right;font-variant-numeric:tabular-nums}
+.rescue-scenario>svg{color:#acd9b8;margin:12px 0}
+.rescue-scenario>p{font-size:10px;line-height:1.7;color:#b2c7b6;margin:15px 0 0;border-top:1px solid #4b6752;padding-top:11px}
+.rescue-empty{display:flex;align-items:flex-start;gap:9px;padding:14px;background:#302b23;border:1px solid #725d3c;border-radius:9px;color:#f0d3b3;font-size:11px;line-height:1.6}
+.rescue-empty svg{flex:0 0 16px}
+.rescue-empty button{background:none;border:none;color:#d5edcf;text-decoration:underline;cursor:pointer}
+.rescue-assumptions{margin-top:17px;border-top:1px solid #35503c;padding-top:13px}
+.rescue-assumptions strong{font-size:11px;color:#d2eace}
+.rescue-assumptions ul{margin:11px 0 0;padding-left:18px;display:grid;gap:8px}
+.rescue-assumptions li{font-size:10px;line-height:1.6;color:#9fb5a4}
+.rescue-conclusion{border:1px solid #586246;background:#2b3223;border-radius:10px;padding:16px;margin-top:17px;display:flex;align-items:flex-start;gap:12px}
+.rescue-conclusion svg{flex:0 0 18px;color:#d8e6a4}
+.rescue-conclusion strong{font-size:13px;color:#edf2ce}
+.rescue-conclusion p{font-size:11px;line-height:1.7;color:#c1cbb1;margin:7px 0 0}
+@media(max-width:840px){.rescue-grid{grid-template-columns:1fr}.rescue-head{flex-direction:column}.rescue-lock{align-self:flex-start}}
+@media(max-width:510px){.rescue-lab{padding:15px}.rescue-protocol{padding:15px}.rescue-scenario>div{align-items:flex-start;flex-direction:column;gap:7px}.rescue-scenario>div strong{text-align:left}}
