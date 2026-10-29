@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, AlertTriangle, ShieldCheck, ShieldAlert, Wallet } from "lucide-react";
 import { ink } from "@/lib/ink";
 import { TydroStress } from "@/components/tydro-stress";
+import { NadoStress } from "@/components/nado-stress";
+import { ExposureOverview } from "@/components/exposure-overview";
 import type { NadoAccountResponse } from "@/lib/nado/types";
 import type { TydroAccountResponse } from "@/lib/tydro/types";
 import { nadoRiskState, tydroRiskState, type RiskState } from "@/lib/risk/status";
@@ -35,7 +37,7 @@ export function RiskPanel(){
     <div className="nado-heading"><div><span className="eyebrow">M04 / RISK MONITOR FOUNDATIONS</span><h2 id="risk-panel-title">Protocol risk monitor</h2><p>Side-by-side, separately calculated Nado margin health and Tydro lending health. No shared collateral, no fictitious combined liquidation level.</p></div>
       <span className="risk-pill">READ-ONLY SIGNALS</span>
     </div>
-    {!connected?<div className="nado-state nado-wallet-state"><Wallet size={24}/><strong>Connect an Ink wallet to inspect risk</strong><span>No signatures or private credentials required. The Tydro price shock simulator unlocks when your wallet is connected.</span></div>:
+    {!connected?<div className="nado-state nado-wallet-state"><Wallet size={24}/><strong>Connect an Ink wallet to inspect risk</strong><span>No signatures or private credentials required. Connect to inspect the Nado and Tydro what-if models and separate exposure inventories.</span></div>:
       <div className="risk-cards">
         <div className="risk-card">
           <div className="risk-card-head"><span>Nado</span><a href="#nado">Open positions <ArrowUpRight size={13}/></a></div>
@@ -68,7 +70,9 @@ export function RiskPanel(){
             </>}
         </div>
       </div>}
+    {connected && nado.data && tydro.data && <ExposureOverview nado={nado.data} tydro={tydro.data}/>}
+    {connected && nado.data && <NadoStress account={nado.data}/>}
     {connected && tydro.data && <TydroStress account={tydro.data}/>}
-    <div className="risk-warning"><ShieldAlert size={18}/><span>Risk status above reflects snapshots; the optional Tydro price-shock model below uses bounded simplifying assumptions and is not a guarantee. Nado maintenance health and Tydro health factor have different units and liquidation rules. A positive reading does not ensure safety during volatile markets or stale data.</span></div>
+    <div className="risk-warning"><ShieldAlert size={18}/><span>Risk status above reflects snapshots; the optional Nado and Tydro what-if models use bounded simplifying assumptions and is not a guarantee. Nado maintenance health and Tydro health factor have different units and liquidation rules. A positive reading does not ensure safety during volatile markets or stale data.</span></div>
   </section>;
 }

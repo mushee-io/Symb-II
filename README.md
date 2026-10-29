@@ -2,7 +2,7 @@
 
 **Your AI Capital Operator for Ink.** An independent, Ink-exclusive application. **Not a decentralized exchange.**
 
-## Current milestone: M3 — Tydro on-chain read-only integration
+## Current milestone: M4 — Protocol-specific risk intelligence (in progress)
 
 This repository contains a responsive Next.js application with:
 
@@ -55,7 +55,7 @@ M1 uses injected EIP-1193 wallets. It works when a compatible extension/in-app b
 
 - **M2 (implemented):** Nado read-only markets, wallet-associated positions, open orders, indexed order activity
 - **M3 (implemented in code):** direct Ink mainnet Tydro reserve data and wallet borrowing/health views
-- **M4:** Deterministic risk engine and verified portfolio aggregation
+- **M4 (in progress):** Nado position PnL sensitivity, Tydro health scenarios and cross-protocol exposure inventory; full protocol risk simulation pending
 - **M5:** AI analysis grounded in actual account state and approved tools
 - **M6:** Explicit user-approved transactions, complete audit trails
 - **M7:** Mobile wallet connectivity, notifications, deeper responsive workflows
@@ -144,3 +144,15 @@ The calculation independently values each Tydro supplied collateral and borrowed
 - The user has no outstanding debt, invalid collateral, missing positions or invalid asset/range inputs.
 
 The model assumes fixed token balances, reserve liquidation thresholds, all other oracle prices, and no intermediate trades, price feed updates or interest accrual. It is **not a liquidation guarantee, portfolio-wide risk simulator, full Nado stress test or execution advice**. Mathematical boundary tests run in CI (`npm run test`). Test with a real active Tydro account and compare to the Tydro app before relying on it.
+
+## M4 — Nado perpetual sensitivity and exposure inventory
+
+The read-only `/workspace#risk` view now provides:
+
+- **Nado linear perpetual position PnL sensitivity:** choose a real, open Nado perpetual position, then shock its matching public ticker between −50% and +50%. The model estimates the **change in quote-denominated position PnL**, not an account liquidation price, risk tier, equity or margin-health projection. It uses the Indexer market's `productId` to match the position and refuses stale/missing quotes and partial account coverage. Quote units (e.g. USDT0) are displayed explicitly, not converted into fictitious USD.
+- **Protocol-separated position inventory:** a single read-only listing of Nado open position quantities and Tydro native-token supplied/borrowed amounts; validates that both sources belong to the same Ink address. It never sums unlike units or assumes transferable collateral.
+- **Tests:** Nado long/short sign, zero and fractional shocks, quote-product matching, time-window/stale guards, source completeness and inventory account isolation.
+
+Ticker prices are not guaranteed Nado margin mark prices, settlement values or execution quotes. PnL sensitivity omits funding, fees, slippage, spread, collateral, liquidation tiers and correlated exposures. Tydro simulations remain separate and subject to their own reconciliation checks. The feature does **not** trade or provide a fully verified cross-protocol risk engine.
+
+Manual acceptance still requires a wallet with genuine Nado open perp positions and Tydro balances, plus independent comparison against the respective official protocol interfaces.

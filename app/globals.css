@@ -366,3 +366,18 @@ h1,h2,h3,p { margin-top: 0; }
 .stress-unavailable svg{flex-shrink:0}
 .stress-disclaimer{color:#8fa998;font-size:10px;line-height:1.7;border-top:1px solid #36513d;margin-top:22px;padding-top:15px}
 @media(max-width:760px){.stress-panel{padding:16px}.stress-controls{grid-template-columns:1fr}.stress-result{padding:15px;gap:10px}.stress-result>div>strong{font-size:25px}}
+
+/* M04: Nado linear-perp sensitivity and protocol-separated exposure inventory */
+.nado-stress{margin-top:20px;border-color:#4c4766;background:linear-gradient(140deg,#211f30,#151c20)}
+.nado-stress .stress-emblem{background:#35304f;color:#dacdff}
+.nado-stress .stress-result>div>strong small{font-size:12px;letter-spacing:0;color:#afbea9}
+.nado-stress .stress-range{width:100%}
+.risk-retry{background:none;border:none;color:#c6f4d0;text-decoration:underline;cursor:pointer}
+.exposures-panel{border:1px solid #405c49;border-radius:13px;background:#17251c;margin-top:20px;padding:24px}
+.exposure-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0}
+.exposure-summary>div{border:1px solid #35543d;border-radius:10px;padding:17px 18px;background:#1e3024;display:flex;flex-direction:column;gap:9px}
+.exposure-summary span{font-size:11px;color:#a3bda8}
+.exposure-summary strong{font-size:29px;font-variant-numeric:tabular-nums;color:#eefcf0}
+.exposure-summary small{font-size:10px;line-height:1.5;color:#91a698}
+.exposure-amount{overflow-wrap:anywhere;max-width:230px;font-variant-numeric:tabular-nums}
+@media(max-width:700px){.exposures-panel{padding:16px}.exposure-summary{grid-template-columns:1fr}}
