@@ -160,3 +160,12 @@ Manual acceptance still requires a wallet with genuine Nado open perp positions 
 ### M4 Nado coverage boundary
 
 The Nado account API includes `positionCoverageComplete` independently of the generic `incomplete` flag. Market/position sensitivity refuses missing position pages, truncated subaccount discovery, non-retrieved cross-margin positions and isolated-subaccount omissions. Incomplete *order history alone* no longer blocks a position-only calculation. This is intentionally a per-position linear price PnL sensitivity, not a position aggregation or liquidation forecast.
+
+## M4 — Active-tab risk watch
+
+The workspace now evaluates Nado margin health and Tydro lending health with deterministic, independently tested alert rules (including provider errors, stale data, wrong wallet/network, incomplete Nado position coverage, invalid health readings and protocol-specific warning thresholds).
+
+- In-app warning cards refresh when the Nado/Tydro account queries refresh while the browser tab is running.
+- Browser notifications are **opt-in** and request permission only on explicit user interaction. Dedupe prevents repeated notifications for unchanged conditions; users can disable notifications.
+- **No promise of 24/7 delivery.** Browser throttling, tab close, sleep, disconnection and network errors may stop updates. The alert engine does not place trades, liquidate accounts or initiate rescue actions.
+- A persistent server worker, authenticated wallet subscriptions, a durable database, retries, rate limits and outgoing delivery infrastructure remain **not implemented**. Do not advertise always-on risk alerts until those components are actually operational and tested.
