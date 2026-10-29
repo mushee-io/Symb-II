@@ -65,15 +65,20 @@ export function WalletVerification(){
     (async():Promise<Source<InkRpcObservation>>=>{
       if(!client)return {status:"error"};
       try{
-       const [chain,block,code,balance]=await Promise.all([
-        client.getChainId(),client.getBlock(),
-        client.getCode({address:currentAddress}),
-        client.getBalance({address:currentAddress}),
+       const block=await client.getBlock();
+       const pinnedBlock=block.number;
+       const [chain,code,balance,confirmation]=await Promise.all([
+        client.getChainId(),
+        client.getCode({address:currentAddress,blockNumber:pinnedBlock}),
+        client.getBalance({address:currentAddress,blockNumber:pinnedBlock}),
+        client.getBlock({blockNumber:pinnedBlock}),
        ]);
+       if(!block.hash||confirmation.hash!==block.hash)
+        throw Error("Ink RPC reference block changed during inspection.");
        return {status:"success",data:{
-        chainId:chain,blockNumber:block.number.toString(),
+        chainId:chain,blockNumber:pinnedBlock.toString(),blockHash:block.hash,
         blockTimestamp:new Date(Number(block.timestamp)*1000).toISOString(),
-        code:code??"",nativeBalanceWei:balance.toString(),observedAt:new Date().toISOString(),
+        code:code??"0x",nativeBalanceWei:balance.toString(),observedAt:new Date().toISOString(),
        }};
       }catch{return {status:"error"};}
     })(),
@@ -94,11 +99,11 @@ export function WalletVerification(){
            functionName:"getUserEMode",args:[currentAddress],blockNumber:number}),
        ]);
        const again=await client.getBlock({blockNumber:number});
-       if(block.hash!==again.hash)throw Error("Pinned Ink block reorganized");
+       if(!block.hash||block.hash!==again.hash)throw Error("Pinned Ink block reorganized");
        return {status:"success",data:{
          observedAt:new Date().toISOString(),
          blockTimestamp:new Date(Number(block.timestamp)*1000).toISOString(),
-         blockNumber:number.toString(),chainId:chain,
+         blockNumber:number.toString(),blockHash:block.hash,chainId:chain,
          verifiedProviderPool:pool,oracleBaseUnit:unit.toString(),
          collateralBaseRaw:accountData[0].toString(),
          debtBaseRaw:accountData[1].toString(),
@@ -283,6 +288,15 @@ export function WalletVerification(){
       <div><strong>{activeReport.notTested}</strong><span>Not tested</span></div>
      </div>
      <p className="ops-note">Observed {new Date(activeReport.checkedAt).toLocaleString()}. Reports expire after three minutes. This is not a wallet ownership certificate or permission to transact.</p>
+     {activeReport.referenceBlocks.length>0&&<div aria-label="Public Ink reference blocks">
+      <h3>Inspectable block evidence</h3>
+      <p className="ops-note">These public Ink block references can be compared against an independent explorer or RPC. They do not prove a wallet signature or settlement.</p>
+      {activeReport.referenceBlocks.map(b=><div className="ops-check" key={b.source}>
+       <span className="ops-check-state pass">INK</span>
+       <div><strong>{b.source==="tydro-pool"?"Pinned Tydro Pool block":"Independent wallet RPC block"} #{b.blockNumber}</strong>
+        <p><code>{b.blockHash}</code></p></div>
+      </div>)}
+     </div>}
      {matrix&&<div aria-label="M8 real-wallet acceptance gates">
       <h3>M8 acceptance gates — read-only</h3>
       <p className="ops-note">An active Nado position and genuine Tydro debt must be independently reconciled. Local and optional one-use server signature tests are separate; neither creates a trading permission, and no audit or protected preflight is asserted by this lab.</p>
