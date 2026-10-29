@@ -31,21 +31,25 @@ export function assessM8Acceptance(
  proof:LocalSignatureEvidence|null=null,
  now=Date.now(),
 ):M8Acceptance{
+ const reportAt=Date.parse(report.checkedAt);
+ const reportFresh=Number.isFinite(reportAt)&&reportAt<=now+5000&&now-reportAt<180000;
+ const freshState=(ids:string[]):VerificationState=>
+  reportFresh?requireChecks(report,ids):"fail";
  const proofExpiry=proof?Date.parse(proof.expiresAt):NaN;
  const localSigned=Boolean(proof&&proof.wallet.toLowerCase()===report.wallet.toLowerCase()&&
   Number.isFinite(proofExpiry)&&proofExpiry>now&&proofExpiry-now<=120000&&
   /^(EOA|ERC-1271)/.test(proof.method));
  const gates:M8AcceptanceGate[]=[
   {id:"public-data",title:"Fresh Ink wallet and provider data",
-   state:requireChecks(report,["connection","rpc","code","nado","tydro"]),
+   state:freshState(["connection","rpc","code","nado","tydro"]),
    evidenceScope:"public-read",
    detail:"Wallet address, chain and live data integrity. No ownership or trade execution is inferred."},
   {id:"active-perp",title:"Observed active Nado perpetual position",
-   state:requireChecks(report,["nado-open-position","nado-position-market"]),
+   state:freshState(["nado-open-position","nado-position-market"]),
    evidenceScope:"public-read",
    detail:"Requires a real active position with matching product and subaccount health; not proof of executable orders."},
   {id:"active-borrow",title:"Observed Tydro variable debt and pinned Pool comparison",
-   state:requireChecks(report,["tydro-variable-debt","tydro-independent-pool"]),
+   state:freshState(["tydro-variable-debt","tydro-independent-pool"]),
    evidenceScope:"public-read",
    detail:"Requires a real debt-bearing wallet and an independent block-pinned Pool/account reconciliation."},
   {id:"local-wallet-signature",title:"Optional local wallet-signature self-test",
