@@ -83,3 +83,21 @@ are verified in the actual deployment.
 
 Transaction execution remains disabled. Neither these monitors nor a passing
 CI run authorize automated trading, broadcasting or token approvals.
+
+## Default-branch deployment drift monitor
+
+`.github/workflows/production-release-drift.yml` independently checks the
+actual latest merged `main` commit against the public `/api/health`
+deployment SHA every 30 minutes. It grants 30 minutes from the commit timestamp
+for deployment, then raises a deduplicated GitHub issue if the production site
+still serves a healthy but older release. After the exact revision is observed,
+the monitor comments and closes that issue automatically. Unavailable or
+invalid production health data is **indeterminate**, and never auto-closes an
+existing drift incident (public outage monitoring handles endpoint failures).
+
+This is a detector, **not a deployment runner or a Vercel billing workaround**.
+It does not call deployment APIs or use API credentials. A GitHub green build
+cannot be misrepresented as a production release; the SHA must match. A
+Vercel deployment quota, team restriction, or Git integration failure still
+requires an authorized operator to resolve it. Scheduled GitHub Actions are
+best effort, and real pager delivery must be independently configured.

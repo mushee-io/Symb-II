@@ -1,0 +1,73 @@
+name: Production release drift
+# A healthy old deployment is NOT the latest release. Check default branch
+# separately from endpoint-uptime monitoring, with no Vercel API usage.
+on:
+  schedule:
+    - cron: "29,59 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: symb-ii-production-release-drift
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Compare live release with latest merged main
+        run: |
+          node scripts/release-drift.mjs > release-drift.json
+          cat release-drift.json
+      - name: Track persistent stale deployment as one GitHub incident
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs=require('node:fs');
+            const report=JSON.parse(fs.readFileSync('release-drift.json','utf8'));
+            const {owner,repo}=context.repo;
+            const title='[M7] Symb-II latest main commit not deployed';
+            const marker='<!-- symb-ii-m7-release-drift -->';
+            const run='https://github.com/'+owner+'/'+repo+'/actions/runs/'+context.runId;
+            const issues=await github.paginate(github.rest.issues.listForRepo,{
+              owner,repo,state:'open',per_page:100
+            });
+            const incident=issues.find(i=>!i.pull_request&&
+              i.title===title&&i.body?.includes(marker));
+            if(report.state==='drift'){
+              if(!incident){
+                const body=[
+                  marker,
+                  'Production serves a healthy **older** release while latest main has not deployed after the 30-minute grace period.',
+                  'Latest main commit: '+report.expectedCommit,
+                  'Observed live release: '+(report.liveCommit||'unknown'),
+                  'Detection: '+report.checkedAt,
+                  'Check: '+run,
+                  '',
+                  'Inspect Vercel quotas, Git integration and deployment permissions. Do not mark M7/M8 merged work live until the exact revision is deployed.',
+                  'This monitor does not trigger a deployment, enable trading, or verify private Redis and wallet acceptance.'
+                ].join('\n');
+                const {data}=await github.rest.issues.create({owner,repo,title,body});
+                core.warning('Opened release drift issue #'+data.number);
+              }else core.warning('Release drift remains open as issue #'+incident.number);
+            }else if(report.state==='current'&&incident){
+              await github.rest.issues.createComment({owner,repo,issue_number:incident.number,
+                body:'Latest main release verified at '+report.checkedAt+'. [Monitor run]('+run+'). Real-wallet and private-service gates remain independent.'});
+              await github.rest.issues.update({owner,repo,issue_number:incident.number,
+                state:'closed',state_reason:'completed'});
+              core.notice('Closed resolved release drift issue #'+incident.number);
+            }else core.info('Release state: '+report.state+'; no change to incident.');
+      - name: Mark persistent deployment drift as a failing run
+        run: |
+          node -e "const r=require('./release-drift.json'); if(r.state==='drift'){console.error('Latest main is not deployed');process.exitCode=1}"

@@ -28,7 +28,7 @@ test("realistic one-use proof accepts only first attempt; subsequent replay neve
  const s=store();
  const first=await verifyOneUseWalletProof(input(),s.deps);
  const second=await verifyOneUseWalletProof(input(),s.deps);
- assert.deepEqual(first,{status:"verified",wallet});
+ assert.deepEqual(first,{status:"verified",wallet,expiresAt:new Date(now+119000).toISOString()});
  assert.deepEqual(second,{status:"invalid"});
  assert.deepEqual(s.stats(),{verified:1,consumed:2,left:0});
  assert.equal(JSON.stringify(first).includes(signature),false);
@@ -91,6 +91,21 @@ test("Ink RPC rejection, invalid contract signatures and thrown verifiers fail c
   assert.equal((await verifyOneUseWalletProof(input(),s.deps)).status,"invalid");
   assert.equal(s.stats().verified,1);
  }
+});
+test("signed payload must bind to the exact nonce requested from Redis",async()=>{
+ const anotherId="abcdefab-1234-4234-8234-123456789012";
+ const s=store(message({id:anotherId}));
+ assert.equal((await verifyOneUseWalletProof(input(),s.deps)).status,"invalid");
+ assert.equal(s.stats().verified,0);
+ assert.equal(s.stats().left,0);
+});
+test("verification at the last second cannot renew the original challenge lifetime",async()=>{
+ const s=store(message());
+ const nearExpiry=now+118999;
+ const result=await verifyOneUseWalletProof(input({now:nearExpiry}),s.deps);
+ assert.equal(result.status,"verified");
+ assert.equal(result.expiresAt,new Date(now+119000).toISOString());
+ assert.equal(Date.parse(result.expiresAt)-nearExpiry,1);
 });
 test("canonical challenge is not accepted if stored value was tampered with",async()=>{
  const s=store(message().replace("Chain ID: 57073","Chain ID: 1"));
