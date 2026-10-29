@@ -8,5 +8,11 @@
       "path": "/api/cron/risk-watch",
       "schedule": "0 9 * * *"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "main": true,
+      "feat/**": false
+    }
+  }
 }
