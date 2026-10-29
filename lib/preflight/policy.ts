@@ -14,6 +14,13 @@ export type PreflightReport={
   gas:{estimatedUnits:string|null;maxEstimatedNativeFee:string|null;nativeBalance:string|null;
     feeModel?:"eip1559"|"unavailable";maxFeePerGasGwei?:string|null;
     approvalEstimatedGasUnits?:string|null;approvalFeeScreeningEth?:string|null};
+  nadoReduceOnly?:{
+    checked:boolean;requestedPercent:number;currentPositionSize:string;
+    floorToIncrement:string|null;minimumSize:string|null;
+    engineMaxReduceOnly:string|null;side:"long"|"short"|null;
+    priceReference:string|null;sizeIncrement:string|null;
+    feasibleBySize:boolean;reason:string;warnings:string[];
+  };
   nadoMarketEvidence?:{
     productId:number;symbol:string;subaccount:string;side:"long"|"short";
     sourceObservedAt:string;sdkObservedAt:string;engineEndpoint:string|null;

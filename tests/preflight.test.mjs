@@ -157,3 +157,28 @@ test("Nado market provenance is sealed into the signed digest while trading stay
  }}),false);
  assert.equal(canAcknowledgePreflight(nado,wallet.address,now),false);
 });
+
+test("Nado SDK reduce-only observation and rounded size are digest-protected",()=>{
+ const base=finalizePreflight({
+  version:1,network:"Ink",chainId:57073,kind:"nado-position-reduce",wallet:wallet.address,
+  asset:null,createdAt:issuedAt,blockNumber:null,reviewOnly:true,executionEnabled:false,
+  transactionPayload:null,amount:null,
+  target:{protocol:"Nado",name:"Read-only limits",address:null},
+  gas:{estimatedUnits:null,maxEstimatedNativeFee:null,nativeBalance:null},
+  allowance:{required:null,current:null,sufficient:null},
+  gates:[{name:"Execution",state:"fail",detail:"Never signed"}],
+  nadoReduceOnly:{
+    checked:true,requestedPercent:25,currentPositionSize:"2000000000000000000",
+    floorToIncrement:"500000000000000000",minimumSize:"100000000000000000",
+    engineMaxReduceOnly:"900000000000000000",
+    side:"short",priceReference:"2500",sizeIncrement:"100000000000000000",
+    feasibleBySize:true,reason:"size check only",warnings:[],
+  },
+ });
+ assert.equal(validatePreflightDigest(base),true);
+ assert.equal(base.readyForHumanReview,false);
+ assert.equal(validatePreflightDigest({...base,nadoReduceOnly:{
+   ...base.nadoReduceOnly,engineMaxReduceOnly:"999999999999999999",
+ }}),false);
+ assert.equal(canAcknowledgePreflight(base,wallet.address,now),false);
+});

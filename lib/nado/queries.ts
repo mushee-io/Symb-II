@@ -2,6 +2,8 @@ import "server-only";
 import { EngineClient, ENGINE_CLIENT_ENDPOINTS } from "@nadohq/engine-client";
 import { IndexerClient, INDEXER_CLIENT_ENDPOINTS } from "@nadohq/indexer-client";
 import { isAddress } from "viem";
+import BigNumber from "bignumber.js";
+import type {ReduceOnlyObservation} from "../preflight/nado-reduce";
 import type { EngineMarketEvidence } from "../preflight/nado-evidence";
 import type { NadoMarket, NadoMarketsResponse, NadoAccountResponse, NadoPosition, NadoOrder, NadoSubaccountHealth } from "./types";
 
@@ -146,4 +148,55 @@ export async function getNadoPreflightEngineEvidence(productId:number):Promise<E
     ask:quote.status==="fulfilled"&&quote.value.productId===productId?quote.value.ask.toString():null,
     warnings,
   };
+}
+
+
+/**
+ * Queries the engine's official reduce-only maximum for a uniquely discovered
+ * CROSS-MARGIN subaccount whose owner is exactly the inspected Ink address.
+ * No linked-signer assumptions or executable order material are returned.
+ */
+export async function getNadoReduceOnlyObservation(args:{
+ address:string;subaccount:string;productId:number;positionSide:"long"|"short"
+}):Promise<ReduceOnlyObservation>{
+ const {address,subaccount,productId,positionSide}=args;
+ const fallback=(warning:string):ReduceOnlyObservation=>({
+   observedAt:new Date().toISOString(),walletSubaccountMatched:false,
+   engineMaxSize:null,priceReference:null,orderSide:null,warning,
+ });
+ if(!isAddress(address,{strict:false})||typeof subaccount!=="string"||
+    subaccount.length>60||!Number.isSafeInteger(productId)||productId<0||
+    productId>1_000_000||!["long","short"].includes(positionSide))
+   return fallback("Invalid wallet, product or subaccount.");
+ const idx=indexer(),eng=engine();
+ try{
+   const discovered=await idx.listSubaccounts({address,limit:50,start:0});
+   if(discovered.length>=50)return fallback("Subaccount discovery reached the page limit.");
+   const matching=discovered.filter(s=>
+     !s.isolated&&s.subaccountOwner.toLowerCase()===address.toLowerCase()&&
+     (s.subaccountName||"(unnamed)")===subaccount);
+   if(matching.length!==1)return fallback("Subaccount owner/name could not be uniquely confirmed against the wallet.");
+   const actual=matching[0];
+   const side=positionSide==="long"?"short" as const:"long" as const;
+   const quote=await eng.getMarketPrice({productId});
+   if(quote.productId!==productId)return fallback("Engine quote product ID differs from the position.");
+   const candidate=side==="short"?quote.bid:quote.ask;
+   if(!candidate.isFinite()||!candidate.gt(0))
+     return fallback("No positive Nado reference price for the requested reduction side.");
+   const maximum=await eng.getMaxOrderSize({
+     subaccountOwner:actual.subaccountOwner,
+     subaccountName:actual.subaccountName,
+     productId,side,price:new BigNumber(candidate.toString()),
+     reduceOnly:true,isolated:false,
+   });
+   if(!maximum.isFinite()||maximum.isNegative())
+     return fallback("Nado returned an invalid reduce-only maximum.");
+   return {
+     observedAt:new Date().toISOString(),walletSubaccountMatched:true,
+     engineMaxSize:maximum.toString(),priceReference:candidate.toString(),
+     orderSide:side,warning:null,
+   };
+ }catch{
+   return fallback("Nado read-only reduce-only maximum query unavailable or rejected.");
+ }
 }
