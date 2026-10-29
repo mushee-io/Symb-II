@@ -30,7 +30,7 @@ test("fails wrong pool, oracle unit, chain and stale block",()=>{
 test("partial adapter and missing contract observation cannot claim reconciliation",()=>{
  assert.equal(compare({...a,incomplete:true},d).state,"not-tested");
  assert.equal(compare({...a,warnings:["oracle unknown"]},d).state,"not-tested");
- assert.equal(compare(a,undefined).state,"not-tested");
+ assert.equal(reconcileTydroDirect(a,undefined,now).state,"not-tested");
 });
 test("no-debt accounts reconcile without inventing health-factor values",()=>{
  const empty={...a,debtBase:"0",healthFactor:null};
