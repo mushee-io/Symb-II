@@ -5,7 +5,7 @@ import { generateText } from "ai";
 import { getNadoAccount } from "@/lib/nado/queries";
 import { getTydroAccount } from "@/lib/tydro/queries";
 import { buildReadOnlyBrief } from "@/lib/agent/brief";
-import { allowedIntent, buildModelInput, isAIConfigured, validateNarrative, AI_DEFAULT_MODEL } from "@/lib/agent/generation-policy";
+import { allowedIntent, buildModelInput, isAIConfigured, validateNarrative, gatewayModel } from "@/lib/agent/generation-policy";
 import { isAcceptableSignature,isValidSignedChallenge } from "@/lib/agent/auth";
 import { acquireLimit,consumeNonce } from "@/lib/agent/redis";
 
@@ -51,9 +51,11 @@ export async function POST(req:NextRequest){
       note:"AI was not called because source data is unavailable, incomplete or unverified."
     },{headers});
   const {system,prompt}=buildModelInput(brief);
+  const model=gatewayModel();
+  if(!model)return reply("Invalid AI Gateway model configuration.",503);
   try{
     const result=await generateText({
-      model:AI_DEFAULT_MODEL,
+      model,
       system,prompt,
       maxOutputTokens:450,
       abortSignal:AbortSignal.timeout(20000),
@@ -62,7 +64,7 @@ export async function POST(req:NextRequest){
     if(!narrative)throw Error("Invalid model response");
     return NextResponse.json({
       kind:"ai",narrative,brief,
-      model:AI_DEFAULT_MODEL,
+      model,
       note:"AI-generated explanation of bounded read-only facts. Verify all claims against the sourced summary.",
     },{headers});
   }catch{

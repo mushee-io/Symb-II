@@ -2,11 +2,18 @@ import {hasValidRedisConfiguration} from "../ops/readiness.ts";
 import { classifyBriefIntent, type CapitalBrief, type BriefIntent } from "./brief.ts";
 
 export const INK_CHAIN_ID = 57073;
-export const AI_DEFAULT_MODEL = "openai/gpt-6-luna";
+// Verify this fallback against Vercel AI Gateway's live /v1/models catalog
+// before activating. A private model override is supported for rollbacks.
+export const AI_DEFAULT_MODEL = "openai/gpt-5.6-luna";
+export function gatewayModel(env:NodeJS.ProcessEnv=process.env):string|null{
+ const value=env.SYMB_II_AI_MODEL?.trim()||AI_DEFAULT_MODEL;
+ return /^[a-z0-9][a-z0-9-]{1,35}\/[a-z0-9][a-z0-9._-]{2,90}$/.test(value)?value:null;
+}
 
 export function isAIConfigured(env: NodeJS.ProcessEnv = process.env): boolean {
   return env.SYMB_II_AI_ENABLED === "true"
     && Boolean(env.AI_GATEWAY_API_KEY)
+    && gatewayModel(env)!==null
     && hasValidRedisConfiguration(env);
 }
 export function allowedIntent(text: unknown, intent: unknown): BriefIntent | null {
