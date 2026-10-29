@@ -9,6 +9,7 @@ import { ExposureOverview } from "@/components/exposure-overview";
 import { RiskAlerts } from "@/components/risk-alerts";
 import { PersistentWatch } from "@/components/persistent-watch";
 import { RescueLab } from "@/components/rescue-lab";
+import {PreflightPanel} from "@/components/preflight-panel";
 import type { NadoAccountResponse } from "@/lib/nado/types";
 import type { TydroAccountResponse } from "@/lib/tydro/types";
 import { nadoRiskState, tydroRiskState, type RiskState } from "@/lib/risk/status";
@@ -84,6 +85,7 @@ export function RiskPanel(){
         <span>No example holdings, generated trade plans or fabricated wallet data will be displayed.</span></div>
     </div>}
     {connected && address && <RescueLab wallet={address} nado={nado.data} tydro={tydro.data}/>}
+    {connected && address && <PreflightPanel key={address.toLowerCase()} wallet={address} nado={nado.data} tydro={tydro.data}/>}
     {connected && nado.data && tydro.data && <ExposureOverview nado={nado.data} tydro={tydro.data}/>}
     {connected && nado.data && <NadoStress account={nado.data}/>}
     {connected && tydro.data && <TydroStress account={tydro.data}/>}
