@@ -14,6 +14,9 @@ export type OneUseVerificationDependencies={
  verifySignature:(args:{
   wallet:string;challenge:string;expectedMessage:string;signature:string;
  })=>Promise<boolean>;
+ // The server clock MUST be sampled again after the asynchronous Ink RPC
+ // signature check. An issued nonce expiring mid-verification cannot succeed.
+ now:()=>number;
 };
 export type OneUseVerificationResult=
  | {status:"verified";wallet:string;expiresAt:string}
@@ -53,5 +56,13 @@ export async function verifyOneUseWalletProof(
   });
   if(!valid)return {status:"invalid"};
  }catch{return {status:"invalid"};}
+ // Reading the time only before network I/O can extend a 120-second proof:
+ // an ERC-1271 RPC could respond after its challenge has expired. Fail
+ // closed if the wall clock is unavailable, reversed or past expiry.
+ let completedAt:number;
+ try{completedAt=deps.now();}
+ catch{return {status:"invalid"};}
+ if(!Number.isFinite(completedAt)||completedAt<input.now||
+    completedAt>=Date.parse(expiresAt))return {status:"invalid"};
  return {status:"verified",wallet,expiresAt};
 }

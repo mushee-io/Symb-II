@@ -27,7 +27,7 @@ export async function POST(req:NextRequest){
  const outcome=await verifyOneUseWalletProof({
   wallet:getAddress(b.wallet),challengeId:b.challengeId,
   signature:b.signature,origin,now:Date.now(),
- },{consumeNonce,verifySignature:isValidSignedChallenge});
+ },{consumeNonce,verifySignature:isValidSignedChallenge,now:()=>Date.now()});
  if(outcome.status==="unavailable")
   return fail("Security store unavailable; no authentication granted.",503);
  if(outcome.status!=="verified")

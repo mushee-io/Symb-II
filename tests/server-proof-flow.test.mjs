@@ -13,13 +13,14 @@ const message=(options={})=>serverOwnershipMessage({
  ...options,
 });
 const input=(options={})=>({wallet,challengeId,signature,origin,now,...options});
-function store(seed=message(),verify=async()=>true){
+function store(seed=message(),verify=async()=>true,clock=()=>now){
  const remaining=new Map([["m8-"+challengeId,seed]]);
  let verified=0,consumed=0;
  return {
   deps:{
    consumeNonce:async key=>{consumed++;const value=remaining.get(key)??null;remaining.delete(key);return value;},
    verifySignature:async args=>{verified++;return await verify(args);},
+   now:clock,
   },
   stats:()=>({verified,consumed,left:remaining.size}),
  };
@@ -82,6 +83,7 @@ test("Redis failure returns unavailable, never claims verification",async()=>{
  const outcome=await verifyOneUseWalletProof(input(),{
   consumeNonce:async()=>{throw Error("secret-redis-failure");},
   verifySignature:async()=>{throw Error("must not reach signature verifier");},
+  now:()=>now,
  });
  assert.deepEqual(outcome,{status:"unavailable"});
 });
@@ -100,12 +102,30 @@ test("signed payload must bind to the exact nonce requested from Redis",async()=
  assert.equal(s.stats().left,0);
 });
 test("verification at the last second cannot renew the original challenge lifetime",async()=>{
- const s=store(message());
  const nearExpiry=now+118999;
+ const s=store(message(),async()=>true,()=>nearExpiry);
  const result=await verifyOneUseWalletProof(input({now:nearExpiry}),s.deps);
  assert.equal(result.status,"verified");
  assert.equal(result.expiresAt,new Date(now+119000).toISOString());
  assert.equal(Date.parse(result.expiresAt)-nearExpiry,1);
+});
+test("successful signature that finishes after original challenge expiry is rejected",async()=>{
+ const expiredAt=now+119000;
+ const s=store(message(),async()=>true,()=>expiredAt);
+ const result=await verifyOneUseWalletProof(input(),s.deps);
+ assert.equal(result.status,"invalid");
+ assert.equal(s.stats().verified,1);
+ assert.equal(s.stats().left,0);
+});
+test("a clock rollback, nonfinite clock, or clock error cannot grant a signed proof",async()=>{
+ for(const clock of [
+  ()=>now-1,
+  ()=>Number.NaN,
+  ()=>{throw Error("clock unavailable");},
+ ]){
+  const s=store(message(),async()=>true,clock);
+  assert.deepEqual(await verifyOneUseWalletProof(input(),s.deps),{status:"invalid"});
+ }
 });
 test("canonical challenge is not accepted if stored value was tampered with",async()=>{
  const s=store(message().replace("Chain ID: 57073","Chain ID: 1"));
