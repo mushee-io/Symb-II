@@ -67,7 +67,7 @@ export function PreflightPanel({wallet,tydro,nado}:{wallet:string;tydro?:TydroAc
     onClick={()=>{setProtocol(name);reset();}}>{name}</button>)}</div>
   <p className="preflight-explainer">{protocol==="Tydro"?
    "This checks ONE existing variable-rate debt token, not an aggregate debt repayment. The verified Pool, token balance, allowance, simulated repay and gas are read where possible.":
-   "Nado engine product metadata, top-of-book quotes, oracle reference and ticker divergence can now be checked independently. Reduce-only authorization, order validation, post-trade margin and execution remain blocked."}</p>
+   "Nado now checks the exact subaccount, engine reduce-only maximum, raw SDK size bounds, bid/ask, oracle reference and product metadata. These checks cannot create signed orders; margin, fill validity and execution remain blocked."}</p>
   <div className="preflight-fields"><label>{protocol==="Tydro"?"Variable-debt asset":"Open Nado position"}
    <select value={protocol==="Tydro"?asset??"":selected??""}
     onChange={e=>{protocol==="Tydro"?setToken(e.target.value):setPosition(e.target.value);reset();}}>
@@ -88,6 +88,24 @@ export function PreflightPanel({wallet,tydro,nado}:{wallet:string;tydro?:TydroAc
    {response.report.amount&&<p>Exact underlying amount: {response.report.amount.value} {response.report.amount.symbol}</p>}
    {response.report.gates.map(g=><div className="preflight-gate" key={g.name}>
     <span className={g.state}>{g.state.toUpperCase()}</span><div><strong>{g.name}</strong><p>{g.detail}</p></div></div>)}
+   {response.report.nadoReduceOnly&&<div className="preflight-approval">
+     <strong>NADO REDUCE-ONLY SIZE CHECK · READ ONLY</strong>
+     <p>For this exact wallet subaccount, the Nado engine was queried with <code>reduceOnly=true</code> and the opposite side of the existing position. No signing request or order was created.</p>
+     <div className="preflight-facts">
+       <span>Selected reduction: {response.report.nadoReduceOnly.requestedPercent}%</span>
+       <span>Existing position (SDK units): {response.report.nadoReduceOnly.currentPositionSize}</span>
+       <span>Conservative increment-rounded portion (SDK units): {response.report.nadoReduceOnly.floorToIncrement??"Unavailable"}</span>
+       <span>Engine reduce-only maximum (SDK units): {response.report.nadoReduceOnly.engineMaxReduceOnly??"Unavailable"}</span>
+       <span>SDK resting minimum size: {response.report.nadoReduceOnly.minimumSize??"Unavailable"}</span>
+       <span>SDK size increment: {response.report.nadoReduceOnly.sizeIncrement??"Unavailable"}</span>
+       <span>Opposite side: {response.report.nadoReduceOnly.side??"Unknown"}</span>
+       <span>Engine-side reference price: {response.report.nadoReduceOnly.priceReference??"Unavailable"}</span>
+       <span>Indicative size boundaries: {response.report.nadoReduceOnly.feasibleBySize?"Within observed bounds":"Not verified / outside bounds"}</span>
+     </div>
+     <p>{response.report.nadoReduceOnly.reason}</p>
+     {response.report.nadoReduceOnly.warnings.map((w,i)=><p key={i}>{w}</p>)}
+     <p><strong>Execution still blocked.</strong> These raw SDK units are not an executable order size or a quote. Matching an engine size limit does not validate margin, fill price, fee costs, order-signing permission or actual liquidity.</p>
+   </div>}
    {response.report.nadoMarketEvidence&&<div className="preflight-approval">
      <strong>NADO ENGINE EVIDENCE · NO ORDER SIGNED</strong>
      <p>Product configuration and prices are read independently from the official Nado engine and indexer. These are not fill quotes, liquidation marks or permission to trade.</p>
