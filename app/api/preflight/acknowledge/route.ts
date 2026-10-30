@@ -3,7 +3,7 @@ import {NextRequest,NextResponse} from "next/server";
 import {getAddress,isAddress} from "viem";
 import {readBoundedJSON,PayloadTooLargeError} from "@/lib/security/request";
 import {isAcceptableSignature,isValidSignedChallenge} from "@/lib/agent/auth";
-import {canAcknowledgePreflight,preflightApprovalMessage} from "@/lib/preflight/policy";
+import {verifyFreshPreflightReview} from "@/lib/preflight/acknowledgement-flow";
 import {consumePreflight,isPreflightConfigured,recordPreflightAcknowledgement} from "@/lib/preflight/store";
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=15;
 const headers={"Cache-Control":"private, no-store"};
@@ -24,11 +24,14 @@ export async function POST(req:NextRequest){
  let report;
  try{report=await consumePreflight(b.reviewId);}
  catch{return fail("Security store unavailable.",503);}
- if(!report||!canAcknowledgePreflight(report,wallet,Date.now()))
-  return fail("Preflight is expired, already consumed or not eligible.",401);
- const message=preflightApprovalMessage(report,new URL(req.url).origin);
- if(!await isValidSignedChallenge({wallet,challenge:message,expectedMessage:message,signature:b.signature}))
-  return fail("Invalid signature for this exact preflight.",401);
+ if(!report)return fail("Preflight is expired, already consumed or not eligible.",401);
+ // A genuine EOA/ERC-1271 RPC can take several seconds. Never persist a
+ // positive acknowledgement if the original 90-second report expires while
+ // the Ink signature call is in flight. Any RPC error must return 401, not 500.
+ const valid=await verifyFreshPreflightReview({
+  report,wallet,origin:new URL(req.url).origin,signature:b.signature,
+ },{verifySignature:isValidSignedChallenge,now:()=>Date.now()});
+ if(!valid)return fail("Signature rejected or the one-use preflight expired.",401);
  const record={id:randomUUID(),digest:report.digest,createdAt:new Date().toISOString(),kind:report.kind};
  try{await recordPreflightAcknowledgement(wallet,record);}
  catch{return fail("Review record could not be saved; no acknowledgement confirmed.",503);}
