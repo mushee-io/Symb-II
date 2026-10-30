@@ -625,3 +625,24 @@ h1,h2,h3,p { margin-top: 0; }
 .ops-check strong{font-size:12px;color:#e7f5e8}
 .ops-check p{font-size:11px;line-height:1.65;color:#afc1b2;margin:7px 0 0}
 @media(max-width:720px){.ops-panel{padding:17px}.ops-panel-heading{flex-direction:column}.ops-gates{grid-template-columns:1fr}.ops-gate-heading{flex-wrap:wrap}.ops-check{gap:8px}}
+
+
+/* M11 — memory-only risk event timeline */
+.m11-timeline { margin: 22px 0 18px; padding: 22px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel); }
+.m11-timeline-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; }
+.m11-timeline-top h3 { display: flex; align-items: center; gap: 9px; font-size: 20px; margin: 8px 0; letter-spacing: -.025em; }
+.m11-timeline-top p, .m11-timeline-disclaimer, .m11-timeline-empty { color: var(--muted); font-size: 12px; line-height: 1.65; }
+.m11-timeline-top p { max-width: 580px; }
+.m11-timeline-list { margin: 16px 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.m11-timeline-event { display: flex; gap: 13px; padding: 13px; background: var(--bg-soft); border: 1px solid var(--line); border-radius: 9px; }
+.m11-timeline-dot { color: var(--accent); margin-top: 2px; flex: 0 0 auto; }
+.m11-timeline-details { min-width: 0; flex: 1; }
+.m11-timeline-event-head { display: flex; gap: 12px; justify-content: space-between; align-items: baseline; flex-wrap: wrap; }
+.m11-timeline-event-head strong { font-size: 13px; }
+.m11-timeline-event-head time { font-size: 11px; color: var(--muted); }
+.m11-timeline-details p { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.m11-timeline-sources { display: flex; gap: 5px; flex-direction: column; margin-top: 10px; }
+.m11-timeline-sources span { font-size: 11px; color: #d7e7dc; overflow-wrap: anywhere; }
+.m11-timeline-disclaimer { margin: 14px 0 0; }
+.m11-timeline-empty { margin: 16px 0; padding: 12px; border-radius: 8px; border: 1px dashed var(--line); }
+@media (max-width: 600px) { .m11-timeline { padding: 16px; } .m11-timeline-top .btn { white-space: normal; } }

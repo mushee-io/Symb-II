@@ -358,3 +358,10 @@ This CI check does not need Upstash tokens, AI Gateway keys or user wallets. It 
 
 ## M8 extra Nado account/market cross-check
 The opt-in Wallet Verification Lab now independently requests the public Nado market endpoint alongside account inventory and checks that every open cross-margin position refers to a unique perpetual product ID with a positive market ticker, known subaccount, valid nonzero position size and an existing subaccount health record. Duplicate/missing product IDs, invalid positions, stale reads and unavailable health are flagged, and empty accounts remain **not tested**. Both account and market endpoints depend on Nado data providers; this is a cross-response consistency check, not independent exchange authentication, signed order validation or a liquidation proof. Exported reports contain only check status and public wallet, never raw position sizes.
+
+## M11 — Browser-tab risk change timeline (code implementation)
+
+M11 introduces a bounded, **in-memory only** warning-transition timeline inside the existing risk monitor. It records alert level/ID changes and shows concise alert titles and observed times without persisting wallet addresses, balances, positions, raw feeds, signatures or keys. Records are erased by tab close/reload, wallet switch or explicit clear; the timeline stores at most 40 events and displays the latest 12. Identical warning sets are deduplicated. A warning recovery is reported only when both Ink Nado and Tydro account feeds return fresh, complete, internally coherent snapshots with no flagged conditions; loading, wrong-wallet, stale and partial feeds never count as recovery. Recovery is only **absence of flagged warnings in those snapshots**, never safety, liquidation immunity or independent account proof. No Upstash, outbound notifications, server actions or trading permissions are introduced by M11.
+
+M10 is **not formally documented in this repository**; naming this M11 workstream does not claim M10 completion. M7–M9 private and independent acceptance gates also remain open. See [M11 scope and acceptance](docs/M11_RISK_TIMELINE.md).
+

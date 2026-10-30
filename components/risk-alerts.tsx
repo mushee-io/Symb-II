@@ -5,6 +5,7 @@ import { Bell, BellOff, ShieldAlert, RefreshCw, Info } from "lucide-react";
 import type { NadoAccountResponse } from "@/lib/nado/types";
 import type { TydroAccountResponse } from "@/lib/tydro/types";
 import { evaluateRiskAlerts, type FeedState } from "@/lib/risk/alerts";
+import {InTabRiskTimeline} from "@/components/in-tab-risk-timeline";
 
 export function RiskAlerts({
   wallet,nado,tydro,fetching,
@@ -77,6 +78,7 @@ export function RiskAlerts({
       <div className={"alert-line alert-"+a.level} key={a.id}>
         <ShieldAlert size={17}/><div><strong>{a.title}</strong><p>{a.detail}</p><small>{a.source} · Observed {Number.isFinite(Date.parse(a.observedAt))?new Date(a.observedAt).toLocaleTimeString():"timestamp unavailable"}</small></div>
       </div>)}</div>}
+    <InTabRiskTimeline wallet={wallet} nado={nado} tydro={tydro} now={now}/>
     {permission==="denied"&&<p className="alert-note">Your browser blocked notifications. In-app warnings remain visible; change notification permissions in your browser settings to enable them.</p>}
     {permission==="unsupported"&&<p className="alert-note">This browser cannot issue system notifications. In-app warnings remain available.</p>}
     <div className="alert-boundary"><Info size={15}/><span>Not a 24/7 monitoring service. Alerts are evaluated only while the workspace stays open and receiving fresh data. Closing the tab, browser throttling, device sleep, network outages or RPC errors can delay or stop them. No server-side watchlist, persistent subscriptions, email/push worker, or liquidation rescue is active.</span></div>
