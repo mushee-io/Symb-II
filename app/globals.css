@@ -653,3 +653,20 @@ h1,h2,h3,p { margin-top: 0; }
 .wallet-chooser-help { font-size: 11px; color: var(--muted); padding: 8px 10px; margin: 0; line-height: 1.55; white-space: normal; }
 .wallet-disconnect-link { display: inline-flex; gap: 5px; align-items: center; margin-top: 7px; padding: 5px 0; color: var(--muted); font-size: 12px; border: 0; background: none; }
 .wallet-disconnect-link:hover { color: var(--text); }
+
+
+/* M13 — distinguish browser/cron snapshots from unconfigured outbound delivery */
+.m13-delivery-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-soft);
+  color: var(--muted);
+}
+.m13-delivery-note > svg { color: var(--violet); flex: 0 0 auto; margin-top: 2px; }
+.m13-delivery-note strong { color: var(--text); font-size: 12px; }
+.m13-delivery-note p { margin: 6px 0 0; font-size: 12px; line-height: 1.65; }
