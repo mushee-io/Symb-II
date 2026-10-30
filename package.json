@@ -10,7 +10,8 @@
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "smoke": "node scripts/smoke.mjs",
     "verify:m8:evidence": "node scripts/verify-m8-evidence.mjs",
-    "verify:m7:redis": "node scripts/verify-m7-redis.mjs"
+    "verify:m7:redis": "node scripts/verify-m7-redis.mjs",
+    "verify:m9:public": "node scripts/verify-m9-public.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
