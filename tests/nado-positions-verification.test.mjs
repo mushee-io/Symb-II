@@ -40,3 +40,46 @@ test("wrong-chain and stale read-only snapshots fail",()=>{
  assert.equal(crosscheckNadoPositions(account(),{...market(),chainId:1},now).state,"fail");
  assert.equal(crosscheckNadoPositions(account(),market(),now+600000).state,"fail");
 });
+
+test("a shared product ID is insufficient when engine and ticker symbols disagree",()=>{
+ const misleading={...market(),markets:[{...market().markets[0],symbol:"BTC-PERP"}]};
+ assert.equal(crosscheckNadoPositions(account(),misleading,now).state,"fail");
+ assert.equal(crosscheckNadoPositions({...account(),positions:[
+  {...position,symbol:"Product #3"}
+ ]},market(),now).state,"fail");
+ assert.equal(crosscheckNadoPositions({...account(),positions:[
+  {...position,symbol:"ETH-PERP-FAKE"}
+ ]},market(),now).state,"fail");
+ // Normalisation permits harmless differences in ASCII letter casing.
+ const normalised={...account(),positions:[{...position,symbol:" eth-perp "}]};
+ assert.equal(crosscheckNadoPositions(normalised,market(),now).state,"pass");
+});
+test("active Nado positions require a positive finite entry price",()=>{
+ for(const entryPrice of ["0","-1","Infinity","NaN","not a price","","1e99999"]){
+  const forged={...account(),positions:[{...position,entryPrice}]};
+  assert.equal(crosscheckNadoPositions(forged,market(),now).state,"fail",entryPrice);
+ }
+ assert.equal(crosscheckNadoPositions({...account(),positions:[
+  {...position,entryPrice:"2.4e3"}
+ ]},market(),now).state,"pass");
+});
+test("subaccount health exists=true is not adequate without finite assets, liabilities and health",()=>{
+ for(const key of ["maintenanceHealth","initialHealth","maintenanceAssets","maintenanceLiabilities"]){
+  for(const bad of ["NaN","Infinity","not a number",""]){
+   const health={...account().subaccountHealth[0],[key]:bad};
+   assert.equal(crosscheckNadoPositions({...account(),subaccountHealth:[health]},market(),now).state,"fail",key+" "+bad);
+  }
+ }
+ for(const key of ["maintenanceAssets","maintenanceLiabilities"]){
+  const health={...account().subaccountHealth[0],[key]:"-1"};
+  assert.equal(crosscheckNadoPositions({...account(),subaccountHealth:[health]},market(),now).state,"fail",key);
+ }
+ // Underwater portfolios can legitimately have negative maintenance health.
+ const underwater={...account().subaccountHealth[0],
+  maintenanceHealth:"-50",initialHealth:"-90"};
+ assert.equal(crosscheckNadoPositions({...account(),subaccountHealth:[underwater]},market(),now).state,"pass");
+});
+test("a fabricated healthy record for an unrelated subaccount cannot validate a position",()=>{
+ const healthy={...account().subaccountHealth[0],subaccount:"other"};
+ assert.equal(crosscheckNadoPositions({...account(),subaccountHealth:[healthy]},market(),now).state,"fail");
+});
