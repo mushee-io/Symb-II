@@ -113,10 +113,12 @@ export async function verifyM8PublicBlocks(report,reader,nowOrClock=()=>Date.now
     now-timestamp>=0&&now-timestamp<180000;
   }catch{return false;}
  };
+ let previousNow=firstNow;
  const current=()=>{
   const now=sample();
-  if(!Number.isFinite(now)||now<firstNow)
-   throw Error("Invalid verifier clock.");
+  if(!Number.isFinite(now)||now<previousNow)
+   throw Error("Invalid or reversed verifier clock.");
+  previousNow=now;
   return now;
  };
  try{
