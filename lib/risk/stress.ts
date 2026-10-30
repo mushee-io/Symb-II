@@ -60,8 +60,10 @@ export function simulateTydroShock(
   if(!selected)return {ok:false,reason:"Select an asset held or borrowed in this Tydro account."};
   try{
     const baseHF=parseUnits(account.healthFactor,18);
-    if(baseHF<=0n||BigInt(account.debtBase.split(".")[0]||"0")<0n)
-      return {ok:false,reason:"An invalid health-factor baseline cannot be projected."};
+    // The Pool account total must report positive debt as well as a valid
+    // health factor; a populated HF on a zero-debt account is contradictory.
+    if(baseHF<=0n||!/[1-9]/.test(account.debtBase))
+      return {ok:false,reason:"An account with zero debt or invalid health cannot be projected."};
     let collateral=0n,debt=0n,adjustedCollateral=0n,adjustedDebt=0n;
     const factor=BigInt(100+shockPct);
     for (const reserve of account.userReserves){
