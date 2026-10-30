@@ -29,7 +29,7 @@ This repository contains a responsive Next.js application with:
 - No fabricated balances, positions, AI responses or transaction receipts
 - No automatic transaction signing, custody or autonomous trading
 
-**Milestone 2 is implemented in code:** Nado live market tickers, publicly discoverable wallet-associated subaccounts, indexed open positions, open orders and paginated order records. No order placement or signing. **Milestone 3 is implemented in code:** direct Ink mainnet Tydro reserve/rate queries and wallet-specific supply/borrowing/health views. **Still not complete:** a fully validated cross-protocol risk engine, live generative AI, transaction execution, lending transactions, standalone mobile WalletConnect and reliable external notifications. Read-only risk views, deterministic assistant foundations and browser-active alerts do exist.
+**Milestone 2 is implemented in code:** Nado live market tickers, publicly discoverable wallet-associated subaccounts, indexed open positions, open orders and paginated order records. No order placement or signing. **Milestone 3 is implemented in code:** direct Ink mainnet Tydro reserve/rate queries and wallet-specific supply/borrowing/health views. **Still not complete:** a fully validated cross-protocol risk engine, live generative AI, transaction execution, lending transactions, independently tested and configured standalone mobile WalletConnect, and reliable external notifications. Read-only risk views, deterministic assistant foundations and browser-active alerts do exist.
 
 ## Ink network
 
@@ -64,7 +64,7 @@ A GitHub Actions workflow runs these checks for pushes and pull requests. A succ
 
 ## Wallet support
 
-M1 uses injected EIP-1193 wallets. It works when a compatible extension/in-app browser injects a provider. **Standalone mobile WalletConnect and native iOS/Android apps are not implemented yet.** Do not claim universal mobile wallet support. No WalletConnect project ID or API keys are required for the current injected-wallet scope.
+M1 supports injected EIP-1193 browser wallets. M12 adds **optional WalletConnect pairing code**, enabled only with a valid public `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (32 hexadecimal characters). A deliberate wallet-choice click is required; the project ID is client-public, not a signing key. Without it, an injected wallet or compatible wallet in-app browser remains the only path. Standalone WalletConnect mobile pairing, device/network switching and revocation **have not been independently tested or accepted in production**. Native iOS/Android apps, trading and wallet spending permissions remain unimplemented.
 
 ## Planned milestones
 
@@ -365,3 +365,7 @@ M11 introduces a bounded, **in-memory only** warning-transition timeline inside 
 
 M10 is **not formally documented in this repository**; naming this M11 workstream does not claim M10 completion. M7–M9 private and independent acceptance gates also remain open. See [M11 scope and acceptance](docs/M11_RISK_TIMELINE.md).
 
+
+## M12 — Optional mobile wallet connection code (not live acceptance)
+
+The UI now lets users explicitly choose an injected browser wallet or WalletConnect v2 QR/mobile pairing when an operator has provisioned a valid public Project ID. Invalid or absent IDs do not activate the connector. All configuration contains only Ink chain 57073; the workspace refuses wrong-network data and provides switch/disconnect controls. No transaction signing, approvals, order routes, persistent application sessions or Upstash services are added by this milestone. Pairing a wallet does not authenticate the Nado/Tydro account owner for protected actions. **Real-device acceptance, production credential provisioning, security review and live deployment checks remain outstanding.** See [M12 operator tests](docs/M12_MOBILE_WALLET.md).

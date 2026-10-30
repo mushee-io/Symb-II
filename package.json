@@ -25,7 +25,8 @@
     "@nadohq/indexer-client": "0.66.0",
     "@nadohq/shared": "0.66.0",
     "bignumber.js": "11.1.1",
-    "ai": "^6.0.0"
+    "ai": "^6.0.0",
+    "@walletconnect/wagmi-connector": "1.0.3"
   },
   "devDependencies": {
     "typescript": "^5.9.0",

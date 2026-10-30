@@ -646,3 +646,10 @@ h1,h2,h3,p { margin-top: 0; }
 .m11-timeline-disclaimer { margin: 14px 0 0; }
 .m11-timeline-empty { margin: 16px 0; padding: 12px; border-radius: 8px; border: 1px dashed var(--line); }
 @media (max-width: 600px) { .m11-timeline { padding: 16px; } .m11-timeline-top .btn { white-space: normal; } }
+
+
+/* M12 — explicit injected wallet or optional mobile WalletConnect chooser */
+.wallet-chooser { width: min(320px, calc(100vw - 38px)); }
+.wallet-chooser-help { font-size: 11px; color: var(--muted); padding: 8px 10px; margin: 0; line-height: 1.55; white-space: normal; }
+.wallet-disconnect-link { display: inline-flex; gap: 5px; align-items: center; margin-top: 7px; padding: 5px 0; color: var(--muted); font-size: 12px; border: 0; background: none; }
+.wallet-disconnect-link:hover { color: var(--text); }
