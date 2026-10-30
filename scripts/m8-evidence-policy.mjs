@@ -37,8 +37,22 @@ export function validateM8PublicEvidence(report,now=Date.now()){
    (!isRecord(report.m8Acceptance)||
     report.m8Acceptance.kind!=="m8-read-only-acceptance-matrix"||
     report.m8Acceptance.transactionEnabled!==false||
-    report.m8Acceptance.complete!==false))
-  return invalid("The accompanying M8 matrix makes an unsupported acceptance claim.");
+    report.m8Acceptance.complete!==false||
+    (report.m8Acceptance.wallet!==undefined&&report.m8Acceptance.wallet!==report.wallet)||
+    (report.m8Acceptance.checkedAt!==undefined&&report.m8Acceptance.checkedAt!==report.checkedAt)))
+  return invalid("The M8 matrix makes an unsupported claim or disagrees with its wallet observation.");
+ // A browser-generated report can include additional OPTIONAL local/server
+ // self-test metadata. It must never imply that reusable access, spending
+ // permissions or an independently signed receipt were granted.
+ const safeExtensions=[
+  [report.serverOwnershipResponse,["reusableSession","independentlySignedReceipt","permissionGranted"]],
+  [report.clientSideOwnershipSelfTest,["serverAuthenticated","permissionGranted"]],
+ ];
+ for(const [extra,flags] of safeExtensions){
+  if(extra===undefined)continue;
+  if(!isRecord(extra)||flags.some(flag=>extra[flag]!==undefined&&extra[flag]!==false))
+   return invalid("Optional ownership evidence contains an unsupported permission claim.");
+ }
  // This is a public-only report. Reject accidentally included private material
  // rather than letting scripts print/store a report containing secrets.
  const forbidden=new Set([
@@ -59,6 +73,14 @@ export function validateM8PublicEvidence(report,now=Date.now()){
      !["pass","fail","not-tested"].includes(check.state)||states.has(check.id))
    return invalid("Evidence has duplicate or malformed check states.");
   states.set(check.id,check.state);
+ }
+ const countFields=["passed","failed","notTested"];
+ if(countFields.some(key=>Object.prototype.hasOwnProperty.call(report,key))){
+  if(!countFields.every(key=>Number.isSafeInteger(report[key])&&report[key]>=0)||
+     report.passed+report.failed+report.notTested!==report.checks.length||
+     report.passed!==[...states.values()].filter(v=>v==="pass").length||
+     report.failed!==[...states.values()].filter(v=>v==="fail").length)
+   return invalid("Browser evidence summary counters disagree with individual checks.");
  }
  if(states.get("rpc")!=="pass")
   return invalid("A passing pinned Ink RPC observation is required.");
