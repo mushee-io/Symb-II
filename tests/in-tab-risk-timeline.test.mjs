@@ -17,7 +17,11 @@ function nado(overrides={}){
 }
 function tydro(overrides={}){
  return {chainId:57073,address:wallet,updatedAt:stamp,incomplete:false,
-  warnings:[],debtBase:"10",healthFactor:"2.1",userReserves:[],...overrides};
+  warnings:[],debtBase:"10",healthFactor:"2.1",userReserves:[{
+   address:"0x"+"ab".repeat(20),symbol:"WETH",supplied:"5",variableDebt:"10",
+   stableDebt:"0",usingAsCollateral:true,decimals:18,
+   liquidationThresholdBps:8000,oraclePriceRaw:"100"
+  }],...overrides};
 }
 const sources=(t=tydro(),n=nado())=>({
  wallet,nado:{status:"success",data:n},tydro:{status:"success",data:t},
@@ -113,4 +117,24 @@ test("invalid wallet and rollback clock reject unverifiable state",()=>{
  assert.strictEqual(advanceInTabRiskTimeline(first,sources(),NOW-1000),first);
  const invalid=advanceInTabRiskTimeline(first,{...sources(),wallet:"wrong"},NOW+1000);
  assert.deepEqual(invalid,emptyInTabRiskTimeline("wrong"));
+});
+
+test("positive Tydro debt without any reserve debt never becomes a recovery",()=>{
+ const prior=risk("1.2");
+ const contradictory=sources(tydro({healthFactor:"2.5",userReserves:[]}));
+ const result=advanceInTabRiskTimeline(prior,contradictory,NOW+1000);
+ assert.notEqual(result.events[0]?.kind,"recovery");
+});
+test("malformed Nado initial/asset/liability health cannot establish recovery",()=>{
+ const prior=risk("1.2");
+ for(const health of [
+  {subaccount:"main",exists:true,maintenanceHealth:"4",initialHealth:"nan",
+   maintenanceAssets:"5",maintenanceLiabilities:"1"},
+  {subaccount:"main",exists:true,maintenanceHealth:"4",initialHealth:"4",
+   maintenanceAssets:"-5",maintenanceLiabilities:"1"},
+ ]){
+  const result=advanceInTabRiskTimeline(prior,sources(tydro(),
+   nado({subaccountHealth:[health]})),NOW+1000);
+  assert.notEqual(result.events[0]?.kind,"recovery");
+ }
 });
