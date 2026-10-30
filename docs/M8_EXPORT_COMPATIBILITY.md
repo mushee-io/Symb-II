@@ -100,3 +100,33 @@ A failing reserve row is classified as failed data integrity, not a
 live-borrow acceptance. Empty reserves remain structurally valid but
 do not prove active borrowing. This is snapshot consistency, not
 repayment, transaction execution, wallet ownership or consensus finality.
+
+## Protected Tydro preflight source integrity and end-of-RPC freshness
+
+The read-only preflight previously compared a pinned contract variable debt
+against an account adapter response, but its source gates did not explicitly
+reject a market feed reporting another Pool/chain, duplicated target asset,
+mismatched market/user-reserve decimals, or independently fresh source reads
+that were too far apart in time.
+
+`assessTydroPreflightSources` now fails closed unless the inspected wallet,
+Ink chain 57073, pinned Tydro Pool, unique user/market reserve inventory,
+asset symbol and precision, coverage and snapshot timestamps agree. User and
+market reads must each be under 90 seconds old and at most 60 seconds apart.
+No real balance is accepted merely because the request names a valid token.
+
+A separate final check repeats source freshness **after** the potentially slow
+eth_call and gas-estimation work, and the RPC chain ID is rechecked at that
+point. Both checks are mandatory gates before
+`readyForHumanReview` can ever become true. This remains only a review
+snapshot, not proof of an executable repayment or spend authorization.
+
+`blockEvidence` now requires actual 32-byte hexadecimal start/recheck block
+hashes, ordered positive block timestamps, and a bounded monotonic block span.
+Arbitrary nonempty hash strings no longer satisfy pinned-block integrity.
+Adversarial unit tests cover wrong wallet, Pool/chain, duplicated target
+assets, stale reads, malformed reserve metadata, and invalid block headers.
+
+No Redis-dependent service has been enabled. This work does not replace
+real-wallet validation, independently operated live-RPC checks, transaction
+simulation acceptance, or external security audit.
