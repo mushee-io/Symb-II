@@ -1,12 +1,12 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {assessNadoEvidence} from "../lib/preflight/nado-evidence.ts";
+import {assessNadoEvidence,canInspectNadoReduction} from "../lib/preflight/nado-evidence.ts";
 const now=Date.parse("2026-10-29T17:25:00Z");
 const updatedAt=new Date(now-1000).toISOString();
 const wallet="0x0000000000000000000000000000000000000001";
 const position={id:"leg",subaccount:"main",productId:3,symbol:"ETH-PERP",side:"long",marginMode:"cross",size:"2",entryPrice:"2500",openedAt:null,updatedAt:null};
 const account=()=>({address:wallet,chainId:57073,updatedAt,incomplete:false,positionCoverageComplete:true,warnings:[],positions:[position],
-  subaccounts:["main"],subaccountHealth:[{subaccount:"main",exists:true,maintenanceHealth:"100",initialHealth:"200"}],openOrders:[],indexedOrders:[]});
+  subaccounts:["main"],subaccountHealth:[{subaccount:"main",exists:true,maintenanceHealth:"100",initialHealth:"200",maintenanceAssets:"300",maintenanceLiabilities:"200"}],openOrders:[],indexedOrders:[]});
 const markets=()=>({chainId:57073,updatedAt,markets:[{productId:3,symbol:"ETH-PERP",type:"perp",base:"ETH",quote:"USDT0",lastPrice:2500,change24h:0,volume24h:10}]});
 const engine=()=>({observedAt:updatedAt,engineChainId:57073,engineEndpoint:"0x0000000000000000000000000000000000000009",productId:3,productType:"perp",oraclePrice:"2490",priceIncrement:"0.1",sizeIncrement:"100000000000000000",minSize:"100000000000000000",bid:"2498",ask:"2502",warnings:[]});
 const inspect=(overrides={})=>assessNadoEvidence({wallet,account:account(),markets:markets(),positionKey:"main:3:leg",engine:engine(),now,...overrides});
@@ -54,4 +54,62 @@ test("missing engine increments and subaccount health return unknown",()=>{
 test("never treats a plausible ticker as validated signed execution",()=>{
  const result=inspect();
  assert.equal(result.gates.some(g=>g.name==="Authenticated order and execution constraints"&&g.state==="fail"),true);
+});
+
+test("hypothetical Nado reduce-only query is allowed only for complete consistent read-only provenance",()=>{
+ const x=inspect();
+ assert.equal(x.gates.find(g=>g.name==="Portfolio position integrity").state,"pass");
+ assert.equal(x.gates.find(g=>g.name==="Engine diagnostic coverage").state,"pass");
+ assert.equal(canInspectNadoReduction(x),true);
+ assert.equal(x.gates.find(g=>g.name==="Authenticated order and execution constraints").state,"fail");
+});
+test("mismatching position and ticker symbols reject a hypothetical reduce-only limit query",()=>{
+ const mismatched=inspect({markets:{...markets(),markets:[
+  {...markets().markets[0],symbol:"BTC-PERP"}
+ ]}});
+ assert.equal(mismatched.gates.find(g=>g.name==="Exact perp product mapping").state,"fail");
+ assert.equal(mismatched.gates.find(g=>g.name==="Portfolio position integrity").state,"fail");
+ assert.equal(canInspectNadoReduction(mismatched),false);
+ const missingSymbol=inspect({account:{...account(),positions:[{...position,symbol:"Product #3"}]}});
+ assert.equal(canInspectNadoReduction(missingSymbol),false);
+});
+test("an entry price or health record anomaly disables preflight size evidence",()=>{
+ for(const accountChange of [
+  {positions:[{...position,entryPrice:"NaN"}]},
+  {positions:[{...position,size:"0"}]},
+  {subaccountHealth:[{...account().subaccountHealth[0],maintenanceAssets:"Infinity"}]},
+  {subaccountHealth:[{...account().subaccountHealth[0],maintenanceLiabilities:"-1"}]},
+  {subaccountHealth:[...account().subaccountHealth,account().subaccountHealth[0]]},
+ ]){
+  const r=inspect({account:{...account(),...accountChange}});
+  assert.equal(r.gates.find(g=>g.name==="Portfolio position integrity").state,"fail");
+  assert.equal(canInspectNadoReduction(r),false);
+ }
+});
+test("individually recent account, ticker and engine responses must still be synchronized",()=>{
+ const accountOlder={...account(),updatedAt:new Date(now-85000).toISOString()};
+ const r=inspect({account:accountOlder});
+ assert.equal(r.gates.find(g=>g.name==="Read timestamp checks").state,"fail");
+ assert.equal(canInspectNadoReduction(r),false);
+ const marketOlder={...markets(),updatedAt:new Date(now-85000).toISOString()};
+ assert.equal(canInspectNadoReduction(inspect({markets:marketOlder})),false);
+});
+test("Nado engine warnings or unavailable quotes cannot produce a positive size claim",()=>{
+ const problems=[
+  {...engine(),warnings:["Engine contract lookup partially failed"]},
+  {...engine(),bid:null,ask:null},
+  {...engine(),oraclePrice:"100"},
+  {...engine(),engineChainId:1},
+ ];
+ for(const v of problems){
+  const r=inspect({engine:v});
+  assert.equal(canInspectNadoReduction(r),false);
+ }
+});
+test("previously valid Nado snapshot expires after delayed asynchronous RPC verification",()=>{
+ const initial=inspect();
+ assert.equal(canInspectNadoReduction(initial),true);
+ const expired=inspect({now:now+91000});
+ assert.equal(expired.gates.find(g=>g.name==="Read timestamp checks").state,"fail");
+ assert.equal(canInspectNadoReduction(expired),false);
 });

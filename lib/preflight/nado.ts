@@ -1,7 +1,7 @@
 import "server-only";
 import {getNadoAccount,getNadoMarkets,getNadoPreflightEngineEvidence,getNadoReduceOnlyObservation} from "@/lib/nado/queries";
 import {nadoPositionKey} from "@/lib/risk/nado-stress";
-import {assessNadoEvidence,type EngineMarketEvidence} from "./nado-evidence";
+import {assessNadoEvidence,canInspectNadoReduction,type EngineMarketEvidence} from "./nado-evidence";
 import {assessReductionSize,type ReduceOnlyObservation} from "./nado-reduce";
 import {finalizePreflight,type PreflightRequest,type PreflightReport} from "./policy";
 
@@ -23,14 +23,15 @@ export async function preflightNado(request:Extract<PreflightRequest,{kind:"nado
    try{evidence=await getNadoPreflightEngineEvidence(productId);}
    catch{/* Fail closed: missing independent Nado engine evidence */}
  }
- const assessed=assessNadoEvidence({
+ let assessed=assessNadoEvidence({
    wallet:request.wallet,account,markets,positionKey:request.positionKey,engine:evidence,
  });
  const position=positions.length===1?positions[0]:null;
  let reduction=null;
- if(position&&account.positionCoverageComplete===true&&
-    account.incomplete===false&&account.warnings.length===0&&
-    evidence.engineChainId===57073&&evidence.productType==="perp"){
+ // A reduce-only maximum is queried ONLY for a fully consistent read-only
+ // portfolio/product/health snapshot. The failing execution gate is exempted:
+ // this query has no order-signing or transaction capabilities.
+ if(position&&canInspectNadoReduction(assessed)){
    let observation:ReduceOnlyObservation;
    try{
      observation=await getNadoReduceOnlyObservation({
@@ -49,6 +50,14 @@ export async function preflightNado(request:Extract<PreflightRequest,{kind:"nado
      percent:request.percent,observation,
    });
  }
+ // Account and ticker timestamps may expire while an engine RPC is running.
+ // Reassess the original source snapshot at response time; never report a
+ // feasible size for an expired or contradictory input set.
+ assessed=assessNadoEvidence({
+   wallet:request.wallet,account,markets,positionKey:request.positionKey,
+   engine:evidence,now:Date.now(),
+ });
+ if(!canInspectNadoReduction(assessed))reduction=null;
  // Even a matching engine cap is NOT a valid order.
  assessed.gates.push({
    name:"Hypothetical reduce-only size bounds",
