@@ -3,6 +3,7 @@ import type {NadoAccountResponse,NadoMarketsResponse} from "../nado/types.ts";
 import {crosscheckNadoPositions} from "./nado-positions.ts";
 import type {TydroAccountResponse} from "../tydro/types.ts";
 import {reconcileTydroDirect,type TydroDirectObservation} from "./tydro-direct.ts";
+import {validTydroReserveInventory} from "./tydro-reserve-integrity.ts";
 
 export type VerificationState="pass"|"fail"|"not-tested";
 export type VerificationCheck={
@@ -88,7 +89,8 @@ export function assessWalletVerification(input:{
  checks.push(check("nado-position-market","Nado open-position product/market integrity",
    crosscheck.state,crosscheck.detail));
  const t=input.tydro.status==="success"?input.tydro.data:null;
- const tValid=t&&validWallet&&t.address.toLowerCase()===wallet.toLowerCase()&&
+ const reserveIntegrity=Boolean(t&&validTydroReserveInventory(t));
+ const tValid=t&&reserveIntegrity&&validWallet&&t.address.toLowerCase()===wallet.toLowerCase()&&
    t.chainId===57073&&ok(t.updatedAt,now)&&!t.incomplete&&t.warnings.length===0&&
    t.userEModeCategory!==null;
  checks.push(check("tydro","Tydro account, wallet and reserve completeness",
@@ -111,11 +113,13 @@ export function assessWalletVerification(input:{
  const baseDebtPositive=Boolean(tValid&&debtFieldsValid&&new BigNumber(t.debtBase).gt(0));
  const contradictoryDebt=Boolean(tValid&&debtFieldsValid&&
    (variableDebt.length>0)!==baseDebtPositive);
- const borrowerState:VerificationState=!tValid?"not-tested":
+ const borrowerState:VerificationState=!tValid?
+   t&&!reserveIntegrity?"fail":"not-tested":
    !debtFieldsValid||contradictoryDebt?"fail":
    variableDebt.length===0?"not-tested":direct.state;
  checks.push(check("tydro-variable-debt","Real Tydro variable-debt account",
    borrowerState,
+   t&&!reserveIntegrity?"Tydro reserve inventory contains duplicate, invalid or malformed entries.":
    !tValid?"No validated Tydro account data.":
    !debtFieldsValid||contradictoryDebt?
      "Borrowing reserve amounts are malformed or conflict with account-level debt. Do not treat this as verified.":
