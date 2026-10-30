@@ -8,6 +8,7 @@ import {TYDRO,providerAbi,poolDataProviderAbi} from "@/lib/tydro/contracts";
 import {finalizePreflight,type Gate,type PreflightReport,type PreflightRequest} from "./policy";
 import {diagnoseApproval,describeApprovalSimulation,gasBudgetWei} from "./approval";
 import {reconcileDebt,exactPartialDebt,blockEvidence} from "./evidence";
+import {assessTydroPreflightSources} from "./tydro-source-policy";
 
 const tokenAbi=parseAbi([
  "function balanceOf(address owner) view returns (uint256)",
@@ -36,8 +37,15 @@ export async function preflightTydro(request:Extract<PreflightRequest,{kind:"tyd
  ]);
  if(onchainPool.toLowerCase()!==TYDRO.pool.toLowerCase())
    throw Error("Pinned Tydro Pool verification failed.");
- const reserve=markets.reserves.find(r=>r.address.toLowerCase()===asset.toLowerCase());
- const user=account.userReserves.find(r=>r.address.toLowerCase()===asset.toLowerCase());
+ // Freshness and chain+wallet integrity are checked together with the
+ // exact reserve inventory BEFORE any positive preflight claim is possible.
+ const sourceAssessment=assessTydroPreflightSources({
+  wallet,asset,account,markets,now:Date.now(),
+ });
+ const reserve=sourceAssessment.valid?
+   markets.reserves.find(r=>r.address.toLowerCase()===asset.toLowerCase()):undefined;
+ const user=sourceAssessment.valid?
+   account.userReserves.find(r=>r.address.toLowerCase()===asset.toLowerCase()):undefined;
  const decimals=reserve?.decimals??user?.decimals??0;
  const debt=user?.variableDebt??"0";
  // All safety-critical contract values below are independently read at one
@@ -78,6 +86,8 @@ export async function preflightTydro(request:Extract<PreflightRequest,{kind:"tyd
    return Number.isFinite(timestamp)&&timestamp<=now+5000&&now-timestamp<90_000;
  });
  const gates:Gate[]=[
+  gate("Cross-source Tydro account and reserve integrity",
+    sourceAssessment.valid?"pass":"fail",sourceAssessment.reason),
   gate("Wallet and Ink network",chainId===57073&&account.chainId===57073&&
    account.address.toLowerCase()===wallet.toLowerCase()?"pass":"fail",
    "RPC, wallet and protocol must identify Ink chain 57073."),
@@ -184,6 +194,18 @@ export async function preflightTydro(request:Extract<PreflightRequest,{kind:"tyd
    startTimestamp,endTimestamp,nowSeconds:BigInt(Math.floor(Date.now()/1000)),
  });
  gates.push(gate("Pinned block hash and freshness",proof.matched?"pass":"fail",proof.reason));
+ // The account/markets might individually be fresh when RPC reads begin but
+ // stale by the time gas estimation and the pinned-block recheck completes.
+ const freshAtCompletion=assessTydroPreflightSources({
+  wallet,asset,account,markets,now:Date.now(),
+ });
+ gates.push(gate("Final account/market freshness",
+  freshAtCompletion.valid?"pass":"fail",freshAtCompletion.reason));
+ let finalChainId:number|null=null;
+ try{finalChainId=await publicClient.getChainId();}catch{/* fail closed */}
+ gates.push(gate("Final Ink RPC chain check",
+  finalChainId===57073?"pass":"fail",
+  "Wallet diagnostics must remain on Ink 57073 after all asynchronous provider and simulation reads."));
  const approvalBudget=gasBudgetWei(approvalGas,maxFeePerGas);
  return finalizePreflight({
    version:1,network:"Ink",chainId:57073,kind:request.kind,wallet,asset,
