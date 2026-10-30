@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 import type {NadoAccountResponse,NadoMarketsResponse,NadoPosition} from "../nado/types.ts";
 import type {Gate} from "./policy.ts";
+import {crosscheckNadoPositions} from "../verification/nado-positions.ts";
 
 /** Only information returned by the official Nado engine. All values are
  * observations, NOT executable order values, mark-to-liquidation prices,
@@ -74,12 +75,21 @@ export function assessNadoEvidence(args:{
     account.chainId===57073&&markets.chainId===57073;
   const complete=account.incomplete===false&&account.positionCoverageComplete===true&&
     account.warnings.length===0;
-  const hasHealth=position&&account.subaccountHealth.filter(h=>h.subaccount===position.subaccount&&h.exists===true).length===1;
+  const crosscheck=crosscheckNadoPositions(account,markets,now);
+  const hasHealth=Boolean(position&&account.subaccountHealth.filter(h=>h.subaccount===position.subaccount&&h.exists===true).length===1&&crosscheck.state==="pass");
   const sourceFresh=fresh(account.updatedAt,now)&&fresh(markets.updatedAt,now);
   const engineFresh=fresh(engine.observedAt,now);
+  const timestamps=[account.updatedAt,markets.updatedAt,engine.observedAt].map(x=>Date.parse(x));
+  const sourceSkewOk=timestamps.every(Number.isFinite)&&
+    Math.max(...timestamps)-Math.min(...timestamps)<=60_000;
   const validEngine=engine.engineChainId===57073&&
     typeof engine.engineEndpoint==="string"&&/^0x[a-f0-9]{40}$/i.test(engine.engineEndpoint);
-  const exactProduct=position&&ticker&&engine.productId===position.productId&&engine.productType==="perp";
+  const tickerMatchesPosition=Boolean(position&&ticker&&
+    typeof position.symbol==="string"&&typeof ticker.symbol==="string"&&
+    position.symbol.trim().toUpperCase()===ticker.symbol.trim().toUpperCase()&&
+    !/^PRODUCT #/i.test(position.symbol.trim()));
+  const exactProduct=Boolean(position&&ticker&&tickerMatchesPosition&&
+    engine.productId===position.productId&&engine.productType==="perp");
   const oracle=valid(engine.oraclePrice),bid=valid(engine.bid),ask=valid(engine.ask);
   const price= ticker&&Number.isFinite(ticker.lastPrice)&&ticker.lastPrice>0?new BigNumber(ticker.lastPrice):null;
   const stepPrice=valid(engine.priceIncrement),stepSize=valid(engine.sizeIncrement),minSize=valid(engine.minSize);
@@ -103,8 +113,10 @@ export function assessNadoEvidence(args:{
       "Local response retrieval timestamps must be within 90 seconds; this does not prove the engine's underlying price freshness."),
     gate("Official Nado engine chain and endpoint",validEngine?"pass":"unknown",
       "Engine getContracts() must identify Ink 57073 and a valid endpoint address."),
+    gate("Engine diagnostic coverage",Array.isArray(engine.warnings)&&engine.warnings.length===0?"pass":"unknown",
+      "No partial Nado engine market, chain or quote diagnostics can be treated as a complete read."),
     gate("Exact perp product mapping",exactProduct&&tickerMatches.length===1?"pass":"fail",
-      "The account position, indexer ticker and engine must identify the same perpetual product."),
+      "The position and ticker must match in product ID, canonical symbol and perpetual type, with the same product confirmed by the Nado engine."),
     gate("Product increments and minimum size",stepPrice&&stepSize&&minSize?"pass":"unknown",
       "Official engine increments must be positive. This does not verify order sizing or match precision."),
     gate("Read-only best bid/ask",spread!==null?"pass":"unknown",
@@ -118,7 +130,7 @@ export function assessNadoEvidence(args:{
     "Nado ticker last trade, engine oracle and top-of-book prices serve different functions; none is a guaranteed fill or liquidation mark.",
     "No orderbook depth, fee quote, order signature, matching-engine validation or post-trade maintenance margin is calculated.",
     "Engine increments are exposed as SDK values; no assertion is made that a hypothetical fraction can be placed as an order.",
-    ...engine.warnings.map(x=>"Engine: "+x),
+    ...(Array.isArray(engine.warnings)?engine.warnings:[]).map(x=>"Engine: "+x),
   ];
   return {
     gates,
@@ -137,4 +149,15 @@ export function assessNadoEvidence(args:{
       limitations,
     }:null,
   };
+}
+
+/** Allow only a bounded, read-only hypothetical reduce-only size request.
+ * This does NOT mean the wallet is authorised to trade or sign an order.
+ * The independent execution gate is intentionally always failing.
+ */
+export function canInspectNadoReduction(assessment:NadoDiagnostic):boolean {
+ const execution=assessment.gates.filter(g=>g.name==="Authenticated order and execution constraints");
+ const diagnostic=assessment.gates.filter(g=>g.name!=="Authenticated order and execution constraints");
+ return execution.length===1&&execution[0].state==="fail"&&
+   diagnostic.length===12&&diagnostic.every(g=>g.state==="pass");
 }
