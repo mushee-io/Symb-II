@@ -117,7 +117,7 @@ export function evaluateRiskAlerts(input:AlertInput,now=Date.now()):RiskAlert[]{
         add(alerts,"Tydro","warning","unknown-health","Tydro health factor unavailable","The lending health factor could not be interpreted.",t.updatedAt);
         continue;
       }
-      const risk=tydroRiskState(t.healthFactor);
+      const risk=tydroRiskState(t.healthFactor,t.debtBase);
       if(risk==="urgent")
         add(alerts,"Tydro","critical","health","Tydro liquidation vulnerability","Health factor is below 1.0. Liquidation may be possible; verify the account on Tydro.",t.updatedAt);
       else if(risk==="caution")
