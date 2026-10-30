@@ -54,3 +54,16 @@ test("malformed account eMode fails cleanly rather than throwing from BigInt con
   assert.equal(compare({...a,userEModeCategory:invalid},d).state,"fail");
  }
 });
+
+test("fresh-but-far-apart Tydro API and pinned Pool snapshots cannot certify the same debt",()=>{
+ const earlier=new Date(now-170000).toISOString();
+ const later=new Date(now-2000).toISOString();
+ const mismatched={...d,observedAt:later,blockTimestamp:later};
+ const olderAccount={...a,updatedAt:earlier};
+ assert.equal(reconcileTydroDirect(olderAccount,mismatched,now).state,"fail");
+ // A small clock skew remains within normal parallel wallet inspection.
+ const nearlyParallel={...a,updatedAt:new Date(now-55000).toISOString()};
+ assert.equal(reconcileTydroDirect(nearlyParallel,mismatched,now).state,"pass");
+ const outsideWindow={...a,updatedAt:new Date(now-63001).toISOString()};
+ assert.equal(reconcileTydroDirect(outsideWindow,mismatched,now).state,"fail");
+});
