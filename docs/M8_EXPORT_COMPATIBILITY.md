@@ -180,3 +180,31 @@ verification. Even when every **data diagnostic** passes, the explicit
 The report is review-only, has no transaction payload and cannot grant
 trading permissions. No Upstash, operator secret or live wallet is required
 for the deterministic regression tests.
+
+## Cross-protocol exposure inventory must not mistake missing data for zero exposure
+
+The combined Nado/Tydro read-only inventory validates **same Ink 57073
+wallet**, correctly formed source addresses, both account snapshot times,
+and an upper bound of 60 seconds of source skew. Either snapshot older
+than three minutes, in the future beyond the small RPC tolerance, or
+missing its timestamp results in **withheld rows and a visible warning**,
+not an empty or reassuring portfolio.
+
+Every Nado position row must have a unique subaccount/product/position
+identity, a valid cross-margin side, known symbol and positive finite
+size and entry price. Duplicate or missing user reserves, invalid token
+addresses, negative debt amounts and malformed Tydro reserve metadata
+also cause the entire cross-protocol inventory to be withheld. Provider
+warnings, partial Nado position discovery and missing subaccount health
+do not invalidate otherwise well-formed displayed rows but explicitly
+mark the inventory **incomplete**. If more than 60 rows exist, the
+display is explicitly truncated and never called complete.
+
+The interface now distinguishes genuinely empty, complete observations
+from data withheld or partially observed because of integrity failures.
+The UI also avoids implying that merely providing a wallet address
+authenticates ownership.
+
+These checks do not establish valuation, margin aggregation, on-chain
+finality, wallet ownership, executable repayments or Nado order
+authorization. They do not depend on Redis or change production flags.
