@@ -30,6 +30,7 @@ async function main(){
   preflight:"/api/preflight/config",proposals:"/api/proposals/config",
   agent:"/api/agent/config",watch:"/api/watch/config",
   verification:"/api/verification/config",
+  notifications:"/api/notifications/config",
   nado:"/api/nado/markets",tydro:"/api/tydro/markets",
  };
  const startedAt=Date.now();
@@ -47,7 +48,8 @@ async function main(){
   expectedSha:args[0],health:r.health,readiness:r.readiness,
   recheckHealth,recheckReadiness,
   configs:{preflight:r.preflight,proposals:r.proposals,agent:r.agent,
-   watch:r.watch,verification:r.verification},nado:r.nado,tydro:r.tydro,
+   watch:r.watch,verification:r.verification,
+   notifications:r.notifications},nado:r.nado,tydro:r.tydro,
  },completedAt);
  console.log(JSON.stringify({...report,checkedAt:new Date(completedAt).toISOString(),
   scanDurationMs:completedAt-startedAt},null,2));
