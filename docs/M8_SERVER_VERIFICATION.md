@@ -207,3 +207,26 @@ ERC-1271 runtime at a pinned block. This is stronger than a fabricated
 signature-string fixture, but **still not a genuine connected mainnet
 wallet or real Upstash test**. Real M8 acceptance and independent
 security review remain outstanding.
+
+## Protected preflight: reject signature verification after snapshot expiry
+
+The protected read-only preflight acknowledgement previously checked its
+90-second snapshot age just before awaiting the Ink EOA/ERC-1271 signature
+RPC. An in-flight signature check might complete after the original snapshot
+expired. That must not result in a newly accepted acknowledgement.
+
+`lib/preflight/acknowledgement-flow.ts` now verifies the canonical report
+digest, wallet and original 90-second age **before and after** asynchronous
+signature verification. A clock failure, rollback, corrupt digest, incorrect
+signer or an unavailable RPC fails closed. The route still uses atomic Redis
+`GETDEL` first and persists a **non-executable receipt only** after both
+checks succeed; no retries can reuse that consumed report. Verification errors
+return rejection instead of bubbling out as an unhandled 500.
+
+`tests/preflight-acknowledgement-flow.test.mjs` uses deterministic real
+viem EOA signatures against a mocked pinned Ink RPC, including an exactly
+expired result, tampered report, bad signer, wrong origin, failed signature
+and server clock anomalies. No live wallet or Redis integration is asserted.
+
+The preflight read-only test does not execute a transaction, quote final gas
+costs or satisfy M8's genuine-wallet security acceptance requirements.
