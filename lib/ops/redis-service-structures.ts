@@ -12,7 +12,7 @@ import type {RedisCommand} from "./redis-one-use.ts";
  */
 export type RedisStructuresStage=
  "list-write"|"list-trim"|"list-read"|"list-retention"|
- "sorted-write"|"sorted-score"|"sorted-order"|"sorted-remove"|
+ "sorted-write"|"sorted-retention"|"sorted-score"|"sorted-order"|"sorted-remove"|
  "cleanup"|"complete";
 export type RedisStructuresResult={
  ok:boolean;stage:RedisStructuresStage;detail:string;
@@ -54,6 +54,12 @@ export async function verifyRedisServiceStructures(command:RedisCommand):Promise
   stage="sorted-write";
   if(await command(["ZADD",sorted,10,one,20,two])!==2)
    throw Error("Synthetic watch ZADD failed.");
+  stage="sorted-retention";
+  if(await command(["EXPIRE",sorted,30])!==1)
+   throw Error("Synthetic watch retention failed.");
+  const sortedTtl=await command(["TTL",sorted]);
+  if(!Number.isInteger(sortedTtl)||(sortedTtl as number)<1||(sortedTtl as number)>30)
+   throw Error("Synthetic watch expiry was not bounded.");
   stage="sorted-score";
   const score=await command(["ZSCORE",sorted,one]);
   if(score!=="10"&&score!==10)throw Error("Synthetic watch ZSCORE failed.");
@@ -69,8 +75,9 @@ export async function verifyRedisServiceStructures(command:RedisCommand):Promise
  }catch{/* Sanitised failure is reported without keys, values or upstream details. */}
  finally{
   try{
-   // Keys have 30s TTL fallback only AFTER list expiry stage. Always
-   // attempt deletion, and never claim acceptance if deletion fails.
+   // Time-bounded keys are checked before accepting the drill. Early
+   // Redis failures still trigger best-effort deletion. Never claim
+   // acceptance if cleanup fails.
    const deleted=await command(["DEL",list,sorted]);
    cleaned=Number.isInteger(deleted)&&(deleted as number)>=0;
   }catch{cleaned=false;}
