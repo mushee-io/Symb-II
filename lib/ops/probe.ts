@@ -3,12 +3,13 @@ import {createPublicClient,http} from "viem";
 import {ink} from "../ink";
 import {redis} from "../agent/redis";
 import {verifyRedisOneUse} from "./redis-one-use";
+import {verifyRedisServiceStructures} from "./redis-service-structures";
 import {getNadoMarkets} from "../nado/queries";
 import {getTydroMarkets} from "../tydro/queries";
 import {assessNadoMarketIntegrity,assessTydroMarketIntegrity} from "./provider-integrity";
 import {describeReadiness,type ServiceId} from "./readiness";
 
-export type ProbeResult={id:ServiceId|"nado"|"tydro";state:"pass"|"fail"|"not-configured";detail:string};
+export type ProbeResult={id:ServiceId|"nado"|"tydro"|"redis-services";state:"pass"|"fail"|"not-configured";detail:string};
 async function probe(label:ProbeResult["id"],f:()=>Promise<boolean>):Promise<ProbeResult>{
  try{return {id:label,state:(await f())?"pass":"fail",detail:"Verified at request time (snapshot only)."};}
  catch{return {id:label,state:"fail",detail:"Connectivity or integrity check failed; no secrets exposed."};}
@@ -26,6 +27,12 @@ export async function probeServices():Promise<{checkedAt:string;results:ProbeRes
    return (await verifyRedisOneUse(redis)).ok;
   }):
    Promise.resolve({id:"redis",state:"not-configured",detail:"Redis credentials missing."} as ProbeResult),
+  enabledRedis?probe("redis-services",async()=>{
+   // Isolated synthetic receipts + watch sorted sets; zero real wallet keys,
+   // no real user subscriptions and no outbound notification delivery.
+   return (await verifyRedisServiceStructures(redis)).ok;
+  }):
+   Promise.resolve({id:"redis-services",state:"not-configured",detail:"Redis credentials missing."} as ProbeResult),
   probe("rpc",async()=>{
    const c=createPublicClient({chain:ink,transport:http(process.env.INK_RPC_URL||
      ink.rpcUrls.default.http[0],{timeout:10000,retryCount:0})});
