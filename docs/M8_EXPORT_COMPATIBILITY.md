@@ -57,3 +57,24 @@ lie; the operator must assess independent provider control and relevance.
 
 No step here enables wallet sessions, gas spending, order execution,
 approvals or token transfers.
+
+## Nado position data-integrity hardening
+
+The account reconciliation now requires **both** the market product ID and
+its engine/indexer ticker label to agree for every reported open cross-margin
+perpetual position. Unknown `Product #...` fallback labels cannot pass.
+The position's entry price must be a positive finite decimal, and the unique
+subaccount health observation must contain finite maintenance/initial health,
+nonnegative finite assets and nonnegative finite liabilities.
+
+Negative maintenance/initial health is permitted: an underwater account is
+risky but should not be discarded as malformed. These checks are designed to
+distinguish a *complete reported data set* from missing or contradictory
+source fields. They do not declare that any position is safe or liquidatable.
+
+**Source limitation:** Nado positions and tickers are queried from Nado's
+indexer/engine API family. Comparing them is an internal consistency check,
+not an independently verified settlement record or permission to trade.
+Active position results still require a genuine connected account and a
+separate operator acceptance test before being treated as production-proof
+evidence. No execution or wallet authorization is enabled.
