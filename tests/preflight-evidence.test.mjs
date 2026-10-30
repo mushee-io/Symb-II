@@ -21,10 +21,37 @@ test("mismatching token decimals or account balance blocks preflight",()=>{
  assert.equal(reconcileDebt({...base,displayed:"NaN"}).matched,false);
 });
 test("stable pinned block proof checks hash, time and bounded span",()=>{
- const good={startNumber:100n,endNumber:102n,startHash:"0xabc",recheckHash:"0xabc",startTimestamp:500n,endTimestamp:504n,nowSeconds:510n};
+ const good={startNumber:100n,endNumber:102n,startHash:"0x"+"ab".repeat(32),recheckHash:"0x"+"ab".repeat(32),startTimestamp:500n,endTimestamp:504n,nowSeconds:510n};
  assert.equal(blockEvidence(good).matched,true);
  assert.equal(blockEvidence({...good,recheckHash:"0xdef"}).matched,false);
  assert.equal(blockEvidence({...good,endNumber:104n}).matched,false);
  assert.equal(blockEvidence({...good,nowSeconds:700n}).matched,false);
  assert.equal(blockEvidence({...good,startTimestamp:null}).matched,false);
+});
+
+test("pinned Ink block verification rejects plausible-looking but malformed or zero-length hashes",()=>{
+ const base={
+  startNumber:100n,endNumber:100n,
+  startHash:"0x"+"aa".repeat(32),recheckHash:"0x"+"aa".repeat(32),
+  startTimestamp:1000n,endTimestamp:1000n,nowSeconds:1010n,
+ };
+ assert.equal(blockEvidence(base).matched,true);
+ assert.equal(blockEvidence({...base,startHash:"0xabc",recheckHash:"0xabc"}).matched,false);
+ assert.equal(blockEvidence({...base,startHash:"0x"+"zz".repeat(32)}).matched,false);
+ assert.equal(blockEvidence({...base,recheckHash:"0x"+"bb".repeat(32)}).matched,false);
+ assert.equal(blockEvidence({...base,recheckHash:"0x"+"AA".repeat(32)}).matched,true);
+});
+test("pinned Ink block timestamps cannot regress or conceal future time",()=>{
+ const base={
+  startNumber:100n,endNumber:102n,
+  startHash:"0x"+"aa".repeat(32),recheckHash:"0x"+"aa".repeat(32),
+  startTimestamp:1000n,endTimestamp:1003n,nowSeconds:1010n,
+ };
+ assert.equal(blockEvidence(base).matched,true);
+ assert.equal(blockEvidence({...base,startTimestamp:1005n}).matched,false);
+ assert.equal(blockEvidence({...base,startTimestamp:-1n}).matched,false);
+ assert.equal(blockEvidence({...base,endTimestamp:0n}).matched,false);
+ assert.equal(blockEvidence({...base,startNumber:-1n,endNumber:1n}).matched,false);
+ assert.equal(blockEvidence({...base,endTimestamp:1020n}).matched,false);
+ assert.equal(blockEvidence({...base,nowSeconds:0n}).matched,false);
 });
