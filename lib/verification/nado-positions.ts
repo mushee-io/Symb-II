@@ -11,7 +11,7 @@ const finiteAmount=(s:unknown):BigNumber|null=>{
  // SDK/indexer amounts can contain decimal/scientific notation. Reject
  // NaN, infinity, malformed or excessively long untrusted strings.
  if(typeof s!=="string"||s.length<1||s.length>128||
-    !/^-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:e[+-]?\\d{1,4})?$/i.test(s))
+    !/^-?(?:\d+(?:\.\d+)?|\.\d+)(?:e[+-]?\d{1,4})?$/i.test(s))
   return null;
  const n=new BigNumber(s);
  return n.isFinite()?n:null;
