@@ -23,6 +23,7 @@ const steps = [
   { number:"08",title:"Real-wallet verification",description:"Opt-in Ink RPC, Nado and Tydro reconciliation with evidence export",status:"Implementation" },
   { number:"09",title:"Release qualification",description:"Fail-closed public deployment and provider integrity checks; live acceptance outstanding",status:"Code implemented" },
   { number:"11",title:"In-tab risk timeline",description:"Privacy-limited, wallet-isolated warning changes and conservative recovery handling",status:"Code implemented" },
+  { number:"12",title:"Mobile wallet connections",description:"Optional WalletConnect pairing, explicit wallet selection and strict Ink network checks",status:"Code implemented · Mobile acceptance pending" },
 ];
 
 export default function Workspace() {
@@ -40,7 +41,7 @@ export default function Workspace() {
         <Link href="/" className="back-link"><ArrowLeft size={15}/> Back to overview</Link>
         <div className="workspace-title-row">
           <div><span className="eyebrow">SYMB-II / WORKSPACE</span><h1>Your capital workspace<span className="title-period">.</span></h1><p>Connect your Ink wallet, inspect real Nado markets and read your wallet-associated trading activity. Tydro lending and health data are read-only. Automated actions are not available.</p></div>
-          <span className="milestone-pill"><span/> M07–M09 / M11 · VALIDATION</span>
+          <span className="milestone-pill"><span/> M07–M09 / M11–M12 · VALIDATION</span>
         </div>
         <div className="workspace-grid">
           <section className="workspace-card wallet-panel">
