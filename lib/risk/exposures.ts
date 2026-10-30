@@ -94,7 +94,7 @@ export function buildExposureInventory(
  for(const h of nado.subaccountHealth){
   const signed=(value:unknown)=>{
    if(typeof value!=="string"||value.length<1||value.length>128||
-      !/^-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:e[+-]?\\d{1,4})?$/i.test(value))return false;
+      !/^-?(?:\d+(?:\.\d+)?|\.\d+)(?:e[+-]?\d{1,4})?$/i.test(value))return false;
    return new BigNumber(value).isFinite();
   };
   if(!h||typeof h.subaccount!=="string"||!h.subaccount.trim()||
