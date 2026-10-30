@@ -1,5 +1,5 @@
 import "server-only";
-import {validatedUpstashOrigin} from "../ops/redis-config";
+import {validatedUpstashOrigin} from "../ops/redis-config.ts";
 
 type RedisResponse = { result?: unknown; error?: string };
 function config() {
