@@ -110,12 +110,6 @@ test("missing, reversed or nonfinite server time fails closed",async()=>{
    verifySignature:realSignature,now:clock(...times),
   }),false);
  }
- for(const clockFn of [
-  ()=>{throw Error("clock unavailable");},
-  clock(signedNow),
- ]){
-  if(clockFn===undefined)throw Error("Invalid clock test");
- }
  let samples=0;
  assert.equal(await verifyFreshPreflightReview(args,{
   verifySignature:realSignature,
