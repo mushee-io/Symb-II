@@ -9,18 +9,10 @@ export type LaunchGate={
  id:ServiceId;title:string;status:GateState;
  requirements:string[];issues:string[];verifiedLive:false;
 };
+import {validatedUpstashOrigin,hasValidRedisConfiguration} from "./redis-config";
+export {hasValidRedisConfiguration} from "./redis-config";
 const set=(value:string|undefined)=>typeof value==="string"&&value.trim().length>0;
-const secureUrl=(value:string|undefined)=>{
- if(!set(value))return false;
- try{
-  const url=new URL(value!);
-  return url.protocol==="https:"&&url.hostname.endsWith(".upstash.io")&&
-    !url.username&&!url.password&&!url.port&&(url.pathname==="/"||url.pathname==="");
- }catch{return false;}
-};
-export function hasValidRedisConfiguration(env:NodeJS.ProcessEnv=process.env):boolean{
- return secureUrl(env.UPSTASH_REDIS_REST_URL)&&set(env.UPSTASH_REDIS_REST_TOKEN);
-}
+const secureUrl=(value:string|undefined)=>validatedUpstashOrigin(value)!==null;
 export function possibleGatewayAuthentication(env:NodeJS.ProcessEnv=process.env):boolean{
  return Boolean(env.AI_GATEWAY_API_KEY)||Boolean(env.VERCEL_OIDC_TOKEN)||env.VERCEL==="1";
 }
