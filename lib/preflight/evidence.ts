@@ -53,13 +53,19 @@ export function blockEvidence(args:{
   nowSeconds:bigint;
 }):{matched:boolean;reason:string}{
  const {startNumber,endNumber,startHash,recheckHash,startTimestamp,endTimestamp,nowSeconds}=args;
- if(!startHash||!recheckHash||startHash!==recheckHash)
-   return {matched:false,reason:"Pinned start-block hash changed or could not be read."};
- if(endNumber<startNumber||endNumber-startNumber>3n)
-   return {matched:false,reason:"More than three Ink blocks elapsed during the preflight."};
- if(startTimestamp===null||endTimestamp===null)
-   return {matched:false,reason:"Pinned block timestamps unavailable."};
- if(startTimestamp>nowSeconds+5n||endTimestamp>nowSeconds+5n||
+ // A truthy string is not sufficient block evidence: require genuine
+ // 32-byte EVM header hashes and compare them case-insensitively.
+ const fullHash=/^0x[0-9a-f]{64}$/i;
+ if(typeof startHash!=="string"||typeof recheckHash!=="string"||
+    !fullHash.test(startHash)||!fullHash.test(recheckHash)||
+    startHash.toLowerCase()!==recheckHash.toLowerCase())
+   return {matched:false,reason:"Pinned start-block hash is missing, malformed or changed."};
+ if(startNumber<0n||endNumber<startNumber||endNumber-startNumber>3n)
+   return {matched:false,reason:"Invalid or excessive Ink block span during the preflight."};
+ if(startTimestamp===null||endTimestamp===null||
+    startTimestamp<=0n||endTimestamp<=0n||endTimestamp<startTimestamp)
+   return {matched:false,reason:"Pinned block timestamps unavailable or out of order."};
+ if(nowSeconds<0n||startTimestamp>nowSeconds+5n||endTimestamp>nowSeconds+5n||
     nowSeconds-startTimestamp>90n||nowSeconds-endTimestamp>90n)
    return {matched:false,reason:"Ink block evidence is too old or timestamp is inconsistent."};
  return {matched:true,reason:"Pinned block hash was stable, timestamps recent and chain advanced ≤3 blocks."};
