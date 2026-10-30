@@ -21,7 +21,7 @@ counts, public protocol labels and generic policy-authored alert titles.
 - A change to no warnings is called a *recovery from flagged conditions*
   only when both feeds are successful, fresh under three minutes, associated
   with the same Ink 57073 wallet, report complete coverage, and pass
-  internal Nado/Tydro reserve/health consistency checks. A "recovery" is
+  internal Nado/Tydro reserve/health consistency checks, including unique, finite Nado subaccount-health data and non-contradictory Tydro account/reserve debt presence. A "recovery" is
   not a safe-account verdict, margin guarantee or proof of account ownership.
 - A repeated alert ID/severity set does not create another event, even if
   new HTTP timestamps arrive. Changes in severity trigger an event.
