@@ -383,3 +383,17 @@ M7 Upstash, wallet-authorised delivery consent, verified recipient ownership,
 atomic revocation, provider idempotency, abuse controls, real delivery trials
 and independent security review. Read the [M13 acceptance runbook](docs/M13_NOTIFICATION_FOUNDATIONS.md).
 
+
+
+## M14 — Recipient verification and signed opt-out policies
+
+M14 extends the disabled M13 delivery foundation with scoped, 256-bit
+single-use recipient possession challenges, 10-minute expiry, three-guess
+limit and a testable, 120-second **revocation-only Ink wallet signature**
+workflow. The policies mandate private compare-and-swap nonce consumption
+and an atomic data-deletion barrier coordinated with in-flight delivery.
+The application does **not** implement actual recipient email/push
+verification, signature/revocation API routes or data storage until M7/M8
+production and security gates have been independently accepted. The
+public M14 readiness response reports these routes **disabled**. See the
+[M14 security and acceptance document](docs/M14_NOTIFICATION_LIFECYCLE.md).
