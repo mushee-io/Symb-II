@@ -51,6 +51,24 @@ const checks=[
      throw Error("Unexpected watch permissions or delivery");
    return v.enabled?"watch configured (not real-time)":"watch safely disabled";
  }],
+ ["M13/M14 outbound notification safety",async()=>{
+   const v=await read("/api/notifications/config");
+   if(v.milestone!=="M13"||v.chainId!==57073||
+      !releaseMatches(v.release,process.env.EXPECTED_COMMIT_SHA)||
+      v.policyImplemented!==true||v.recipientProofPolicyImplemented!==true||
+      v.revocationPolicyImplemented!==true||
+      v.deliveryEnabled!==false||v.notificationsDelivered!==false||
+      v.providerConfigured!==false||v.verifiedConsentStore!==false||
+      v.externalDeliveryVerified!==false||v.executionEnabled!==false||
+      v.recipientVerificationAvailable!==false||
+      v.recipientOwnershipVerified!==false||
+      v.signedRevocationEndpointAvailable!==false||
+      v.atomicRevocationVerified!==false||v.privacyDeletionVerified!==false||
+      !Array.isArray(v.channels)||v.channels.length!==2||
+      !v.channels.includes("email")||!v.channels.includes("web-push"))
+      throw Error("M13/M14 notification route indicates unaccepted delivery, recipient access or invalid release");
+   return "external delivery, recipient verification and revocation safely disabled";
+ }],
  ["M8 wallet verification config",async()=>{
    const v=await read("/api/verification/config");
    if(v.chainId!==57073||typeof v.enabled!=="boolean"||
