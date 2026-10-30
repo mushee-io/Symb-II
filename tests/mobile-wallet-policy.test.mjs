@@ -28,6 +28,7 @@ test("public connection setup is optional, Ink-only and cannot silently choose a
  const ui=readFileSync(new URL("../components/wallet-button.tsx",import.meta.url),"utf8");
  const env=readFileSync(new URL("../.env.example",import.meta.url),"utf8");
  assert.match(config,/validWalletConnectProjectId\(projectId\)/);
+ assert.match(config,/from "@walletconnect\/wagmi-connector"/);
  assert.match(config,/walletConnectConfigured&&projectId/);
  assert.match(config,/chains:\[ink\]/);
  assert.match(config,/showQrModal:true/);
