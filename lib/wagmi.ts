@@ -1,5 +1,6 @@
 import {createConfig,http} from "wagmi";
-import {injected,walletConnect} from "wagmi/connectors";
+import {injected} from "wagmi";
+import {walletConnect} from "@walletconnect/wagmi-connector";
 import {ink} from "@/lib/ink";
 import {validWalletConnectProjectId} from "@/lib/wallet/connect-policy";
 
