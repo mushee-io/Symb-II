@@ -1,6 +1,7 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {buildExposureInventory} from "../lib/risk/exposures.ts";
+import {TYDRO} from "../lib/tydro/contracts.ts";
 
 const now=Date.parse("2026-10-30T20:20:00.000Z");
 const current=new Date(now-10000).toISOString();
@@ -25,7 +26,7 @@ const reserve=(address,symbol,supplied,variableDebt,stableDebt="0")=>({
  oraclePriceRaw:"100000000",
 });
 function tydro(extra={}){
- return {address:wallet,chainId:57073,updatedAt:current,
+ return {address:wallet,chainId:57073,updatedAt:current,pool:TYDRO.pool,
   incomplete:false,warnings:[],userReserves:[
    reserve("0x0000000000000000000000000000000000000002","WETH","0.01","0"),
    reserve("0x0000000000000000000000000000000000000003","USDC","0","400"),
@@ -51,6 +52,7 @@ test("mismatched wallet, malformed address or chain withholds all exposure rows"
   [nado({chainId:1}),tydro()],
   [nado(),tydro({chainId:1})],
   [nado({address:"not-wallet"}),tydro()],
+  [nado(),tydro({pool:"0x0000000000000000000000000000000000000004"})],
  ]){
   const r=inventory(n,t);
   assert.equal(r.complete,false);
@@ -129,6 +131,8 @@ test("missing, duplicate or non-existing Nado subaccount health cannot claim com
   [],[health(),health()],
   [{...health(),exists:false}],
   [{...health(),subaccount:"unrelated"}],
+  [{...health(),maintenanceHealth:"NaN"}],
+  [{...health(),maintenanceAssets:"-5"}],
  ]){
   const r=inventory(nado({subaccountHealth:healthRows}),tydro());
   assert.equal(r.complete,false);
