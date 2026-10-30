@@ -7,7 +7,7 @@ function nado(overrides={}){return {chainId:57073,address:wallet,updatedAt:"2026
   incomplete:false,positionCoverageComplete:true,subaccounts:["main"],subaccountHealth:[
     {subaccount:"main",exists:true,maintenanceHealth:"4",initialHealth:"4",maintenanceAssets:"6",maintenanceLiabilities:"2"}],
   warnings:[],positions:[],openOrders:[],indexedOrders:[],...overrides};}
-function tydro(overrides={}){return {chainId:57073,address:wallet,updatedAt:"2026-10-29T14:59:30Z",incomplete:false,warnings:[],healthFactor:"2.3",userReserves:[],...overrides};}
+function tydro(overrides={}){return {chainId:57073,address:wallet,updatedAt:"2026-10-29T14:59:30Z",incomplete:false,warnings:[],debtBase:"100",healthFactor:"2.3",userReserves:[],...overrides};}
 const input=(n=nado(),t=tydro())=>({wallet,nado:{status:"success",data:n},tydro:{status:"success",data:t}});
 test("healthy complete feeds yield no alerts",()=>assert.deepEqual(evaluateRiskAlerts(input(),now),[]));
 test("Tydro thresholds distinguish liquidation from caution",()=>{
@@ -15,7 +15,7 @@ test("Tydro thresholds distinguish liquidation from caution",()=>{
   assert.equal(alerts.length,1);assert.equal(alerts[0].level,"critical");
   alerts=evaluateRiskAlerts(input(nado(),tydro({healthFactor:"1.49"})),now);
   assert.equal(alerts[0].level,"warning");
-  assert.deepEqual(evaluateRiskAlerts(input(nado(),tydro({healthFactor:null})),now),[]);
+  assert.deepEqual(evaluateRiskAlerts(input(nado(),tydro({debtBase:"0",healthFactor:null})),now),[]);
 });
 test("negative or zero Nado maintenance readings alert but keep separate units",()=>{
   let alerts=evaluateRiskAlerts(input(nado({subaccountHealth:[{subaccount:"main",exists:true,maintenanceHealth:"-0.1"}]})),now);
@@ -45,4 +45,53 @@ test("malformed maintenance health and lending HF produce warnings",()=>{
 });
 test("wallet address mismatch from user returns no exposure",()=>{
   assert.deepEqual(evaluateRiskAlerts({...input(),wallet:"garbage"},now),[]);
+});
+
+test("duplicate Nado health rows cannot silently conceal critical negative maintenance",()=>{
+ const healthy={subaccount:"main",exists:true,maintenanceHealth:"4",
+  initialHealth:"4",maintenanceAssets:"6",maintenanceLiabilities:"2"};
+ const distressed={...healthy,maintenanceHealth:"-0.5"};
+ const alerts=evaluateRiskAlerts(input(nado({subaccountHealth:[healthy,distressed]})),now);
+ assert.ok(alerts.some(a=>a.id==="nado:duplicate-health"&&a.level==="warning"));
+ assert.ok(alerts.some(a=>a.id==="nado:maintenance:main"&&a.level==="critical"));
+ assert.equal(alerts.filter(a=>a.id==="nado:maintenance:main").length,1);
+});
+test("discovered Nado subaccount without its own health cannot be hidden by an unrelated row",()=>{
+ const unrelated={subaccount:"other",exists:true,maintenanceHealth:"10"};
+ const alerts=evaluateRiskAlerts(input(nado({subaccountHealth:[unrelated]})),now);
+ assert.ok(alerts.some(a=>a.id==="nado:missing-health"));
+ assert.ok(alerts.some(a=>a.id==="nado:unmatched-health"));
+});
+test("existing=false Nado health does not count as a validated discovered account",()=>{
+ const missing={subaccount:"main",exists:false,maintenanceHealth:"10"};
+ const alerts=evaluateRiskAlerts(input(nado({subaccountHealth:[missing]})),now);
+ assert.ok(alerts.some(a=>a.id==="nado:missing-health"));
+});
+test("Nado warnings alone must visibly mark a risk feed partial",()=>{
+ const alerts=evaluateRiskAlerts(input(nado({warnings:["missing engine read"]})),now);
+ assert.ok(alerts.some(a=>a.id==="nado:partial"));
+});
+test("Tydro borrower without a health factor is unknown, never risk-free",()=>{
+ const alerts=evaluateRiskAlerts(input(nado(),tydro({debtBase:"25",healthFactor:null})),now);
+ assert.ok(alerts.some(a=>a.id==="tydro:unknown-health"&&a.level==="warning"));
+ assert.deepEqual(evaluateRiskAlerts(input(nado(),tydro({debtBase:"0",healthFactor:null})),now),[]);
+});
+test("Tydro debt and health factor contradictions or invalid amounts produce warnings",()=>{
+ for(const t of [
+  tydro({debtBase:"NaN",healthFactor:"2.3"}),
+  tydro({debtBase:"-1",healthFactor:"2.3"}),
+  tydro({debtBase:"0",healthFactor:"2.3"}),
+ ]){
+  const alerts=evaluateRiskAlerts(input(nado(),t),now);
+  assert.ok(alerts.some(a=>a.id==="tydro:unknown-debt"||a.id==="tydro:health-without-debt"));
+ }
+});
+test("malformed Tydro reserve inventory is surfaced even when health factor looks good",()=>{
+ const t=tydro({userReserves:[{
+  address:"bad",symbol:"USDC",variableDebt:"10",stableDebt:"0",supplied:"0",
+  decimals:6,liquidationThresholdBps:8000,usingAsCollateral:false,
+  oraclePriceRaw:"100000000",
+ }]});
+ const alerts=evaluateRiskAlerts(input(nado(),t),now);
+ assert.ok(alerts.some(a=>a.id==="tydro:reserve-integrity"));
 });

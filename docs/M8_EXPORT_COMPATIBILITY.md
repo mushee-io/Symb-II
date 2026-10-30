@@ -130,3 +130,25 @@ assets, stale reads, malformed reserve metadata, and invalid block headers.
 No Redis-dependent service has been enabled. This work does not replace
 real-wallet validation, independently operated live-RPC checks, transaction
 simulation acceptance, or external security audit.
+
+## M8 risk-alert failure modes: no silent healthy readings
+
+The read-only risk feed now detects conflicting Nado subaccount-health
+inventories. Duplicate names, unrelated health records, missing
+`exists:true` readings and warnings from the Nado adapter become explicit
+warnings. Every duplicate observation is still checked for adverse maintenance
+health; the most severe alert is retained rather than letting the first
+positive record suppress a later negative one.
+
+For Tydro, a missing health factor is expected for an account with **zero**
+debt. If the account reports positive debt (or debt cannot be decoded), a
+missing health factor instead emits an **unknown borrower health** warning.
+Malformed debt amounts, contradictions between zero debt and a populated
+health factor, and invalid reserve inventory rows emit diagnostic warnings
+even when another field appears reassuring.
+
+These are display-only alerts on short-lived provider snapshots. They do
+not change a position, borrow, repay, set permissions, send a notification,
+or establish that an account is liquidatable. Live operator testing and
+upstream provider provenance still matter; no Upstash credentials are needed
+to test the pure alert policy.
