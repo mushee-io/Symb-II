@@ -8,6 +8,8 @@ test("Tydro no-debt status requires independently observed zero Pool debt",()=>{
  assert.equal(tydroRiskState(null,"NaN"),"unknown");
  assert.equal(tydroRiskState(null,"0"),"no-exposure");
  assert.equal(tydroRiskState(null,"0.000000"),"no-exposure");
+ assert.equal(tydroRiskState(null,"0."+"0".repeat(90)+"1"),"unknown");
+ assert.equal(tydroRiskState(null,"9".repeat(120)),"unknown");
  assert.equal(tydroRiskState("2","0"),"unknown");
 });
 test("Tydro HF categorization still follows protocol threshold with actual debt",()=>{
