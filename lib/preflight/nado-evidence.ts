@@ -109,8 +109,11 @@ export function assessNadoEvidence(args:{
       "Review requires exactly one matching open position. Duplicate IDs or missing positions are refused."),
     gate("Cross-margin health observation",hasHealth?"pass":"unknown",
       "A matching existing subaccount health observation is required; this does not calculate post-order margin."),
-    gate("Read timestamp checks",sourceFresh&&engineFresh?"pass":"fail",
-      "Local response retrieval timestamps must be within 90 seconds; this does not prove the engine's underlying price freshness."),
+    gate("Portfolio position integrity",crosscheck.state==="pass"?"pass":
+      crosscheck.state==="fail"?"fail":"unknown",
+      crosscheck.detail+" Nado indexer and engine are related providers, not independent settlement evidence."),
+    gate("Read timestamp checks",sourceFresh&&engineFresh&&sourceSkewOk?"pass":"fail",
+      "Account, ticker and engine observations must each be under 90 seconds old and within 60 seconds of one another. This does not prove price freshness."),
     gate("Official Nado engine chain and endpoint",validEngine?"pass":"unknown",
       "Engine getContracts() must identify Ink 57073 and a valid endpoint address."),
     gate("Engine diagnostic coverage",Array.isArray(engine.warnings)&&engine.warnings.length===0?"pass":"unknown",
