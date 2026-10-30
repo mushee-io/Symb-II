@@ -11,12 +11,15 @@ export function tydroRiskState(
 ): RiskState {
   const validDebt=typeof debtBase==="string"&&debtBase.length>0&&
     debtBase.length<=128&&/^(?:\d+(?:\.\\d+)?|\\.\\d+)$/.test(debtBase);
-  const debt=validDebt?Number(debtBase):NaN;
-  if(!Number.isFinite(debt)||debt<0)return "unknown";
-  if(healthFactor===null)return debt===0?"no-exposure":"unknown";
+  if(!validDebt)return "unknown";
+  // Decimal strings from the protocol can exceed JavaScript's safe integer
+  // range or underflow Number() for tiny values. Zero/nonzero must remain
+  // exact; no floating-point conversion for borrower classification.
+  const owes=/[1-9]/.test(debtBase);
+  if(healthFactor===null)return owes?"unknown":"no-exposure";
   // If a health factor is populated but the Pool says no debt, these inputs
   // contradict one another; do not show a reassuring score.
-  if(debt===0||!healthFactor.trim()||healthFactor.length>128)return "unknown";
+  if(!owes||!healthFactor.trim()||healthFactor.length>128)return "unknown";
   const value = Number(healthFactor);
   if (!Number.isFinite(value) || value < 0) return "unknown";
   if (value < 1) return "urgent";
