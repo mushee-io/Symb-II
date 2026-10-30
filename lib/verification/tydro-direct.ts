@@ -48,6 +48,11 @@ export function reconcileTydroDirect(
  const stamp=Date.parse(direct.observedAt), blockTime=Date.parse(direct.blockTimestamp),feed=Date.parse(account.updatedAt);
  if([stamp,blockTime,feed].some(n=>!Number.isFinite(n)||n>now+5000||now-n>180000))
    return failed("Direct block or account snapshot is stale or time-inconsistent.");
+ // Freshness alone is not enough: two snapshots can each be <3 min old yet
+ // differ by nearly 3 minutes after borrowing or collateral changes.
+ // Parallel browser inspection should normally be much closer than 60 sec.
+ if(Math.abs(stamp-feed)>60000)
+   return failed("Tydro adapter and pinned Pool observations are over 60 seconds apart.");
  if(direct.chainId!==57073||account.chainId!==57073||
     direct.verifiedProviderPool.toLowerCase()!==TYDRO.pool.toLowerCase()||
     account.pool.toLowerCase()!==TYDRO.pool.toLowerCase())
