@@ -15,6 +15,19 @@ export type NadoStressResult =
   | { ok: false; reason: string };
 
 const MAX_SNAPSHOT_AGE_MS=120_000;
+const MAX_SKEW_MS=60_000;
+// The Nado indexer may append a quote suffix (ETH-PERP_USDT0) while the
+// official position identifier is ETH-PERP. Accept those two exact forms.
+function symbolsAgree(position:NadoPosition,market:NadoMarket):boolean{
+ if(typeof position.symbol!=="string"||typeof market.symbol!=="string"||
+    typeof market.quote!=="string"||!market.quote.trim()||
+    position.symbol.length>80||market.symbol.length>120||market.quote.length>32)return false;
+ const symbol=position.symbol.trim().toUpperCase();
+ const ticker=market.symbol.trim().toUpperCase();
+ const quote=market.quote.trim().toUpperCase();
+ return symbol.length>0&&!/^PRODUCT #/i.test(symbol)&&
+   (ticker===symbol||ticker===symbol+"_"+quote);
+}
 const MAX_POSITION_AGE_MS=180_000;
 function recent(iso: string, now: number, maxAge: number) {
   const ts=Date.parse(iso);
@@ -30,17 +43,21 @@ export function simulateNadoPosition(
 ): NadoStressResult {
   if(!Number.isInteger(shockPct)||shockPct < -50||shockPct>50)
     return {ok:false,reason:"Select a whole-number price change from -50% to +50%."};
-  if(market.type!=="perp"||position.productId!==market.productId)
+  if(market.type!=="perp"||position.productId!==market.productId||
+     position.marginMode!=="cross"||!symbolsAgree(position,market))
     return {ok:false,reason:"No matching perpetual market quote for this Nado position."};
   if(!recent(snapshots.marketUpdatedAt,now,MAX_SNAPSHOT_AGE_MS)||
      !recent(snapshots.accountUpdatedAt,now,MAX_POSITION_AGE_MS))
     return {ok:false,reason:"Market or position snapshot is stale. Refresh Nado data to continue."};
-  if(!/^(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(position.size) ||
-     !Number.isFinite(market.lastPrice) || !["long","short"].includes(position.side))
+  if(!/^(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(position.size)||
+     typeof position.entryPrice!=="string"||
+     !/^(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(position.entryPrice)||
+     !Number.isFinite(market.lastPrice)||!["long","short"].includes(position.side))
     return {ok:false,reason:"Invalid position size, side or Nado market price."};
   const size=new BigNumber(position.size);
   const price=new BigNumber(market.lastPrice);
   if(!size.isFinite()||!size.isGreaterThan(0)||
+     !new BigNumber(position.entryPrice).gt(0)||
      !price.isFinite()||!price.isGreaterThan(0)||
      !market.quote||!/^[a-z0-9]+$/i.test(market.quote))
     return {ok:false,reason:"The position size, ticker price or quote unit is unavailable."};
@@ -73,15 +90,33 @@ export function simulateNadoFromFeeds(
   shockPct: number,
   now=Date.now(),
 ): NadoStressResult {
-  if(account.chainId!==57073||markets.chainId!==57073||
-    account.positionCoverageComplete!==true||markets.markets.length===0)
-    return {ok:false,reason:"Nado account or market coverage is incomplete."};
-  if(!Array.isArray(account.positions)||!Array.isArray(markets.markets))
-    return {ok:false,reason:"Invalid Nado response shape."};
-  const position=account.positions.find(p=>nadoPositionKey(p)===positionKey);
-  if(!position) return {ok:false,reason:"Choose an open perpetual position from the latest wallet records."};
-  const market=markets.markets.find(m=>m.productId===position.productId && m.type==="perp");
-  if(!market) return {ok:false,reason:"This position has no corresponding live perpetual ticker."};
+  if(!account||!markets||account.chainId!==57073||markets.chainId!==57073||
+     typeof account.address!=="string"||
+     !/^0x[0-9a-f]{40}$/i.test(account.address)||
+     account.positionCoverageComplete!==true||
+     !Array.isArray(account.positions)||!Array.isArray(markets.markets)||
+     account.positions.length>100||markets.markets.length===0||
+     markets.markets.length>500)
+    return {ok:false,reason:"Nado account identity or position coverage is incomplete."};
+  const accountAt=Date.parse(account.updatedAt);
+  const marketsAt=Date.parse(markets.updatedAt);
+  if(!Number.isFinite(accountAt)||!Number.isFinite(marketsAt)||
+     Math.abs(accountAt-marketsAt)>MAX_SKEW_MS)
+    return {ok:false,reason:"Nado position and ticker snapshots are over 60 seconds apart."};
+  const keys=new Set<string>();
+  for(const p of account.positions){
+    const key=nadoPositionKey(p);
+    if(keys.has(key))return {ok:false,reason:"Duplicate Nado position identity in account snapshot."};
+    keys.add(key);
+  }
+  const matching=account.positions.filter(p=>nadoPositionKey(p)===positionKey);
+  if(matching.length!==1)
+    return {ok:false,reason:"Exactly one active Nado position must match the selected identity."};
+  const position=matching[0];
+  const tickers=markets.markets.filter(m=>m.productId===position.productId&&m.type==="perp");
+  if(tickers.length!==1)
+    return {ok:false,reason:"Nado position has no unique matching perpetual ticker."};
+  const market=tickers[0];
   return simulateNadoPosition(position,market,shockPct,{
     marketUpdatedAt:markets.updatedAt,accountUpdatedAt:account.updatedAt,
   },now);
