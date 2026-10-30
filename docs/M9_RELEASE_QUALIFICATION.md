@@ -38,3 +38,28 @@ No single automated script can establish genuine wallet ownership, upstream fina
 ## Failure reporting
 
 A failed precheck is never worked around by substituting the live SHA as the expected input. Resolve deployment lag/drift, invalid network, unexpected route permissions or upstream feed failure, then rerun against the genuine intended main-branch commit. Preserve only redacted output for incident follow-up; do not upload wallet exports or secrets to GitHub issues.
+
+
+## M9 phase 2 — public evidence freshness and release drift
+
+The public CLI now re-fetches **both** `/api/health` and `/api/ops/readiness`
+after checking market endpoints. All four observations must agree with the
+expected full Git commit's published 12-character prefix and Ink 57073.
+Each readiness snapshot must contain exactly eight unique declared services,
+all explicitly `verifiedLive:false`. A deployment changing mid-scan fails
+rather than silently inheriting the initial release result.
+
+Public Nado and Tydro responses now require reviewed provider identities,
+fresh `updatedAt` API observation times (under three minutes), bounded
+and unique assets, and finite, coherent market, collateral, risk and reserve
+metadata. Invalid rates, missing symbols, negative amounts, stale timestamps
+and missing reserve fields fail the public gate. The CLI also rejects
+unexpected content types, redirects, oversized responses, clock rollback
+and scans taking more than 90 seconds.
+
+**Limits:** `updatedAt` is the API observation timestamp, not independent
+authentication of the underlying exchange trade, oracle age, or settlement.
+The published short release SHA is a release coordination check, not a
+cryptographic attestation of the full runtime. None of these checks proves
+live Redis, user control of a wallet, independent security review,
+notification delivery or mainnet execution safety.
