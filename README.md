@@ -2,7 +2,22 @@
 
 **Your AI Capital Operator for Ink.** An independent, Ink-exclusive application. **Not a decentralized exchange.**
 
-## Current milestone: M4 — Protocol-specific risk intelligence (in progress)
+## Current status — implemented code vs verified live capability
+
+M1–M3 implement Ink wallet and read-only Nado/Tydro account access.
+M4 risk sensitivity and M5 guided briefs are implemented **with bounded,
+read-only limitations**. M6 permissioned execution remains **unimplemented and
+disabled**. Significant M7 monitoring/Redis integration and M8 security
+verification code exists, but neither milestone is accepted as fully operational
+until its live infrastructure, real-wallet checks and independent security
+review pass. Green CI and public production smoke **do not** imply live wallet
+or protected-service acceptance.
+
+See [Live completion gates](docs/LAUNCH_ACCEPTANCE.md) for the exact
+remaining sign-offs. Never activate signing, order placement, token approvals
+or autonomous repayment as a shortcut to milestone completion.
+
+### Legacy implementation notes
 
 This repository contains a responsive Next.js application with:
 
@@ -14,7 +29,7 @@ This repository contains a responsive Next.js application with:
 - No fabricated balances, positions, AI responses or transaction receipts
 - No automatic transaction signing, custody or autonomous trading
 
-**Milestone 2 is implemented in code:** Nado live market tickers, publicly discoverable wallet-associated subaccounts, indexed open positions, open orders and paginated order records. No order placement or signing. **Milestone 3 is implemented in code:** direct Ink mainnet Tydro reserve/rate queries and wallet-specific supply/borrowing/health views. **Not yet implemented:** cross-protocol risk, AI agent, order execution, lending transactions, mobile WalletConnect or notifications.
+**Milestone 2 is implemented in code:** Nado live market tickers, publicly discoverable wallet-associated subaccounts, indexed open positions, open orders and paginated order records. No order placement or signing. **Milestone 3 is implemented in code:** direct Ink mainnet Tydro reserve/rate queries and wallet-specific supply/borrowing/health views. **Still not complete:** a fully validated cross-protocol risk engine, live generative AI, transaction execution, lending transactions, standalone mobile WalletConnect and reliable external notifications. Read-only risk views, deterministic assistant foundations and browser-active alerts do exist.
 
 ## Ink network
 

@@ -1,5 +1,7 @@
 import { formatUnits, parseUnits } from "viem";
 import type { TydroAccountResponse, TydroUserReserve } from "../tydro/types.ts";
+import {TYDRO} from "../tydro/contracts.ts";
+import {validTydroReserveInventory} from "../verification/tydro-reserve-integrity.ts";
 
 /** Deterministic, read-only single-asset parallel-price shock. No transaction execution.
  * The approximate health factor preserves the protocol's reported starting HF,
@@ -26,23 +28,42 @@ export function simulateTydroShock(
   account: TydroAccountResponse,
   asset: string,
   shockPct: number,
+  now=Date.now(),
 ): StressResult {
   if (!Number.isInteger(shockPct) || shockPct < -50 || shockPct > 50)
     return {ok:false,reason:"Choose a whole-number shock from -50% to +50%."};
-  if (account.chainId !== 57073 || account.incomplete || account.warnings.length > 0)
-    return {ok:false,reason:"Account data is partial or belongs to a different network."};
+  if (!account||account.chainId!==57073||
+      typeof account.address!=="string"||
+      !/^0x[0-9a-f]{40}$/i.test(account.address)||
+      typeof account.pool!=="string"||
+      account.pool.toLowerCase()!==TYDRO.pool.toLowerCase())
+    return {ok:false,reason:"Tydro account, Ink chain or pinned Pool is inconsistent."};
+  const observed=Date.parse(account.updatedAt);
+  if(!Number.isFinite(now)||!Number.isFinite(observed)||
+     observed>now+5000||now-observed<0||now-observed>=180000)
+    return {ok:false,reason:"Tydro account snapshot expired or has an inconsistent timestamp."};
+  if(account.incomplete!==false||!Array.isArray(account.warnings)||
+     account.warnings.length>0||!validTydroReserveInventory(account))
+    return {ok:false,reason:"Tydro account reserve data is incomplete, duplicated or malformed."};
   if (account.userEModeCategory !== 0)
     return {ok:false,reason:"eMode or unknown risk configuration requires a dedicated simulation model."};
   if(account.healthFactor===null)
-    return {ok:false,reason:"This account has no debt, so a debt-liquidation health-factor scenario is not applicable."};
-  if (!/^\d+(?:\.\d+)?$/.test(account.healthFactor))
-    return {ok:false,reason:"Invalid on-chain health factor."};
+    return {ok:false,reason:"No usable Tydro debt health factor is available for this account."};
+  if (!/^\d+(?:\.\d+)?$/.test(account.healthFactor)||
+      !/^\d+(?:\.\d+)?$/.test(account.debtBase))
+    return {ok:false,reason:"Invalid on-chain debt or health factor."};
   if (account.userReserves.length===0)
     return {ok:false,reason:"No lending positions were found."};
+  if(typeof asset!=="string"||!/^0x[0-9a-f]{40}$/i.test(asset))
+    return {ok:false,reason:"Select a valid Tydro asset address."};
   const selected=account.userReserves.find(r=>r.address.toLowerCase()===asset.toLowerCase());
-  if(!selected) return {ok:false,reason:"Select an asset held or borrowed in this Tydro account."};
+  if(!selected)return {ok:false,reason:"Select an asset held or borrowed in this Tydro account."};
   try{
     const baseHF=parseUnits(account.healthFactor,18);
+    // The Pool account total must report positive debt as well as a valid
+    // health factor; a populated HF on a zero-debt account is contradictory.
+    if(baseHF<=0n||!/[1-9]/.test(account.debtBase))
+      return {ok:false,reason:"An account with zero debt or invalid health cannot be projected."};
     let collateral=0n,debt=0n,adjustedCollateral=0n,adjustedDebt=0n;
     const factor=BigInt(100+shockPct);
     for (const reserve of account.userReserves){
