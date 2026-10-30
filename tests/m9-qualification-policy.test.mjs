@@ -18,6 +18,16 @@ const fixture=()=>({
   watch:{executionEnabled:false,notificationsDelivered:false},
   verification:{chainId:57073,executionEnabled:false,permissionGranted:false,
    serverSessionIssued:false,redisOneUseNonce:true},
+  notifications:{
+   milestone:"M13",chainId:57073,release:sha.slice(0,12),
+   policyImplemented:true,deliveryEnabled:false,notificationsDelivered:false,
+   providerConfigured:false,verifiedConsentStore:false,externalDeliveryVerified:false,
+   executionEnabled:false,channels:["email","web-push"],
+   recipientProofPolicyImplemented:true,revocationPolicyImplemented:true,
+   recipientVerificationAvailable:false,recipientOwnershipVerified:false,
+   signedRevocationEndpointAvailable:false,atomicRevocationVerified:false,
+   privacyDeletionVerified:false,
+  },
  },
  nado:{chainId:57073,source:"Nado indexer",updatedAt:new Date().toISOString(),
   markets:[{productId:2,lastPrice:5,type:"perp",symbol:"BTC-PERP",base:"BTC",
@@ -73,6 +83,22 @@ test("execution or notification permission claims block the public precheck",()=
   x=>x.configs.watch.notificationsDelivered=true,
   x=>x.configs.verification.serverSessionIssued=true,
   x=>x.configs.verification.redisOneUseNonce=false,
+  x=>x.configs.notifications.deliveryEnabled=true,
+  x=>x.configs.notifications.notificationsDelivered=true,
+  x=>x.configs.notifications.providerConfigured=true,
+  x=>x.configs.notifications.verifiedConsentStore=true,
+  x=>x.configs.notifications.externalDeliveryVerified=true,
+  x=>x.configs.notifications.executionEnabled=true,
+  x=>x.configs.notifications.recipientVerificationAvailable=true,
+  x=>x.configs.notifications.recipientOwnershipVerified=true,
+  x=>x.configs.notifications.signedRevocationEndpointAvailable=true,
+  x=>x.configs.notifications.atomicRevocationVerified=true,
+  x=>x.configs.notifications.privacyDeletionVerified=true,
+  x=>x.configs.notifications.release="f".repeat(12),
+  x=>x.configs.notifications.channels=["email"],
+  x=>x.configs.notifications.chainId=1,
+  x=>x.configs.notifications.policyImplemented=false,
+  x=>x.configs.notifications.revocationPolicyImplemented=false,
  ]){
   const x=fixture();change(x);
   assert.equal(state(x,"non-executable-route-contracts"),"blocked");
@@ -153,5 +179,20 @@ test("Nado market detail and Tydro reserve risk bounds cannot be omitted or forg
  ]){
   const x=fixture();change(x);
   assert.equal(state(x,"public-nado-tydro-snapshots"),"blocked");
+ }
+});
+
+test("missing or contradictory M13/M14 evidence blocks public acceptance",()=>{
+ for(const change of [
+  x=>delete x.configs.notifications,
+  x=>x.configs.notifications=null,
+  x=>x.configs.notifications.recipientProofPolicyImplemented=false,
+  x=>x.configs.notifications.milestone="M14",
+  x=>x.configs.notifications.channels=["email","email"],
+  x=>x.configs.notifications.release=null,
+ ]){
+  const x=fixture();change(x);
+  assert.equal(state(x,"non-executable-route-contracts"),"blocked");
+  assert.equal(assessM9PublicQualification(x).publicPrecheckPassed,false);
  }
 });

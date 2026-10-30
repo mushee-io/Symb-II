@@ -81,14 +81,28 @@ function validRelease(health,readiness,sha){
 }
 function safeConfigs(c){
  if(!record(c))return false;
- const {preflight,proposals,agent,watch,verification}=c;
+ const {preflight,proposals,agent,watch,verification,notifications}=c;
  return record(preflight)&&preflight.supportsExecution===false&&
   record(proposals)&&proposals.supportsExecution===false&&proposals.supportsBroadcast===false&&
   record(agent)&&agent.chainId===INK&&agent.tradingEnabled===false&&
   record(watch)&&watch.executionEnabled===false&&watch.notificationsDelivered===false&&
   record(verification)&&verification.chainId===INK&&verification.executionEnabled===false&&
    verification.permissionGranted===false&&verification.serverSessionIssued===false&&
-   verification.redisOneUseNonce===true;
+   verification.redisOneUseNonce===true&&
+  record(notifications)&&notifications.milestone==="M13"&&
+   notifications.chainId===INK&&notifications.policyImplemented===true&&
+   notifications.deliveryEnabled===false&&notifications.notificationsDelivered===false&&
+   notifications.providerConfigured===false&&notifications.verifiedConsentStore===false&&
+   notifications.externalDeliveryVerified===false&&notifications.executionEnabled===false&&
+   Array.isArray(notifications.channels)&&notifications.channels.length===2&&
+   notifications.channels.includes("email")&&notifications.channels.includes("web-push")&&
+   notifications.recipientProofPolicyImplemented===true&&
+   notifications.revocationPolicyImplemented===true&&
+   notifications.recipientVerificationAvailable===false&&
+   notifications.recipientOwnershipVerified===false&&
+   notifications.signedRevocationEndpointAvailable===false&&
+   notifications.atomicRevocationVerified===false&&
+   notifications.privacyDeletionVerified===false;
 }
 
 export function assessM9PublicQualification(input,now=Date.now()){
@@ -99,7 +113,9 @@ export function assessM9PublicQualification(input,now=Date.now()){
   validRelease(recheckHealth,recheckReadiness,expectedSha)&&
   validServiceConfiguration(readiness)&&validServiceConfiguration(recheckReadiness);
  const nonExecutable=validServiceConfiguration(readiness)&&
-  validServiceConfiguration(recheckReadiness)&&safeConfigs(configs);
+  validServiceConfiguration(recheckReadiness)&&safeConfigs(configs)&&
+  record(configs?.notifications)&&hasSha&&
+  releaseMatches(configs.notifications.release,expectedSha);
  const providers=validNado(nado,now)&&validTydro(tydro,now);
  const configuredRedis=validServiceConfiguration(readiness)&&
   readiness.services.find(s=>s.id==="redis")?.status==="configured";
@@ -107,7 +123,7 @@ export function assessM9PublicQualification(input,now=Date.now()){
   gate("exact-production-revision",revision?"pass":"blocked",
    "Expected main SHA prefix must match health/readiness both before and after provider reads; not a deployment attestation."),
   gate("non-executable-route-contracts",nonExecutable?"pass":"blocked",
-   "Public response contracts must deny execution, spending, reusable sessions and claimed live credential verification."),
+   "Public response contracts must deny execution, spending, reusable sessions, and unverified M13/M14 delivery, recipient and revocation claims."),
   gate("public-nado-tydro-snapshots",providers?"pass":"blocked",
    "Fresh Ink Nado and canonical Tydro snapshot metadata must be coherent; underlying trade/oracle freshness is unproven."),
   gate("private-redis-one-use-drill",configuredRedis?"not-tested":"blocked",

@@ -63,3 +63,24 @@ The published short release SHA is a release coordination check, not a
 cryptographic attestation of the full runtime. None of these checks proves
 live Redis, user control of a wallet, independent security review,
 notification delivery or mainnet execution safety.
+
+
+## October 2026 — M13/M14 deployment claim hardening
+
+The exact-release public precheck now reads the deployed
+`GET /api/notifications/config` response alongside existing
+Ink, Nado, Tydro and M8 endpoints. It requires the observed revision to
+match the expected Git SHA, both notification channels to be declared,
+and M13/M14 policy flags to be present. Until separately activated and
+independently accepted, outbound delivery, recipient verification, signed
+revocation endpoints, provider configuration, recipient storage, deletion
+verification and all transaction execution must explicitly report
+`false`. Missing or contradictory response fields block
+public precheck. The production smoke adds a twelfth public check.
+
+This is a **truthfulness and regression gate**, not proof of live email,
+web push, Redis, wallet identity or recipient revocation. With all the
+notification services intentionally disabled, passing remains the safe
+expected public-only state. Live rollout requires updating the
+qualification contract to test genuinely operational permission scopes
+with new protected acceptance evidence, not merely flipping a flag.
