@@ -30,3 +30,5 @@ jobs:
         run: node scripts/await-production.mjs
       - name: Verify eleven safe public production and M8 security checks
         run: npm run smoke
+      - name: M9 exact-release and no-execution public qualification
+        run: npm run verify:m9:public -- "$EXPECTED_COMMIT_SHA"
