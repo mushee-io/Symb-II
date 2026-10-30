@@ -10,7 +10,7 @@ export function tydroRiskState(
  debtBase: string | null = null,
 ): RiskState {
   const validDebt=typeof debtBase==="string"&&debtBase.length>0&&
-    debtBase.length<=128&&/^(?:\d+(?:\.\\d+)?|\\.\\d+)$/.test(debtBase);
+    debtBase.length<=128&&/^(?:[0-9]+(?:[.][0-9]+)?|[.][0-9]+)$/.test(debtBase);
   if(!validDebt)return "unknown";
   // Decimal strings from the protocol can exceed JavaScript's safe integer
   // range or underflow Number() for tiny values. Zero/nonzero must remain
