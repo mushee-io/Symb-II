@@ -193,3 +193,37 @@ The Redis URL validator is now shared by readiness and the real transport.
 It rejects URL credentials, non-TLS, query strings, fragments, unsafe
 paths and explicit ports. The private REST client also refuses HTTP
 redirects to prevent bearer-token forwarding.
+
+## Step 2 — isolated Redis structure drills for protected services
+
+A configured Redis connection must support not only one-use M8 nonces but
+also the **real data structures required by the existing M7 services**:
+
+- Proposal and preflight receipt retention: `LPUSH`, `LTRIM`, `LRANGE`,
+  `EXPIRE` and bounded `TTL` for a synthetic private list.
+- Background watch indexing: `ZADD`, `ZSCORE`, `ZRANGE`, `ZREM`,
+  `EXPIRE` and `TTL` for a synthetic private sorted set.
+
+The existing operator-only `GET /api/ops/probe` now reports a separate
+`redis-services` result **only after a live test**. Every synthetic key has a
+random UUID under `symb-ii:ops:`; no real subscription list, private
+wallet, actual receipt or alert is read or mutated. Both keys receive a
+short retention timeout and a cleanup attempt is made on every outcome.
+A failed command, incorrect order, missing TTL or incomplete cleanup
+is never counted as a healthy storage service.
+
+If no Redis credentials exist, this check reports `not-configured` and
+the private probe retains the existing distinction between *public
+provider health* and *private service activation*. A missing or failed
+`redis-services` observation when Redis is configured causes HTTP 503.
+The M7 operator `npm run verify:m7:redis` command now **requires**
+the new observation too; an earlier 4-check probe no longer qualifies
+for activation.
+
+**A pass is not an endorsement of turning on all M7 services at once.**
+It proves the protected storage primitives, not email notifications,
+background watch scheduling, Vercel AI Gateway billing/authentication,
+actual Nado/Tydro user state or signed acknowledgement validity.
+Enable one feature at a time only after Redis passes and its own
+real-world acceptance run is recorded. All trading and wallet
+execution remain disabled.
