@@ -78,3 +78,25 @@ not an independently verified settlement record or permission to trade.
 Active position results still require a genuine connected account and a
 separate operator acceptance test before being treated as production-proof
 evidence. No execution or wallet authorization is enabled.
+
+## Tydro reserve inventory and snapshot skew
+
+The read-only active-borrow assessment now validates every returned Tydro
+user reserve before accepting account completeness or a positive
+variable-debt observation. Addresses must be valid, nonduplicated Ink
+asset addresses; decimal precision and liquidation parameters must remain
+within reviewed bounds; underlying balance/debt amounts, oracle prices
+and collateral flags must have their expected safe types. More than
+32 reserve entries fails closed rather than silently truncating exposure.
+
+Independently queried Tydro adapter and pinned Pool observations are
+also checked for **timestamp skew**. Even if each observation is younger
+than 180 seconds, two reads that are more than 60 seconds apart cannot
+be called reconciled. The browser makes these inspections in parallel;
+a delayed or unavailable endpoint must not be disguised as a live
+match.
+
+A failing reserve row is classified as failed data integrity, not a
+live-borrow acceptance. Empty reserves remain structurally valid but
+do not prove active borrowing. This is snapshot consistency, not
+repayment, transaction execution, wallet ownership or consensus finality.
