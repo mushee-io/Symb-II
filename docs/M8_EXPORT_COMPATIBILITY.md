@@ -152,3 +152,31 @@ not change a position, borrow, repay, set permissions, send a notification,
 or establish that an account is liquidatable. Live operator testing and
 upstream provider provenance still matter; no Upstash credentials are needed
 to test the pure alert policy.
+
+## Nado preflight now shares wallet position integrity gates
+
+The Nado read-only preflight now uses `crosscheckNadoPositions`, the same
+position/ticker/subaccount health policy used by the Wallet Verification Lab.
+The earlier diagnostic could report an exact product mapping merely because
+the product ID agreed, and could call the engine's hypothetical reduce-only
+maximum even when the associated position symbol or health figures disagreed.
+
+To request **only a read-only engine maximum**, the wallet, chain, position
+coverage, unique position, complete portfolio reconciliation, ticker symbol,
+health fields, engine chain/endpoint, market increments, bid/ask spread,
+price divergence, engine warnings and all source timestamps must be
+consistent. Account/indexer/engine observations must be under 90 seconds old
+and no more than 60 seconds apart.
+
+When the separate engine size query completes, preflight recalculates
+source freshness. If the original account, market or engine snapshot has
+expired during the asynchronous query, the hypothetical size is discarded
+and the corresponding evidence gate fails or becomes unknown. Such a
+read cannot silently recover by reusing previous positive diagnostics.
+
+This still uses Nado API-family sources rather than independent settlement
+verification. Even when every **data diagnostic** passes, the explicit
+`Authenticated order and execution constraints` gate remains **FAIL**.
+The report is review-only, has no transaction payload and cannot grant
+trading permissions. No Upstash, operator secret or live wallet is required
+for the deterministic regression tests.
