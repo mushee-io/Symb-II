@@ -101,3 +101,12 @@ export const M14_REVOCATION_PURGE_CLASSES=[
  "notification-consent","recipient-mapping","pending-recipient-proof",
  "queued-jobs","dedupe-reservations","provider-delivery-leases",
 ] as const;
+
+export function publicRecipientLifecycleConfiguration(){
+ return {
+  recipientProofPolicyImplemented:true,revocationPolicyImplemented:true,
+  recipientVerificationAvailable:false,recipientOwnershipVerified:false,
+  signedRevocationEndpointAvailable:false,atomicRevocationVerified:false,
+  privacyDeletionVerified:false,
+ };
+}
