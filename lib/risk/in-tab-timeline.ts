@@ -29,6 +29,44 @@ const validFresh=(stamp:unknown,now:number)=>{
   const t=Date.parse(stamp);
   return Number.isFinite(t)&&t<=now+5000&&now-t>=0&&now-t<180000;
 };
+function finiteHealth(value:unknown,nonnegative=false):boolean {
+  if(typeof value!=="string"||value.length<1||value.length>128||
+     !/^-?(?:\d+(?:\.\d+)?|\.\d+)(?:e[+-]?\d{1,4})?$/i.test(value))
+    return false;
+  const n=Number(value);
+  return Number.isFinite(n)&&(!nonnegative||n>=0);
+}
+function consistentNadoHealth(n:NonNullable<AlertInput["nado"]["data"]>):boolean {
+  const names=n.subaccounts;
+  const rows=n.subaccountHealth;
+  if(!Array.isArray(names)||!Array.isArray(rows)||names.length>100||
+     rows.length!==names.length)return false;
+  const expected=new Set<string>();
+  for(const name of names){
+    if(typeof name!=="string"||!name.trim()||name.length>128)return false;
+    expected.add(name.toLowerCase());
+  }
+  if(expected.size!==names.length)return false;
+  const seen=new Set<string>();
+  for(const h of rows){
+    if(!h||typeof h.subaccount!=="string"||!expected.has(h.subaccount.toLowerCase())||
+       seen.has(h.subaccount.toLowerCase())||h.exists!==true||
+       !finiteHealth(h.maintenanceHealth)||!finiteHealth(h.initialHealth)||
+       !finiteHealth(h.maintenanceAssets,true)||
+       !finiteHealth(h.maintenanceLiabilities,true))return false;
+    seen.add(h.subaccount.toLowerCase());
+  }
+  return true;
+}
+function consistentTydroDebt(t:NonNullable<AlertInput["tydro"]["data"]>):boolean {
+  if(typeof t.debtBase!=="string"||t.debtBase.length>128||
+     !/^\d+(?:\.\d+)?$/.test(t.debtBase)||!Array.isArray(t.userReserves))return false;
+  const accountHasDebt=/[1-9]/.test(t.debtBase);
+  const reserveHasDebt=t.userReserves.some(r=>
+    /[1-9]/.test(r.variableDebt)||/[1-9]/.test(r.stableDebt));
+  return accountHasDebt===reserveHasDebt&&
+    (accountHasDebt?t.healthFactor!==null:t.healthFactor===null);
+}
 export function emptyInTabRiskTimeline(wallet:string):InTabRiskTimeline {
   return {wallet:WALLET.test(wallet)?wallet.toLowerCase():"",fingerprint:null,events:[],lastObservedAt:null};
 }
@@ -44,8 +82,8 @@ function completeForRecovery(input:AlertInput,now:number):boolean {
     n.data.positionCoverageComplete!==true||
     !Array.isArray(n.data.warnings)||n.data.warnings.length!==0||
     !Array.isArray(t.data.warnings)||t.data.warnings.length!==0||
-    !Array.isArray(n.data.subaccounts)||!Array.isArray(n.data.subaccountHealth)||
-    !validTydroReserveInventory(t.data))
+    !consistentNadoHealth(n.data)||!validTydroReserveInventory(t.data)||
+    !consistentTydroDebt(t.data))
     return false;
   return true;
 }
