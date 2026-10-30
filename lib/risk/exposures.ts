@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import type {NadoAccountResponse} from "../nado/types.ts";
 import type {TydroAccountResponse} from "../tydro/types.ts";
 import {validTydroReserveInventory} from "../verification/tydro-reserve-integrity.ts";
+import {TYDRO} from "../tydro/contracts.ts";
 
 /** Display-only, per-protocol exposure inventory. Never merge asset units or
  * infer combined collateral, liquidation health or authenticated ownership.
@@ -74,8 +75,9 @@ export function buildExposureInventory(
 ):ExposureInventory{
  if(!nado||!tydro||!walletAddress(nado.address)||!walletAddress(tydro.address)||
     nado.chainId!==57073||tydro.chainId!==57073||
-    nado.address.toLowerCase()!==tydro.address.toLowerCase())
-  return empty("Protocol accounts do not identify the same valid Ink wallet.");
+    nado.address.toLowerCase()!==tydro.address.toLowerCase()||
+    typeof tydro.pool!=="string"||tydro.pool.toLowerCase()!==TYDRO.pool.toLowerCase())
+  return empty("Protocol accounts do not agree on a valid Ink wallet and canonical Tydro Pool.");
  const nadoAt=timestamp(nado.updatedAt,now);
  const tydroAt=timestamp(tydro.updatedAt,now);
  if(nadoAt===null||tydroAt===null)
@@ -90,10 +92,17 @@ export function buildExposureInventory(
  const healthNames=new Set<string>();
  let healthCoverageValid=nado.subaccounts.length===nado.subaccountHealth.length;
  for(const h of nado.subaccountHealth){
+  const signed=(value:unknown)=>{
+   if(typeof value!=="string"||value.length<1||value.length>128||
+      !/^-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)(?:e[+-]?\\d{1,4})?$/i.test(value))return false;
+   return new BigNumber(value).isFinite();
+  };
   if(!h||typeof h.subaccount!=="string"||!h.subaccount.trim()||
      healthNames.has(h.subaccount.toLowerCase())||
      !nado.subaccounts.some(x=>x.toLowerCase()===h.subaccount.toLowerCase())||
-     h.exists!==true)healthCoverageValid=false;
+     h.exists!==true||!signed(h.maintenanceHealth)||!signed(h.initialHealth)||
+     amount(h.maintenanceAssets)===null||amount(h.maintenanceLiabilities)===null)
+    healthCoverageValid=false;
   else healthNames.add(h.subaccount.toLowerCase());
  }
  if(nado.incomplete!==false||nado.positionCoverageComplete!==true||
