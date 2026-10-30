@@ -5,7 +5,7 @@ import {ink} from "@/lib/ink";
 import {walletConnectConfigured} from "@/lib/wagmi";
 import {classifyWalletConnection} from "@/lib/wallet/connect-policy";
 import {ArrowUpRight,LogOut,Wallet,AlertTriangle,Smartphone} from "lucide-react";
-import {useState} from "react";
+import {useId,useState} from "react";
 
 function shortAddress(value:string){return value.slice(0,6)+"…"+value.slice(-4);}
 
@@ -14,18 +14,19 @@ export function WalletButton({compact=false}:{compact?:boolean}){
  const {connect,connectors,isPending,error:connectError}=useConnect();
  const {disconnect}=useDisconnect();
  const {switchChain,isPending:isSwitching,error:switchError}=useSwitchChain();
+ const chooserId=useId();
  const [open,setOpen]=useState(false);
  const [choose,setChoose]=useState(false);
  const state=classifyWalletConnection({isConnected,address,chainId});
 
  if(state==="disconnected")return <div className="wallet-action">
   <button type="button" className={compact?"btn btn-primary btn-small":"btn btn-primary"}
-    disabled={isPending} aria-expanded={choose} aria-controls="wallet-connect-choices"
+    disabled={isPending} aria-expanded={choose} aria-controls={chooserId}
     onClick={()=>setChoose(value=>!value)}>
     <Wallet size={16} strokeWidth={1.8}/>
     {isPending?"Connecting…":"Connect wallet"} <ArrowUpRight size={15}/>
   </button>
-  {choose&&<div id="wallet-connect-choices" className="wallet-menu wallet-chooser">
+  {choose&&<div id={chooserId} className="wallet-menu wallet-chooser">
    <div className="wallet-menu-header"><Wallet size={14}/> Choose a wallet</div>
    {connectors.map(connector=><button key={connector.uid} type="button"
      disabled={isPending}
