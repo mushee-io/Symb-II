@@ -9,8 +9,8 @@ export type LaunchGate={
  id:ServiceId;title:string;status:GateState;
  requirements:string[];issues:string[];verifiedLive:false;
 };
-import {validatedUpstashOrigin,hasValidRedisConfiguration} from "./redis-config";
-export {hasValidRedisConfiguration} from "./redis-config";
+import {validatedUpstashOrigin,hasValidRedisConfiguration} from "./redis-config.ts";
+export {hasValidRedisConfiguration} from "./redis-config.ts";
 const set=(value:string|undefined)=>typeof value==="string"&&value.trim().length>0;
 const secureUrl=(value:string|undefined)=>validatedUpstashOrigin(value)!==null;
 export function possibleGatewayAuthentication(env:NodeJS.ProcessEnv=process.env):boolean{
