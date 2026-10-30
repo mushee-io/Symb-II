@@ -1,10 +1,22 @@
 /** Display-only protocol-specific margin states, never used for execution or on-chain approvals. */
 export type RiskState = "no-exposure" | "urgent" | "caution" | "above-warning-level" | "unknown";
 
-/** Pool.getUserAccountData health factor < 1 permits liquidation. */
-export function tydroRiskState(healthFactor: string | null): RiskState {
-  if (healthFactor === null) return "no-exposure";
-  if (!healthFactor.trim()) return "unknown";
+/** A null Aave HF proves NO debt only if the separately observed Pool debt
+ * is exactly zero. Missing or malformed debt is unknown, never safe.
+ * Display-only; risk categories are not transaction policy.
+ */
+export function tydroRiskState(
+ healthFactor: string | null,
+ debtBase: string | null = null,
+): RiskState {
+  const validDebt=typeof debtBase==="string"&&debtBase.length>0&&
+    debtBase.length<=128&&/^(?:\d+(?:\.\\d+)?|\\.\\d+)$/.test(debtBase);
+  const debt=validDebt?Number(debtBase):NaN;
+  if(!Number.isFinite(debt)||debt<0)return "unknown";
+  if(healthFactor===null)return debt===0?"no-exposure":"unknown";
+  // If a health factor is populated but the Pool says no debt, these inputs
+  // contradict one another; do not show a reassuring score.
+  if(debt===0||!healthFactor.trim()||healthFactor.length>128)return "unknown";
   const value = Number(healthFactor);
   if (!Number.isFinite(value) || value < 0) return "unknown";
   if (value < 1) return "urgent";
