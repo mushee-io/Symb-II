@@ -13,6 +13,7 @@ import {PreflightPanel} from "@/components/preflight-panel";
 import type { NadoAccountResponse } from "@/lib/nado/types";
 import type { TydroAccountResponse } from "@/lib/tydro/types";
 import { nadoRiskState, tydroRiskState, type RiskState } from "@/lib/risk/status";
+import {TYDRO} from "@/lib/tydro/contracts";
 
 async function load<T>(url:string,signal?:AbortSignal):Promise<T>{
   const response=await fetch(url,{signal,cache:"no-store"});
@@ -36,7 +37,19 @@ export function RiskPanel(){
     queryFn:({signal})=>load<TydroAccountResponse>("/api/tydro/account?address="+encodeURIComponent(address!),signal),
     enabled:connected,retry:1,staleTime:30000,refetchInterval:connected?60000:false,
   });
-  const tstate=tydro.data?tydroRiskState(tydro.data.healthFactor):"unknown";
+  // The Pool only reports a null health factor on a debt-free account.
+  // Never turn a missing borrower's HF, stale state or malformed wallet data
+  // into a reassuring "No debt" label.
+  const t=tydro.data;
+  const observedAt=t?Date.parse(t.updatedAt):NaN;
+  const tSourceValid=Boolean(t&&t.chainId===57073&&
+    t.address.toLowerCase()===address?.toLowerCase()&&
+    t.pool.toLowerCase()===TYDRO.pool.toLowerCase()&&
+    t.incomplete===false&&t.warnings.length===0&&
+    Number.isFinite(observedAt)&&observedAt<=Date.now()+5000&&
+    Date.now()-observedAt>=0&&Date.now()-observedAt<180000);
+  const tstate:RiskState=tSourceValid&&t?
+    tydroRiskState(t.healthFactor,t.debtBase):"unknown";
   return <section className="nado-section" id="risk" aria-labelledby="risk-panel-title">
     <div className="nado-heading"><div><span className="eyebrow">M04 / RISK MONITOR FOUNDATIONS</span><h2 id="risk-panel-title">Protocol risk monitor</h2><p>Side-by-side, separately calculated Nado margin health and Tydro lending health. No shared collateral, no fictitious combined liquidation level.</p></div>
       <span className="risk-pill">READ-ONLY SIGNALS</span>
@@ -67,8 +80,12 @@ export function RiskPanel(){
             tydro.error?<p className="risk-message">Tydro lending risk unavailable. No safe status can be inferred.</p>:
             tydro.data&&<>
               <div className={"risk-condition "+color(tstate)}>{stateLabel(tstate)}</div>
-              <div className="risk-value">{tydro.data.healthFactor===null?"No debt":Number(tydro.data.healthFactor).toFixed(3)+"×"}</div>
-              <small>{tydro.data.healthFactor===null?"No borrowed funds recorded by Tydro's pool":"Tydro's on-chain health factor; liquidation can be possible below 1.0"}</small>
+              <div className="risk-value">{tstate==="no-exposure"?"No debt":
+                tstate==="unknown"?"Unavailable":
+                Number(tydro.data.healthFactor).toFixed(3)+"×"}</div>
+              <small>{tstate==="no-exposure"?"Verified account snapshot reports zero debt":
+                tstate==="unknown"?"Debt, wallet or health data is missing, inconsistent or stale. No safe state can be inferred.":
+                "Tydro's on-chain health factor; liquidation can be possible below 1.0"}</small>
               {tydro.data.warnings.length>0&&<p className="risk-message">{tydro.data.warnings.length} Tydro query warnings; this view may be incomplete.</p>}
               <div className="nado-source">Tydro Pool · Retrieved {new Date(tydro.data.updatedAt).toLocaleTimeString()}</div>
             </>}
