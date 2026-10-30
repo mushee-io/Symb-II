@@ -369,3 +369,17 @@ M10 is **not formally documented in this repository**; naming this M11 workstrea
 ## M12 — Optional mobile wallet connection code (not live acceptance)
 
 The UI now lets users explicitly choose an injected browser wallet or WalletConnect v2 QR/mobile pairing when an operator has provisioned a valid public Project ID. Invalid or absent IDs do not activate the connector. All configuration contains only Ink chain 57073; the workspace refuses wrong-network data and provides switch/disconnect controls. No transaction signing, approvals, order routes, persistent application sessions or Upstash services are added by this milestone. Pairing a wallet does not authenticate the Nado/Tydro account owner for protected actions. **Real-device acceptance, production credential provisioning, security review and live deployment checks remain outstanding.** See [M12 operator tests](docs/M12_MOBILE_WALLET.md).
+
+
+## M13 — Opt-in notification delivery policy (code only)
+
+M13 adds separate recipient-verification and delivery-consent record policies,
+risk-event dedupe, bounded retry/dead-letter transitions and provider/store
+interfaces. The workspace explicitly discloses that background watch consent
+does **not** enable email or mobile push. There is no live delivery worker,
+recipient database or connected provider: public configuration always states
+`notificationsDelivered:false`. Production activation requires
+M7 Upstash, wallet-authorised delivery consent, verified recipient ownership,
+atomic revocation, provider idempotency, abuse controls, real delivery trials
+and independent security review. Read the [M13 acceptance runbook](docs/M13_NOTIFICATION_FOUNDATIONS.md).
+
