@@ -75,5 +75,11 @@ export function PersistentWatch({wallet}:{wallet:string}){
         </div>}
       </>}
     <div className="persistent-watch-footer"><LockKeyhole size={14}/><span>Subscription changes require a one-time wallet signature and can be revoked. No account balances, trade history or raw positions are stored by this watch. This is not emergency liquidation protection.</span></div>
+    <div className="m13-delivery-note" aria-label="Notification delivery not active">
+      <BellRing size={17}/>
+      <div><strong>M13 / External notifications not active</strong>
+        <p>Email and mobile push delivery are not connected. A watch subscription authorises monitoring history only, not outbound alerts. A separate verified delivery opt-in, private queue, provider and live tests are required.</p>
+      </div>
+    </div>
   </section>;
 }
