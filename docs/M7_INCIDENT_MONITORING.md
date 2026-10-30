@@ -118,3 +118,78 @@ automatic production releases. An operator must still resolve any existing
 Vercel billing/plan or deployment-cap limit. Preview deployments for
 `feat/**` can be intentionally made manually with authorized tooling if
 needed once deployment capacity is available.
+
+## Step 1 — protected Upstash activation gate
+
+**This gate ships ready to run, but Redis is not provisioned by source-code
+changes.** Creating a database or installing a Marketplace integration may
+require an authorized account holder, approval of billing terms, and access
+to the Vercel project. Do not create trial credentials or placeholder secrets.
+
+1. On the **Symb-II** Vercel project, use **Storage → Create Database →
+   Upstash Redis**, or install the Upstash integration from
+   https://vercel.com/marketplace/upstash and connect the database to the
+   project. Review the region and billing plan yourself. An existing Upstash
+   account can also be connected.
+2. Verify that the **production** environment contains exactly these
+   server-only variables:
+   - `UPSTASH_REDIS_REST_URL` — root HTTPS `*.upstash.io` REST endpoint
+   - `UPSTASH_REDIS_REST_TOKEN` — the private REST token
+
+   Upstash integration may inject these automatically when the database
+   is connected. Use the Vercel **Secret** type for the token; never use
+   `NEXT_PUBLIC_` keys, commit secrets, or paste tokens into a chat.
+3. Keep `SYMB_II_WALLET_PROOF_ENABLED`, `SYMB_II_AI_ENABLED`,
+   `SYMB_II_PREFLIGHT_ENABLED`, `SYMB_II_PROPOSALS_ENABLED` and
+   `SYMB_II_WATCH_ENABLED` disabled while validating the store.
+   **Redeploy** Symb-II after setting production environment variables.
+   Previously deployed functions do not gain newly added variables.
+4. From an up-to-date checkout of `main` with Node and dependencies
+   installed, inject **the existing `CRON_SECRET`** into the local
+   terminal using a trusted secret manager/environment tool and run:
+
+   ```sh
+   git switch main
+   git pull --ff-only
+   npm run verify:m7:redis
+   ```
+
+   Do not put `CRON_SECRET` on a command line, in a script committed to Git,
+   or in CI logs. The command uses `git rev-parse HEAD`, queries
+   **only** `https://symb-ii.vercel.app`, refuses HTTP redirects, and
+   verifies the exact production commit from `/api/health` and
+   `/api/ops/readiness` **before** sending the secret to
+   `/api/ops/probe`.
+
+   The protected route executes a live `PING`, synthetic `SET NX EX`,
+   bounded `TTL`, `GETDEL`, replay rejection and cleanup, then checks
+   Ink RPC, Nado and Tydro public integrity. The CLI prints only
+   non-sensitive policy-owned check labels, never the raw HTTP response,
+   operator token, Redis key or private endpoint.
+
+5. Step 1 is accepted only if all **five** checks pass: exact release,
+   read-only runtime, Redis configuration, disabled M8 wallet proof, and a
+   healthy *live* protected Redis/provider probe. The output's scope is
+   `m7-redis-one-use-and-public-provider-activation-only`.
+
+This **does not enable** M7 model generation, watch notifications,
+signed receipts or M8 wallet ownership; those require separate
+credential-specific activation and real-wallet acceptance. A green CI
+test or a configured URL never counts as proof of a live Redis service.
+
+### Failure cases
+
+- `blocked` / `redis-configuration`: URL or token missing or malformed;
+  check the *production* environment and redeploy.
+- `blocked` / `exact-release`: your local checkout does not match the
+  deployed revision; do not send the secret until releases match.
+- `blocked` / `protected-live-redis-and-providers`: check protected
+  Vercel logs and DNS/network connectivity; a 503 from Redis, Ink RPC,
+  Nado or Tydro must not be overridden.
+- `blocked` / `wallet-proof-not-prematurely-enabled`: disable the
+  feature first, then separately plan genuine-wallet testing.
+
+The Redis URL validator is now shared by readiness and the real transport.
+It rejects URL credentials, non-TLS, query strings, fragments, unsafe
+paths and explicit ports. The private REST client also refuses HTTP
+redirects to prevent bearer-token forwarding.

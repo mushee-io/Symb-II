@@ -1,16 +1,13 @@
 import "server-only";
+import {validatedUpstashOrigin} from "../ops/redis-config.ts";
 
 type RedisResponse = { result?: unknown; error?: string };
 function config() {
-  const raw=process.env.UPSTASH_REDIS_REST_URL;
+  const url=validatedUpstashOrigin(process.env.UPSTASH_REDIS_REST_URL);
   const token=process.env.UPSTASH_REDIS_REST_TOKEN;
-  if(!raw||!token)throw Error("AI security store is not configured.");
-  const url=new URL(raw);
-  // Bound the service to an intentional TLS-only Upstash credential destination.
-  if(url.protocol!=="https:"||!url.hostname.endsWith(".upstash.io")||
-    url.username||url.password||url.port||url.pathname!=="/")
-    throw Error("Invalid Upstash security-store endpoint.");
-  return {url:url.origin,token};
+  if(!url||typeof token!=="string"||!token.trim())
+    throw Error("Private security store is not validly configured.");
+  return {url,token};
 }
 export async function redis(command:(string|number)[]):Promise<unknown>{
   const {url,token}=config();
@@ -19,6 +16,8 @@ export async function redis(command:(string|number)[]):Promise<unknown>{
     headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},
     body:JSON.stringify(command),
     cache:"no-store",
+    // Never forward a secret bearer token to a redirected endpoint.
+    redirect:"error",
     signal:AbortSignal.timeout(5000),
   });
   if(!response.ok)throw Error("Security store request failed.");
