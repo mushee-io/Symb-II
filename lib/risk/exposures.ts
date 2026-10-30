@@ -87,9 +87,18 @@ export function buildExposureInventory(
   return empty("Protocol position or reserve inventory is malformed or duplicated. Data is withheld.");
 
  const warnings:string[]=[];
+ const healthNames=new Set<string>();
+ let healthCoverageValid=nado.subaccounts.length===nado.subaccountHealth.length;
+ for(const h of nado.subaccountHealth){
+  if(!h||typeof h.subaccount!=="string"||!h.subaccount.trim()||
+     healthNames.has(h.subaccount.toLowerCase())||
+     !nado.subaccounts.some(x=>x.toLowerCase()===h.subaccount.toLowerCase())||
+     h.exists!==true)healthCoverageValid=false;
+  else healthNames.add(h.subaccount.toLowerCase());
+ }
  if(nado.incomplete!==false||nado.positionCoverageComplete!==true||
-    nado.warnings.length>0)
-  warnings.push("Nado position coverage is incomplete; missing subaccounts or positions remain possible.");
+    nado.warnings.length>0||!healthCoverageValid)
+  warnings.push("Nado position or health coverage is incomplete; missing subaccounts or positions remain possible.");
  if(tydro.incomplete!==false||tydro.warnings.length>0)
   warnings.push("Tydro reserve coverage is incomplete; additional exposure may be missing.");
  const rows:ExposureRow[]=[];
