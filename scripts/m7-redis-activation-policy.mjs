@@ -43,14 +43,14 @@ export function assessM7RedisActivation(args,now=Date.now()){
    "Leave M8 wallet proof OFF until a separately accepted genuine wallet test."));
  const results=Array.isArray(probe?.results)?probe.results:[];
  const byId=new Map();
- let validShape=results.length>=4&&results.length<=16;
+ let validShape=results.length>=5&&results.length<=16;
  for(const r of results){
   if(!isObject(r)||typeof r.id!=="string"||
      !["pass","fail","not-configured"].includes(r.state)||byId.has(r.id))
    validShape=false;
   else byId.set(r.id,r.state);
  }
- const hasAll=["redis","rpc","nado","tydro"].every(id=>byId.get(id)==="pass");
+ const hasAll=["redis","redis-services","rpc","nado","tydro"].every(id=>byId.get(id)==="pass");
  const noOtherFailures=[...byId.values()].every(state=>state==="pass");
  signals.push(gate("protected-live-redis-and-providers",
    args?.probeStatus===200&&
@@ -60,7 +60,7 @@ export function assessM7RedisActivation(args,now=Date.now()){
    Array.isArray(probe.summary.requiredFailures)&&probe.summary.requiredFailures.length===0&&
    Array.isArray(probe.summary.unconfigured)&&!probe.summary.unconfigured.includes("redis")&&
    validShape&&hasAll&&noOtherFailures,
-   "Protected probe must confirm live Redis PING, SET NX EX, TTL, atomic GETDEL and replay rejection, plus Ink RPC/Nado/Tydro integrity."));
+   "Protected probe must confirm live Redis one-use nonce integrity AND list/sorted-set storage operations, plus Ink RPC/Nado/Tydro integrity."));
  return {
   accepted:signals.every(s=>s.status==="pass"),
   scope:"m7-redis-one-use-and-public-provider-activation-only",
