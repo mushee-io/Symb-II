@@ -43,9 +43,9 @@ export function RiskPanel(){
   const t=tydro.data;
   const observedAt=t?Date.parse(t.updatedAt):NaN;
   const tSourceValid=Boolean(t&&t.chainId===57073&&
-    t.address.toLowerCase()===address?.toLowerCase()&&
-    t.pool.toLowerCase()===TYDRO.pool.toLowerCase()&&
-    t.incomplete===false&&t.warnings.length===0&&
+    typeof t.address==="string"&&t.address.toLowerCase()===address?.toLowerCase()&&
+    typeof t.pool==="string"&&t.pool.toLowerCase()===TYDRO.pool.toLowerCase()&&
+    t.incomplete===false&&Array.isArray(t.warnings)&&t.warnings.length===0&&
     Number.isFinite(observedAt)&&observedAt<=Date.now()+5000&&
     Date.now()-observedAt>=0&&Date.now()-observedAt<180000);
   const tstate:RiskState=tSourceValid&&t?
