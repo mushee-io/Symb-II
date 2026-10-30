@@ -104,7 +104,7 @@ explicitly authorized.
 
 ## What code and public CI can certify today
 
-TypeScript, automated adversarial fixtures, the production build and eleven
+TypeScript, automated adversarial fixtures, the production build and twelve
 safe public production acceptance checks certify the deployed **read-only**
 release only. They cannot certify a real wallet, proprietary provider behavior,
 Upstash, AI cost/budget controls, actual portfolio positions or independent
