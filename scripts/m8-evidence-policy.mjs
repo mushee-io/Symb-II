@@ -89,27 +89,65 @@ export function validateM8PublicEvidence(report,now=Date.now()){
  * verifies the public block reference against the configured provider, but
  * does not attest the wallet's signature or protocol positions.
  */
-export async function verifyM8PublicBlocks(report,reader,now=Date.now()){
- const schema=validateM8PublicEvidence(report,now);
+export async function verifyM8PublicBlocks(report,reader,nowOrClock=()=>Date.now()){
+ // Tests can inject a fixed numeric clock. The production CLI uses an actual
+ // live clock sampled before AND after every RPC call, so a slow response
+ // cannot validate an expired three-minute public reference.
+ const sample=typeof nowOrClock==="function"?nowOrClock:()=>nowOrClock;
+ let firstNow;
+ try{firstNow=sample();}catch{
+  return {valid:false,reason:"Verification clock unavailable.",checked:0,scope:"public-blocks-only"};
+ }
+ if(!Number.isFinite(firstNow))
+  return {valid:false,reason:"Verification clock unavailable.",checked:0,scope:"public-blocks-only"};
+ const schema=validateM8PublicEvidence(report,firstNow);
  if(!schema.valid)return {valid:false,reason:schema.reason,checked:0,scope:"public-blocks-only"};
+ const fail=(reason,checked)=>({valid:false,reason,checked,scope:"public-blocks-only"});
+ const fresh=(block,number,hash,now)=>{
+  if(!block||typeof block.hash!=="string"||
+     block.hash.toLowerCase()!==hash)return false;
+  try{
+   if(BigInt(block.number)!==number)return false;
+   const timestamp=Number(block.timestamp)*1000;
+   return Number.isFinite(timestamp)&&timestamp<=now+5000&&
+    now-timestamp>=0&&now-timestamp<180000;
+  }catch{return false;}
+ };
+ const current=()=>{
+  const now=sample();
+  if(!Number.isFinite(now)||now<firstNow)
+   throw Error("Invalid verifier clock.");
+  return now;
+ };
  try{
   if(await reader.getChainId()!==INK_CHAIN_ID)
-   return {valid:false,reason:"Independent provider is not on Ink 57073.",checked:0,scope:"public-blocks-only"};
+   return fail("Independent provider is not on Ink 57073.",0);
   let checked=0;
   for(const item of schema.blocks){
-   const observed=await reader.getBlock(BigInt(item.blockNumber));
-   if(!observed||typeof observed.hash!=="string"||
-      observed.hash.toLowerCase()!==item.blockHash||
-      BigInt(observed.number)!==BigInt(item.blockNumber))
-    return {valid:false,reason:"Independent RPC block hash or number disagrees.",checked,scope:"public-blocks-only"};
-   const timestamp=Number(observed.timestamp)*1000;
-   if(!Number.isFinite(timestamp)||timestamp>now+5000||
-      now-timestamp>=180000||now-timestamp<0)
-    return {valid:false,reason:"Independent reference block is not fresh.",checked,scope:"public-blocks-only"};
+   const number=BigInt(item.blockNumber);
+   const observed=await reader.getBlock(number);
+   const atRead=current();
+   if(!fresh(observed,number,item.blockHash,atRead))
+    return fail("Independent RPC block hash, number or age disagrees.",checked);
+   // A second read of the SAME height closes the simple reorg window while
+   // the first public hash is checked. It is still not a finality proof.
+   const confirmed=await reader.getBlock(number);
+   const atConfirm=current();
+   if(!fresh(confirmed,number,item.blockHash,atConfirm))
+    return fail("Independent reference block changed or expired while checking.",checked);
    checked++;
   }
-  return {valid:true,reason:"Separate RPC confirmed every supplied Ink block number and hash.",checked,scope:"public-blocks-only"};
+  if(await reader.getChainId()!==INK_CHAIN_ID)
+   return fail("Independent provider chain changed during verification.",checked);
+  const atCompletion=current();
+  if(!validateM8PublicEvidence(report,atCompletion).valid)
+   return fail("Reported evidence expired while independent RPC was checking.",checked);
+  return {
+   valid:true,
+   reason:"Independent RPC twice confirmed each supplied Ink block and rechecked chain ID; public hashes only, not finality.",
+   checked,scope:"public-blocks-only",
+  };
  }catch{
-  return {valid:false,reason:"Independent Ink RPC failed or returned malformed data.",checked:0,scope:"public-blocks-only"};
+  return fail("Independent Ink RPC, verification clock or block data unavailable.",0);
  }
 }
