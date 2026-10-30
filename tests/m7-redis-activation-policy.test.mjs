@@ -22,6 +22,7 @@ const fixture=()=>({
   summary:{healthy:true,requiredFailures:[],unconfigured:[]},
   results:[
    {id:"redis",state:"pass"},
+   {id:"redis-services",state:"pass"},
    {id:"rpc",state:"pass"},
    {id:"nado",state:"pass"},
    {id:"tydro",state:"pass"},
@@ -102,4 +103,15 @@ test("malformed or duplicate provider entries cannot disguise bad reports",()=>{
  const f=fixture();
  f.probe.results.push({id:"nado",state:"pass"});
  assert.equal(assessM7RedisActivation(f,now).accepted,false);
+});
+
+test("a missing or nonpassing Redis receipt/watch drill cannot count as Stage 1 live activation",()=>{
+ for(const edit of [
+  f=>f.probe.results.splice(1,1),
+  f=>f.probe.results[1].state="not-configured",
+  f=>f.probe.results[1].state="fail",
+ ]){
+  const f=fixture();edit(f);
+  assert.equal(assessM7RedisActivation(f,now).accepted,false);
+ }
 });
