@@ -96,3 +96,27 @@ test("clock rollback and malformed provider block fail closed",async()=>{
   getBlock:async()=>({number:"not-an-integer",hash,timestamp:"invalid"}),
  },now)).valid,false);
 });
+
+test("browser export cannot hide altered counters, a different matrix wallet or invented permissions",()=>{
+ const original=browserReport();
+ for(const changed of [
+  {...original,passed:original.passed+1},
+  {...original,m8Acceptance:{...original.m8Acceptance,wallet:"0x0000000000000000000000000000000000000002"}},
+  {...original,m8Acceptance:{...original.m8Acceptance,checkedAt:new Date(now-1000).toISOString()}},
+  {...original,serverOwnershipResponse:{reusableSession:true,permissionGranted:false}},
+  {...original,serverOwnershipResponse:{independentlySignedReceipt:true}},
+  {...original,clientSideOwnershipSelfTest:{serverAuthenticated:true}},
+ ]){
+  assert.equal(validateM8PublicEvidence(changed,now).valid,false);
+ }
+});
+test("clock regression between first and second block read fails even if both hashes match",async()=>{
+ const report=browserReport();
+ let ticks=0;
+ const timeline=[now,now+3000,now+2000];
+ const r=await verifyM8PublicBlocks(report,{
+  getChainId:async()=>57073,
+  getBlock:async n=>({number:n,hash,timestamp:BigInt(Math.floor((now-4000)/1000))}),
+ },()=>timeline[Math.min(ticks++,timeline.length-1)]);
+ assert.equal(r.valid,false);
+});
