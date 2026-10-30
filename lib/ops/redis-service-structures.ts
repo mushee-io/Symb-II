@@ -79,7 +79,9 @@ export async function verifyRedisServiceStructures(command:RedisCommand):Promise
    // Redis failures still trigger best-effort deletion. Never claim
    // acceptance if cleanup fails.
    const deleted=await command(["DEL",list,sorted]);
-   cleaned=Number.isInteger(deleted)&&(deleted as number)>=0;
+   // On successful verification both synthetic keys still exist and
+   // both must be removed; a misleading partial DEL cannot count as clean.
+   cleaned=Number.isInteger(deleted)&&(passed?deleted===2:(deleted as number)>=0);
   }catch{cleaned=false;}
  }
  if(!cleaned)return outcome(false,"cleanup");
