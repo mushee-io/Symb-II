@@ -165,3 +165,16 @@
 .pairingGood{background:#24442f;color:#d7ffdf}
 .pairingPanel .modelFootnote{margin:0}
 @media(max-width:600px){.optionalModel{margin:0 9px 15px}.pairingPanel{padding:12px}}
+
+
+/* Temporary, public watch-only address; does not establish wallet control. */
+.watchOnlyForm{display:grid;gap:8px;padding:12px;border:1px solid #3f6047;border-radius:8px;background:#17281d}
+.watchOnlyForm label{font-size:11px;color:#cce2d2}
+.watchOnlyForm>div:first-of-type{display:flex;gap:8px;flex-wrap:wrap}
+.watchOnlyForm input{min-width:160px;flex:1;border:1px solid #49604f;background:#0f1e15;color:#e5f6e7;border-radius:7px;padding:11px;font-size:12px}
+.watchOnlyForm input[aria-invalid="true"]{border-color:#e4a297}
+.watchOnlyForm button{background:#b9edc4;color:#162b1b;border:0;border-radius:7px;font-weight:650;font-size:11px;padding:10px 12px;cursor:pointer}
+.watchOnlyCurrent{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#c9e6cf;font-size:10px}
+.watchOnlyCurrent button{background:#3d4a3b;color:#e1f1e6}
+.watchOnlyWarning{background:#3c3423;border-bottom:1px solid #6f5d42;padding:12px 15px;font-size:11px;line-height:1.65;color:#f1d2af;margin:0}
+@media(max-width:650px){.watchOnlyForm>div:first-of-type{display:grid}.watchOnlyForm input{min-width:0;width:100%}}
