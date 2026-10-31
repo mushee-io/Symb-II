@@ -2,7 +2,7 @@
   "name": "symb-ii-desktop",
   "version": "0.1.0",
   "private": true,
-  "description": "Security-constrained desktop shell for the read-only Symb-II trading terminal.",
+  "description": "Windows-first, sandboxed Symb-II read-only trading terminal for internal acceptance.",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
@@ -21,6 +21,7 @@
     "files": [
       "main.cjs",
       "security-policy.cjs",
+      "offline.html",
       "package.json"
     ],
     "directories": {
@@ -29,7 +30,9 @@
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "requestedExecutionLevel": "asInvoker",
+      "artifactName": "Symb-II-Setup-${version}-${arch}.${ext}"
     },
     "mac": {
       "target": [
@@ -40,6 +43,16 @@
       "target": [
         "AppImage"
       ]
+    },
+    "asar": true,
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false
     }
   }
 }
