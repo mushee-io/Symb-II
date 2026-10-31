@@ -780,3 +780,6 @@ h1,h2,h3,p { margin-top: 0; }
   .workspace-shortcuts-head>span{display:none}
   .workspace-start-card{padding:20px}
 }
+
+/* Sticky dashboard tabs must not be trapped by the legacy .site overflow container. */
+.workspace-site{overflow:clip}
