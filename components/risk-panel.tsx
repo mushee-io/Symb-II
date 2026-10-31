@@ -1,5 +1,6 @@
 "use client";
 import { useAccount } from "wagmi";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowUpRight, AlertTriangle, ShieldCheck, ShieldAlert, Wallet } from "lucide-react";
 import { ink } from "@/lib/ink";
@@ -64,7 +65,7 @@ export function RiskPanel({mode="risk"}:{mode?:"risk"|"rescue"|"preflight"|"moni
     {mode==="risk" && (!connected?<div className="nado-state nado-wallet-state"><Wallet size={24}/><strong>Connect an Ink wallet to inspect risk</strong><span>No signatures or private credentials required. Connect to inspect live Nado PnL sensitivity, Tydro lending health and the cross-protocol exposure inventory.</span></div>:
       <div className="risk-cards">
         <div className="risk-card">
-          <div className="risk-card-head"><span>Nado</span><a href="/workspace/nado">Open positions <ArrowUpRight size={13}/></a></div>
+          <div className="risk-card-head"><span>Nado</span><Link href="/workspace/nado">Open positions <ArrowUpRight size={13}/></Link></div>
           {nado.isPending?<p className="risk-loading">Loading current Nado margin readings…</p>:
             nado.error?<p className="risk-message">Nado risk unavailable. No safe status can be inferred.</p>:
             nado.data&&<>
@@ -82,7 +83,7 @@ export function RiskPanel({mode="risk"}:{mode?:"risk"|"rescue"|"preflight"|"moni
             </>}
         </div>
         <div className="risk-card">
-          <div className="risk-card-head"><span>Tydro</span><a href="/workspace/tydro">Lending details <ArrowUpRight size={13}/></a></div>
+          <div className="risk-card-head"><span>Tydro</span><Link href="/workspace/tydro">Lending details <ArrowUpRight size={13}/></Link></div>
           {tydro.isPending?<p className="risk-loading">Loading on-chain health factor…</p>:
             tydro.error?<p className="risk-message">Tydro lending risk unavailable. No safe status can be inferred.</p>:
             tydro.data&&<>
