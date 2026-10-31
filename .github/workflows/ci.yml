@@ -14,6 +14,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Syntax-check public release verification scripts
+        run: |
+          node --check scripts/smoke.mjs
+          node --check scripts/verify-m9-public.mjs
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run test
