@@ -4,10 +4,10 @@ import {useMemo,useState} from "react";
 import Link from "next/link";
 import {useQuery} from "@tanstack/react-query";
 import {useAccount} from "wagmi";
-import {Activity,ArrowUpRight,Bot,Clock3,LockKeyhole,RefreshCw,ShieldAlert,Wallet} from "lucide-react";
-import {WalletButton} from "@/components/wallet-button";
+import {Activity,ArrowUpRight,Bot,Clock3,LockKeyhole,RefreshCw} from "lucide-react";
 import {ink} from "@/lib/ink";
-import type {NadoMarket,NadoMarketsResponse,NadoAccountResponse} from "@/lib/nado/types";
+import type {NadoMarketsResponse} from "@/lib/nado/types";
+import {TerminalAccountDesk} from "@/components/terminal-account-desk";
 import styles from "@/app/workspace/terminal/terminal.module.css";
 import {parseTerminalCommand,calculateDraftIllustration} from "@/lib/trading/order-draft";
 
@@ -35,11 +35,6 @@ export function TradingTerminal(){
     queryKey:["nado-markets"],
     queryFn:({signal})=>readJson<NadoMarketsResponse>("/api/nado/markets",signal),
     staleTime:15000,refetchInterval:30000,retry:1,
-  });
-  const account=useQuery({
-    queryKey:["nado-account",address?.toLowerCase()],
-    queryFn:({signal})=>readJson<NadoAccountResponse>("/api/nado/account?address="+encodeURIComponent(address!),signal),
-    enabled:onInk,staleTime:30000,refetchInterval:onInk?60000:false,retry:1,
   });
   const perps=useMemo(()=>(markets.data?.markets??[]).filter(m=>m.type==="perp"),[markets.data]);
   const market=perps.find(m=>m.productId===selectedId)??perps[0]??null;
@@ -135,18 +130,7 @@ export function TradingTerminal(){
         <p className={styles.muted}>These calculations are not Nado margin, liquidation or execution quotes. They exclude fees, slippage, funding, margin requirements and market impact. The quote may be stale between refreshes. Never use this draft to infer a safe liquidation price.</p>
       </section>
     </div>
-    <section className={styles.positions} aria-label="Wallet-associated Nado positions">
-      <div className={styles.panelTop}><strong>Open positions · wallet inspection</strong><span>{onInk&&address?address.slice(0,6)+"…"+address.slice(-4):"No connected Ink wallet"}</span></div>
-      {!onInk?<div className={styles.positionsEmpty}><Wallet size={18}/><p>Connect an Ink wallet to inspect publicly accessible Nado account positions. This does not authorise trading.</p><WalletButton/></div>:
-        account.isPending?<p className={styles.muted}>Reading wallet-associated Nado subaccounts…</p>:
-        account.error?<p className={styles.warning} role="alert">{account.error.message}</p>:
-        account.data?<div>
-          {(!account.data.positionCoverageComplete||account.data.incomplete||account.data.warnings.length>0)&&<p className={styles.warning}><ShieldAlert size={15}/> Some Nado account evidence is partial or incomplete. Do not treat missing positions as proof of no risk. {account.data.warnings.join(" ")}</p>}
-          {account.data.positions.length?<div className={styles.tableScroll}><table><thead><tr><th>Market</th><th>Side</th><th>Size</th><th>Entry price</th><th>Margin mode</th></tr></thead>
-            <tbody>{account.data.positions.slice(0,8).map(p=><tr key={p.subaccount+p.id+p.productId}><td>{p.symbol}</td><td>{p.side}</td><td>{p.size}</td><td>{p.entryPrice}</td><td>{p.marginMode}</td></tr>)}</tbody></table></div>:
-            <p className={styles.muted}>No positions in the available records. Account coverage may be incomplete; confirm against Nado directly.</p>}
-        </div>:<p className={styles.muted}>No Nado account data returned.</p>}
-    </section>
+    <TerminalAccountDesk/>
     <p className={styles.footer}>Symb-II is not an exchange or brokerage. Desktop-first web terminal preview only; no native desktop installer is included yet. Trading remains disabled pending security review and independent wallet testing.</p>
   </div>;
 }
