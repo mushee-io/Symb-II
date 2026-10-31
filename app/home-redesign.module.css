@@ -108,10 +108,11 @@
  .heroInner,.sectionFrame{width:calc(100% - 36px)}
  .landing :global(.header-inner){width:calc(100% - 36px)}
  .eyebrowBar>span:last-child{display:none}
- .wordmark{font-size:clamp(75px,17.5vw,132px);margin-top:35px}
+ .wordmark{font-size:clamp(48px,14vw,105px);margin-top:35px}
  .wordmark sup{margin-left:9px}
  .heroBody{margin-top:44px}
  .heroStory h1{font-size:clamp(42px,10vw,70px)}
+ .heroStory h1 span{font-size:.82em}
  .heroStory>p{font-size:14px}
  .heroRight{grid-template-columns:1fr;gap:15px}
  .statusBoard{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px}
@@ -125,6 +126,7 @@
  .manifesto{padding:64px 0}
  .manifestoHeading{padding:40px 0}
  .manifestoHeading h2{font-size:clamp(47px,12vw,78px)}
+ .manifestoHeading h2 em{font-size:.82em}
  .systemGrid{grid-template-columns:1fr;border-bottom:0}
  .systemCard{border-bottom:1px solid #c6ccc3;min-height:220px}
  .systemCard h3{margin-top:30px}
@@ -136,6 +138,7 @@
  .previewFooter{gap:13px}
  .finalSection{padding:75px 0}
  .finalSection h2{font-size:clamp(53px,11vw,88px)}
+ .finalSection h2 span{font-size:.81em}
  .finalBottom{flex-direction:column;align-items:flex-start}
  .finalCtas{justify-content:flex-start}
 }
