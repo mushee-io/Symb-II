@@ -52,7 +52,8 @@ jobs:
         shell: pwsh
         run: |
           ./desktop/verify-windows-candidate.ps1 -DistPath 'desktop/dist'
-          if ($LASTEXITCODE -ne 0) { throw 'Windows candidate verification failed.' }
+          # Script throws on failure; a PowerShell script does not reliably
+          # reset LASTEXITCODE from an earlier native command on success.
       - name: Upload private short-lived Windows candidate for independent device testing
         uses: actions/upload-artifact@v4
         with:
