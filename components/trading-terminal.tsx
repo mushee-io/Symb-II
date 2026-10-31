@@ -13,6 +13,7 @@ import {TerminalCandlestickChart} from "@/components/terminal-candlestick-chart"
 import {TerminalTradeResearch} from "@/components/terminal-trade-research";
 import {TerminalAIExplanation} from "@/components/terminal-ai-explanation";
 import {TerminalWalletPairing} from "@/components/terminal-wallet-pairing";
+import {WalletButton} from "@/components/wallet-button";
 import {TerminalOrderBook} from "@/components/terminal-order-book";
 import styles from "@/app/workspace/terminal/terminal.module.css";
 import {parseTerminalCommand,calculateDraftIllustration} from "@/lib/trading/order-draft";
@@ -44,7 +45,7 @@ export function TradingTerminal(){
     staleTime:15000,refetchInterval:30000,retry:1,
   });
   const perps=useMemo(()=>(markets.data?.markets??[]).filter(m=>m.type==="perp"),[markets.data]);
-  const market=perps.find(m=>m.productId===selectedId)??perps[0]??null;
+  const market=perps.find(m=>m.productId===selectedId)??perps.find(m=>m.symbol.toUpperCase()==="BTC-PERP")??perps[0]??null;
   const filtered=perps.filter(m=>(m.symbol+" "+m.base).toLowerCase().includes(search.toLowerCase())).slice(0,24);
   const notional=Number(notionalText);
   const leverage=Number(leverageText);
@@ -124,8 +125,8 @@ export function TradingTerminal(){
           <p className={styles.muted}>No live Nado book is available. No prices are simulated.</p>
         </section>}
       <section className={styles.draft} aria-label="Local order draft">
-        <TerminalWalletPairing watchAddress={watchAddress} onWatchAddress={setWatchAddress}/>
         <div className={styles.panelTop}><strong>Order draft</strong><small>Preview only</small></div>
+        <div className={styles.ticketConnect}><span>NON-CUSTODIAL · INK MAINNET</span><WalletButton compact/></div>
         <div className={styles.sideButtons}>
           <button type="button" aria-pressed={side==="long"} className={side==="long"?styles.longActive:""} onClick={()=>setSide("long")}>Long</button>
           <button type="button" aria-pressed={side==="short"} className={side==="short"?styles.shortActive:""} onClick={()=>setSide("short")}>Short</button>
@@ -144,6 +145,10 @@ export function TradingTerminal(){
         {!validDraft&&<p className={styles.warning}>Enter a positive notional and leverage between 1 and 10.</p>}
         <div className={styles.disabledAction}><LockKeyhole size={16}/> Order placement disabled</div>
         <p className={styles.muted}>These calculations are not Nado margin, liquidation or execution quotes. They exclude fees, slippage, funding, margin requirements and market impact. The quote may be stale between refreshes. Never use this draft to infer a safe liquidation price.</p>
+        <details className={styles.walletTools}>
+          <summary>WALLET &amp; WATCH-ONLY TOOLS</summary>
+          <TerminalWalletPairing watchAddress={watchAddress} onWatchAddress={setWatchAddress}/>
+        </details>
       </section>
     </div>
     <section className={styles.researchSection} aria-label="Agent and market research tools">
