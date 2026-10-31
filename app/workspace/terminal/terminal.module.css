@@ -1,0 +1,70 @@
+.terminal{display:grid;gap:17px;min-width:0}
+.heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:5px 0 10px}
+.heading h1{font-size:clamp(32px,3.7vw,51px);line-height:1.12;letter-spacing:-.055em;margin:11px 0 12px}
+.heading p{max-width:650px;color:var(--muted);font-size:12px;line-height:1.7;margin:0}
+.lock{display:inline-flex;gap:7px;align-items:center;border:1px solid #597047;background:#303b2c;color:#e0eccd;padding:10px 12px;border-radius:99px;white-space:nowrap;font-size:10px;font-weight:720}
+.statusRow{display:flex;gap:16px;align-items:center;flex-wrap:wrap;background:#18221a;border:1px solid #344b39;border-radius:10px;padding:12px 15px;font-size:11px;color:#b3cbb6}
+.statusRow span{display:inline-flex;align-items:center;gap:6px}
+.statusRow svg{color:#9cd6a7}
+.statusRow button{margin-left:auto;display:inline-flex;align-items:center;gap:6px;background:#253a2a;border:1px solid #426047;color:#d4efd9;padding:7px 10px;border-radius:7px;font-size:11px}
+.grid{display:grid;grid-template-columns:minmax(155px,.77fr) minmax(260px,1.4fr) minmax(230px,1fr);gap:12px;align-items:stretch}
+.watch,.center,.draft,.positions{border:1px solid #344b3a;background:#142019;border-radius:12px;min-width:0;overflow:hidden}
+.panelTop{min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #314637;padding:15px;font-size:13px}
+.panelTop strong{font-weight:680}
+.panelTop small,.panelTop span{font-size:10px;color:#93b2a0;overflow-wrap:anywhere}
+.search{display:flex;flex-direction:column;gap:6px;padding:13px;font-size:10px;color:#b8d1bc}
+.search input,.field input,.agentArea textarea{background:#0f1913;color:#e6f6e8;border:1px solid #415846;border-radius:8px;padding:11px;font-size:12px;min-width:0;width:100%;font:inherit}
+.search input:focus,.field input:focus,.agentArea textarea:focus{outline:2px solid #86c593;outline-offset:1px}
+.watchList{overflow:auto;max-height:540px;padding:0 7px 9px}
+.marketButton{width:100%;border:1px solid transparent;background:transparent;border-radius:8px;display:flex;justify-content:space-between;gap:10px;padding:12px 9px;color:#e8f2ea;text-align:left}
+.marketButton:hover{background:#1e3024}
+.marketButton.active{background:#2a4331;border-color:#436b4c}
+.marketButton>span{display:grid;gap:4px;min-width:0}
+.marketButton strong{font-size:11px;overflow-wrap:anywhere}
+.marketButton small{font-size:10px;color:#9eae9f;white-space:nowrap}
+.right{text-align:right}
+.up{color:#b9f5c6!important}
+.down{color:#ffada4!important}
+.quote{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:16px}
+.quote>div{border:1px solid #30483a;background:#1c2c21;padding:11px;border-radius:9px;min-width:0}
+.quote small{display:block;color:#a4bba9;font-size:10px;margin-bottom:8px}
+.quote strong{font-size:clamp(11px,1.5vw,18px);overflow-wrap:anywhere}
+.agentArea{margin:10px 15px 15px;border-top:1px solid #314638;padding-top:18px}
+.agentTitle{display:flex;align-items:center;gap:9px;margin-bottom:16px}
+.agentTitle>svg{color:#c6b8f7;flex:0 0 18px}
+.agentTitle>div{display:grid;gap:4px}
+.agentTitle strong{font-size:13px}
+.agentTitle small{font-size:10px;color:#a3b7a8}
+.agentArea label{display:block;font-size:11px;margin-bottom:8px;color:#c9dccb}
+.agentArea textarea{resize:vertical;line-height:1.55}
+.parseButton{margin-top:10px;background:#b6f7cd;color:#112518;border:0;border-radius:7px;padding:12px 13px;font-size:12px;font-weight:700}
+.parserNote{border:1px solid #49634b;border-radius:7px;padding:10px;font-size:11px;line-height:1.55;color:#cde7d0}
+.muted{color:#9fb4a5;font-size:11px;line-height:1.7;margin:14px}
+.agentArea .muted{margin:13px 0 0;font-size:10px}
+.warning{display:flex;align-items:flex-start;gap:7px;margin:13px;padding:11px;background:#3b3024;border:1px solid #7b6141;border-radius:7px;color:#efc9ad;font-size:11px;line-height:1.6}
+.links{display:flex;gap:10px;flex-wrap:wrap;padding:0 15px 19px}
+.links a{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#bbebc6;border-bottom:1px solid #5d8566;padding-bottom:4px}
+.draft{padding-bottom:16px}
+.sideButtons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px}
+.sideButtons button{padding:11px;color:#cbd7ca;background:#1d2d22;border:1px solid #3b5542;border-radius:8px;font-size:12px}
+.sideButtons button.longActive{background:#27553a;border-color:#7bc895;color:#e9fff1}
+.sideButtons button.shortActive{background:#5d332c;border-color:#cc847e;color:#ffe6df}
+.field{display:grid;gap:8px;padding:0 14px;margin:14px 0;color:#c4dac9;font-size:11px}
+.preview{margin:19px 14px;border:1px solid #435c49;border-radius:10px;background:#1b3022;padding:14px}
+.preview>strong{display:block;font-size:12px;margin-bottom:12px}
+.preview>div{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding:9px 0;border-top:1px solid #34513b;font-size:10px}
+.preview span{color:#b0c8b6;line-height:1.55}
+.preview b{text-align:right;color:#effbf1;font-weight:680;overflow-wrap:anywhere}
+.disabledAction{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;margin:14px;border:1px solid #665e45;color:#e3d4b5;background:#363528;border-radius:8px;font-size:11px;font-weight:650}
+.draft>.muted{font-size:10px}
+.positions{min-height:170px}
+.positionsEmpty{display:flex;align-items:center;gap:14px;padding:16px;color:#c9dacd}
+.positionsEmpty p{font-size:11px;line-height:1.6;margin:0;flex:1}
+.tableScroll{overflow-x:auto}
+.positions table{width:100%;border-collapse:collapse;font-size:11px}
+.positions th,.positions td{text-align:left;padding:12px 17px;white-space:nowrap;border-bottom:1px solid #2d4635}
+.positions th{color:#9fbaa5;font-weight:550}
+.footer{font-size:10px;line-height:1.7;color:#a0b5a6;margin:0}
+@media(max-width:1200px){.grid{grid-template-columns:minmax(160px,.7fr) minmax(250px,1.3fr)}.draft{grid-column:1/-1}.draft .preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px}}
+@media(max-width:800px){.heading{flex-direction:column}.grid{grid-template-columns:1fr}.draft{grid-column:auto}.watchList{max-height:260px}.statusRow button{margin-left:0}.positionsEmpty{flex-wrap:wrap}.quote strong{font-size:16px}}
+@media(max-width:500px){.quote{grid-template-columns:1fr}.draft .preview{display:block}.lock{white-space:normal}.positionsEmpty{display:grid}}

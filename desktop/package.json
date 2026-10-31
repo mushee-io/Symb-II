@@ -1,0 +1,45 @@
+{
+  "name": "symb-ii-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Security-constrained desktop shell for the read-only Symb-II trading terminal.",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "pack:dir": "electron-builder --dir --publish never",
+    "pack:win": "electron-builder --win nsis --x64 --publish never",
+    "pack:mac": "electron-builder --mac dmg --publish never",
+    "pack:linux": "electron-builder --linux AppImage --publish never"
+  },
+  "devDependencies": {
+    "electron": "45.1.0",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "xyz.mushee.symbii.desktop",
+    "productName": "Symb-II Desktop",
+    "files": [
+      "main.cjs",
+      "security-policy.cjs",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
+  }
+}
