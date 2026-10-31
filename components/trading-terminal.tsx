@@ -13,7 +13,8 @@ import {TerminalCandlestickChart} from "@/components/terminal-candlestick-chart"
 import {TerminalTradeResearch} from "@/components/terminal-trade-research";
 import {TerminalAIExplanation} from "@/components/terminal-ai-explanation";
 import {TerminalWalletPairing} from "@/components/terminal-wallet-pairing";
-import {TerminalEngineQuote} from "@/components/terminal-engine-quote";
+import {WalletButton} from "@/components/wallet-button";
+import {TerminalOrderBook} from "@/components/terminal-order-book";
 import styles from "@/app/workspace/terminal/terminal.module.css";
 import {parseTerminalCommand,calculateDraftIllustration} from "@/lib/trading/order-draft";
 
@@ -44,7 +45,7 @@ export function TradingTerminal(){
     staleTime:15000,refetchInterval:30000,retry:1,
   });
   const perps=useMemo(()=>(markets.data?.markets??[]).filter(m=>m.type==="perp"),[markets.data]);
-  const market=perps.find(m=>m.productId===selectedId)??perps[0]??null;
+  const market=perps.find(m=>m.productId===selectedId)??perps.find(m=>m.symbol.toUpperCase()==="BTC-PERP")??perps[0]??null;
   const filtered=perps.filter(m=>(m.symbol+" "+m.base).toLowerCase().includes(search.toLowerCase())).slice(0,24);
   const notional=Number(notionalText);
   const leverage=Number(leverageText);
@@ -68,19 +69,29 @@ export function TradingTerminal(){
     setParserNote("Instruction parsed into a local preview only. This is a deterministic parser, not a generative AI model or a trading signal.");
   }
 
-  return <div className={styles.terminal}>
+  return <div className={styles.terminal+" terminal-route"}>
     <div className={styles.heading}>
-      <div><span className="eyebrow">SYMB-II / DESKTOP-FIRST TERMINAL</span>
-        <h1>Trading terminal<span className="title-period">.</span></h1>
-        <p>Live Nado perpetual market snapshots, wallet-associated positions and a local order draft. This is the first building block of the desktop trading agent.</p>
+      <div><span className="eyebrow">SYMB-II / INK TRADING SYSTEM</span>
+        <h1>PERPETUALS <span className={styles.headingSlash}>/</span> TERMINAL</h1>
+        <p>Live Nado data, actual indexed candles and risk-aware drafts. A precision-built read-only market desk.</p>
       </div>
-      <span className={styles.lock}><LockKeyhole size={15}/> READ-ONLY · NO ORDER SUBMISSION</span>
+      <span className={styles.lock}><LockKeyhole size={15}/> EXECUTION LOCKED · OBSERVE ONLY</span>
+    </div>
+    <div className={styles.marketRibbon} aria-label="Selected live perpetual market">
+      <div className={styles.marketIdentity}><span className={styles.marketGlyph}>S</span>
+       <strong>{market?market.symbol:"MARKET UNAVAILABLE"}</strong>
+       <span className={styles.perpTag}>PERP</span>
+      </div>
+      <div className={styles.marketStat}><small>INDEXED LAST</small><strong>{market?priceLabel(market.lastPrice):"—"}</strong></div>
+      <div className={styles.marketStat}><small>24H CHANGE</small><strong className={market?.change24h!=null&&market.change24h<0?styles.down:styles.up}>{market?(market.change24h>=0?"+":"")+number(market.change24h)+"%":"—"}</strong></div>
+      <div className={styles.marketStat}><small>24H VOLUME</small><strong>{market?money(market.volume24h):"—"}</strong></div>
+      <div className={styles.marketStat}><small>PROTOCOL</small><strong>NADO / INK</strong></div>
     </div>
     <div className={styles.statusRow}>
       <span><Activity size={15}/> Ink Mainnet · 57073</span>
       <span><Clock3 size={15}/> {markets.data?"Indexer snapshot "+new Date(markets.data.updatedAt).toLocaleTimeString():"Awaiting market data"}</span>
       <span>{onInk?"Wallet connected":watchAddress?"Watching public address (not authenticated)":isConnected?"Wrong wallet network":"Wallet not connected"}</span>
-      <button type="button" onClick={()=>void markets.refetch()} disabled={markets.isFetching}><RefreshCw size={14}/> Refresh markets</button>
+      <button type="button" onClick={()=>void markets.refetch()} disabled={markets.isFetching}><RefreshCw size={14}/> Refresh</button>
     </div>
     <div className={styles.grid}>
       <section className={styles.watch} aria-label="Nado market watchlist">
@@ -106,23 +117,16 @@ export function TradingTerminal(){
         </div>:<p className={styles.muted}>Market data is unavailable. The terminal does not generate simulated prices.</p>}
         {market&&<TerminalCandlestickChart productId={market.productId}/>}
         {market&&markets.data&&<TerminalPriceTape productId={market.productId} price={market.lastPrice} updatedAt={markets.data.updatedAt}/>}
-        {market&&<TerminalEngineQuote productId={market.productId}/>}
         {!quoteFresh&&<div className={styles.warning} role="status">Quote missing or more than two minutes old. Quote-based quantity estimates are disabled until refreshed.</div>}
-        <div className={styles.agentArea}>
-          <div className={styles.agentTitle}><Bot size={18}/><div><strong>Agent command desk</strong><small>Rule-based draft parser · AI reasoning not connected</small></div></div>
-          <label htmlFor="terminal-instruction">Describe a draft to prepare</label>
-          <textarea id="terminal-instruction" value={instruction} onChange={e=>setInstruction(e.target.value)} placeholder="Prepare a $500 BTC long at 2x" rows={4}/>
-          <button type="button" className={styles.parseButton} onClick={interpretInstruction}>Parse into order draft</button>
-          {parserNote&&<p className={styles.parserNote} role="status">{parserNote}</p>}
-          <p className={styles.muted}>No AI-generated investment advice, signing, approvals, exchange orders or autonomous actions. Parsing only updates the fields on this screen.</p>
-        </div>
-        {market&&<TerminalTradeResearch productId={market.productId} side={side} notional={notional} leverage={leverage}/>}
-        {market&&<TerminalAIExplanation productId={market.productId} side={side} notional={notional} leverage={leverage}/>}
-        <div className={styles.links}><Link href="/workspace/risk">Risk monitor <ArrowUpRight size={13}/></Link><Link href="/workspace/rescue">Rescue Lab <ArrowUpRight size={13}/></Link><Link href="/agent">Guided explanations <ArrowUpRight size={13}/></Link></div>
       </section>
+      {market?<TerminalOrderBook productId={market.productId}/>:
+        <section className={styles.orderBook} aria-label="Nado order book unavailable">
+          <div className={styles.panelTop}><strong>Order book</strong><small>OFFLINE</small></div>
+          <p className={styles.muted}>No live Nado book is available. No prices are simulated.</p>
+        </section>}
       <section className={styles.draft} aria-label="Local order draft">
-        <TerminalWalletPairing watchAddress={watchAddress} onWatchAddress={setWatchAddress}/>
         <div className={styles.panelTop}><strong>Order draft</strong><small>Preview only</small></div>
+        <div className={styles.ticketConnect}><span>NON-CUSTODIAL · INK MAINNET</span><WalletButton compact/></div>
         <div className={styles.sideButtons}>
           <button type="button" aria-pressed={side==="long"} className={side==="long"?styles.longActive:""} onClick={()=>setSide("long")}>Long</button>
           <button type="button" aria-pressed={side==="short"} className={side==="short"?styles.shortActive:""} onClick={()=>setSide("short")}>Short</button>
@@ -141,9 +145,27 @@ export function TradingTerminal(){
         {!validDraft&&<p className={styles.warning}>Enter a positive notional and leverage between 1 and 10.</p>}
         <div className={styles.disabledAction}><LockKeyhole size={16}/> Order placement disabled</div>
         <p className={styles.muted}>These calculations are not Nado margin, liquidation or execution quotes. They exclude fees, slippage, funding, margin requirements and market impact. The quote may be stale between refreshes. Never use this draft to infer a safe liquidation price.</p>
+        <details className={styles.walletTools}>
+          <summary>WALLET &amp; WATCH-ONLY TOOLS</summary>
+          <TerminalWalletPairing watchAddress={watchAddress} onWatchAddress={setWatchAddress}/>
+        </details>
       </section>
     </div>
+    <section className={styles.researchSection} aria-label="Agent and market research tools">
+      <div className={styles.researchBanner}><span>02 / RESEARCH &amp; INTELLIGENCE</span><strong>DECISIONS NEED CONTEXT.</strong><small>OBSERVATION &amp; LOCAL DRAFTS ONLY</small></div>
+        <div className={styles.agentArea}>
+          <div className={styles.agentTitle}><Bot size={18}/><div><strong>Agent command desk</strong><small>Rule-based draft parser · AI reasoning not connected</small></div></div>
+          <label htmlFor="terminal-instruction">Describe a draft to prepare</label>
+          <textarea id="terminal-instruction" value={instruction} onChange={e=>setInstruction(e.target.value)} placeholder="Prepare a $500 BTC long at 2x" rows={4}/>
+          <button type="button" className={styles.parseButton} onClick={interpretInstruction}>Parse into order draft</button>
+          {parserNote&&<p className={styles.parserNote} role="status">{parserNote}</p>}
+          <p className={styles.muted}>No AI-generated investment advice, signing, approvals, exchange orders or autonomous actions. Parsing only updates the fields on this screen.</p>
+        </div>
+        {market&&<TerminalTradeResearch productId={market.productId} side={side} notional={notional} leverage={leverage}/>}
+        {market&&<TerminalAIExplanation productId={market.productId} side={side} notional={notional} leverage={leverage}/>}
+        <div className={styles.links}><Link href="/workspace/risk">Risk monitor <ArrowUpRight size={13}/></Link><Link href="/workspace/rescue">Rescue Lab <ArrowUpRight size={13}/></Link><Link href="/agent">Guided explanations <ArrowUpRight size={13}/></Link></div>
+    </section>
     <TerminalAccountDesk watchAddress={watchAddress}/>
-    <p className={styles.footer}>Symb-II is not an exchange or brokerage. Desktop-first web terminal preview only; no native desktop installer is included yet. Trading remains disabled pending security review and independent wallet testing.</p>
+    <p className={styles.footer}>Symb-II is not an exchange or brokerage. Read-only terminal on the web and in an internal Electron desktop shell. Unsigned Windows builds require device testing. Live trading remains disabled pending independent security review and wallet acceptance.</p>
   </div>;
 }
