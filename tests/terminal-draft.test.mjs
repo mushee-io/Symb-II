@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import {parseTerminalCommand,calculateDraftIllustration} from "../lib/trading/order-draft.ts";
 
 const markets=[
-  {productId:1,symbol:"BTC-PERP",base:"BTC",quote:"USDT0",type:"perp",lastPrice:65000,change24h:0,volume24h:100000},
-  {productId:2,symbol:"ETH-PERP",base:"ETH",quote:"USDT0",type:"perp",lastPrice:3000,change24h:0,volume24h:100000},
+  {productId:1,symbol:"BTC-PERP",base:"BTC-PERP",quote:"USDT0",type:"perp",lastPrice:65000,change24h:0,volume24h:100000},
+  {productId:2,symbol:"ETH-PERP",base:"ETH-PERP",quote:"USDT0",type:"perp",lastPrice:3000,change24h:0,volume24h:100000},
 ];
-test("parses an explicit desktop-agent instruction without creating a transaction",()=>{
+test("parses a natural BTC instruction against the real Nado BTC-PERP base",()=>{
   const result=parseTerminalCommand("Prepare a $500 BTC long at 2x",markets);
   assert.deepEqual(result,{ok:true,market:markets[0],side:"long",notional:500,leverage:2});
 });
