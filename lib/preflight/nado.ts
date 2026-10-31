@@ -3,6 +3,7 @@ import {getNadoAccount,getNadoMarkets,getNadoPreflightEngineEvidence,getNadoRedu
 import {nadoPositionKey} from "@/lib/risk/nado-stress";
 import {assessNadoEvidence,canInspectNadoReduction,type EngineMarketEvidence} from "./nado-evidence";
 import {assessReductionSize,type ReduceOnlyObservation} from "./nado-reduce";
+import {reviewNadoReduceOnlyLimit} from "@/lib/nado/order-limit-policy";
 import {finalizePreflight,type PreflightRequest,type PreflightReport} from "./policy";
 
 /** Read-only Nado product diagnostics, NEVER an authenticated order preview.
@@ -63,6 +64,22 @@ export async function preflightNado(request:Extract<PreflightRequest,{kind:"nado
    name:"Hypothetical reduce-only size bounds",
    state:reduction?.feasibleBySize?"pass":"unknown",
    detail:reduction?.reason??"No verified reduce-only engine limit for this exact wallet position.",
+ });
+ // A second, independent display-only limit-tick and slippage screening on
+ // current official BBO is useful for review. No user or exchange signature.
+ const indicativeLimit=reduction&&position&&canInspectNadoReduction(assessed)?
+   reviewNadoReduceOnlyLimit({
+     wallet:request.wallet,sourceWallet:account.address,productId:position.productId,
+     positionSide:position.side,engine:evidence,reduction,
+     limitPrice:position.side==="long"?(evidence.bid??""):(evidence.ask??""),
+     maxSlippageBps:0,now:Date.now(),
+   }):null;
+ assessed.gates.push({
+   name:"Indicative Nado reduce-only limit review",
+   state:indicativeLimit?.passesIndicativeBounds?"pass":"unknown",
+   detail:indicativeLimit?.passesIndicativeBounds?
+     "Top-of-book reference matches tick, slippage and engine size heuristics. No executable quote, order credentials, wallet approval or signing.":
+     (indicativeLimit?.reasons.join(" ")??"An exact fresh, supported Nado limit-order reference is unavailable."),
  });
  // Nado execution restrictions ALWAYS fail regardless of all source gates.
  return finalizePreflight({
