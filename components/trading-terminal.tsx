@@ -9,6 +9,8 @@ import {ink} from "@/lib/ink";
 import type {NadoMarketsResponse} from "@/lib/nado/types";
 import {TerminalAccountDesk} from "@/components/terminal-account-desk";
 import {TerminalPriceTape} from "@/components/terminal-price-tape";
+import {TerminalCandlestickChart} from "@/components/terminal-candlestick-chart";
+import {TerminalTradeResearch} from "@/components/terminal-trade-research";
 import {TerminalEngineQuote} from "@/components/terminal-engine-quote";
 import styles from "@/app/workspace/terminal/terminal.module.css";
 import {parseTerminalCommand,calculateDraftIllustration} from "@/lib/trading/order-draft";
@@ -99,6 +101,7 @@ export function TradingTerminal(){
           <div><small>24-hour change</small><strong className={market.change24h<0?styles.down:styles.up}>{market.change24h>=0?"+":""}{number(market.change24h)}%</strong></div>
           <div><small>24-hour indexed volume</small><strong>{money(market.volume24h)}</strong></div>
         </div>:<p className={styles.muted}>Market data is unavailable. The terminal does not generate simulated prices.</p>}
+        {market&&<TerminalCandlestickChart productId={market.productId}/>}
         {market&&markets.data&&<TerminalPriceTape productId={market.productId} price={market.lastPrice} updatedAt={markets.data.updatedAt}/>}
         {market&&<TerminalEngineQuote productId={market.productId}/>}
         {!quoteFresh&&<div className={styles.warning} role="status">Quote missing or more than two minutes old. Quote-based quantity estimates are disabled until refreshed.</div>}
@@ -110,6 +113,7 @@ export function TradingTerminal(){
           {parserNote&&<p className={styles.parserNote} role="status">{parserNote}</p>}
           <p className={styles.muted}>No AI-generated investment advice, signing, approvals, exchange orders or autonomous actions. Parsing only updates the fields on this screen.</p>
         </div>
+        {market&&<TerminalTradeResearch productId={market.productId} side={side} notional={notional} leverage={leverage}/>}
         <div className={styles.links}><Link href="/workspace/risk">Risk monitor <ArrowUpRight size={13}/></Link><Link href="/workspace/rescue">Rescue Lab <ArrowUpRight size={13}/></Link><Link href="/agent">Guided explanations <ArrowUpRight size={13}/></Link></div>
       </section>
       <section className={styles.draft} aria-label="Local order draft">
