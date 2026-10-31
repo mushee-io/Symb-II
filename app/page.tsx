@@ -50,7 +50,7 @@ export default function HomePage() {
             <span className="eyebrow">EARLY FOUNDATION RELEASE</span>
             <h2>Built for how capital<br/><span>should move.</span></h2>
             <p>Read-only Nado and Tydro integrations, guided analysis, risk monitoring and a Portfolio Rescue Lab preview are available. Trading and borrowing actions are not enabled.</p>
-            <Link href="/workspace#portfolio-rescue" className="btn btn-primary btn-large">Explore Rescue Lab <ArrowRight size={17}/></Link>
+            <Link href="/workspace/rescue" className="btn btn-primary btn-large">Explore Rescue Lab <ArrowRight size={17}/></Link>
             <div className="closing-tags"><span><Smartphone size={13}/> Responsive web</span><span><ShieldCheck size={13}/> Explicit approvals</span><span><Network size={13}/> Ink only</span></div>
           </div>
         </section>
