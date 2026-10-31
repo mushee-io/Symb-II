@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {normalizeNadoCandles,calculateCandleIndicators,CANDLE_INTERVALS} from "../lib/trading/candles.ts";
 const now=1_800_000_000_000;
-const bar=(time,open=100,high=110,low=95,close=104,volume=25)=>({
+const bar=(time,open=100,high=110,low=95,close=104,volume="25000000000000000000")=>({
  time:String(time),open:String(open),high:String(high),low:String(low),close:String(close),volume:String(volume)
 });
 test("supports exactly the bounded public historical periods",()=>{
@@ -13,6 +13,8 @@ test("normalizes real provider-shaped bars to ascending timestamp order",()=>{
  const a=1_799_999_900,b=a+60;
  const value=normalizeNadoCandles([bar(b),bar(a)],2,"1m",now);
  assert.equal(value.candles.length,2);
+ assert.equal(value.candles[0].volume,25);
+ assert.equal(value.candles[1].volume,25);
  assert.deepEqual(value.candles.map(c=>c.time),[a,b]);
  assert.equal(value.incomplete,false);
  assert.equal(value.executionEnabled,false);
@@ -45,4 +47,11 @@ test("calculates simple SMA only from twenty actual OHLC closes",()=>{
  assert.equal(r?.sma20,109.5);
  assert.equal(r?.rangeHigh,129);
  assert.equal(r?.rangeLow,90);
+});
+
+test("Nado raw x18 volume matches observed BTC indexer scale",()=>{
+ const t=1_799_999_900;
+ const result=normalizeNadoCandles([bar(t,78082,78196,77971,77980,"22988300000000000000")],2,"15m",now);
+ assert.equal(result.candles[0].volume,22.9883);
+ assert.equal(result.executionEnabled,false);
 });

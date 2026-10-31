@@ -26,7 +26,9 @@ export function normalizeNadoCandles(raw:readonly RawNadoCandle[],productId:numb
  const valid:HistoricalCandle[]=[];
  let dropped=0;
  for(const bar of raw.slice(0,MAX_BARS)){
-  const time=num(bar.time),open=num(bar.open),high=num(bar.high),low=num(bar.low),close=num(bar.close),volume=num(bar.volume);
+  // The official indexer SDK maps OHLC prices to decimals, but leaves volume in raw x18 units.
+  // Convert volume to base-asset units before exposing it to browser charts and research.
+  const time=num(bar.time),open=num(bar.open),high=num(bar.high),low=num(bar.low),close=num(bar.close),volume=num(bar.volume)/1e18;
   const ok=Number.isSafeInteger(time)&&time>946684800&&time*1000<=now+periodSeconds*1000&&
    [open,high,low,close,volume].every(Number.isFinite)&&
    open>0&&low>0&&high>0&&close>0&&volume>=0&&
