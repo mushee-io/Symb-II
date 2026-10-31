@@ -339,3 +339,16 @@
  .marketGlyph{width:30px;height:30px;flex-basis:30px}
  .candleStatistics{grid-template-columns:1fr}
 }
+
+
+/* Accessible wallet tools stay available without pushing the order ticket
+   below the fold on desktop trading screens. */
+.ticketConnect{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 13px;background:#19261e;border-bottom:1px solid #314b38}
+.ticketConnect>span{color:#93ad9b;font:700 9px Consolas,monospace}
+.ticketConnect :global(.wallet-action){max-width:100%}
+.walletTools{border-top:1px solid #304234;margin:18px 12px 0;background:#121d16}
+.walletTools summary{cursor:pointer;padding:14px 12px;color:#a8ddb6;font:750 10px Consolas,monospace;letter-spacing:.04em;list-style-position:inside}
+.walletTools summary:focus-visible{outline:2px solid #a6e7bc;outline-offset:2px}
+.walletTools[open] summary{border-bottom:1px solid #324635}
+.walletTools .pairingPanel{border-bottom:0;padding:14px 10px}
+@media(max-width:420px){.ticketConnect{align-items:flex-start;flex-direction:column}}
