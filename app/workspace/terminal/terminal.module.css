@@ -98,3 +98,26 @@
 .engineQuoteMetrics small{font-size:10px;color:#aac4af}
 .engineQuoteMetrics strong{font-size:14px;color:#e9faed;overflow-wrap:anywhere}
 @media(max-width:620px){.engineQuoteMetrics{grid-template-columns:1fr}}
+
+
+/* Provider-backed historical trading candles, with no fabricated chart data */
+.candlePanel{background:#15251b;border:1px solid #395343;border-radius:11px;margin:0 15px 16px;overflow:hidden}
+.candleHeader{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:15px;border-bottom:1px solid #314839}
+.candleHeader>div:first-child{display:grid;gap:5px}
+.candleHeader strong{color:#e6f6e9;font-size:12px}
+.candleHeader small{font-size:10px;color:#a1bba6}
+.candleActions{display:flex;align-items:center;gap:8px}
+.timeframeTabs{display:flex;gap:2px;align-items:center;padding:3px;border:1px solid #35523e;border-radius:8px}
+.timeframeTabs button,.refreshCandles{border:0;border-radius:6px;color:#b6c9b9;background:transparent;padding:8px 9px;font-size:10px}
+.timeframeTabs button[aria-pressed="true"]{color:#12241a;background:#b7eec4;font-weight:750}
+.refreshCandles{display:inline-flex;align-items:center;justify-content:center;background:#263b2d;border:1px solid #395b43}
+.refreshCandles:disabled{opacity:.5}
+.candleSvg{width:100%;height:auto;display:block;max-height:315px}
+.candleStatistics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:3px 15px 15px}
+.candleStatistics span{display:flex;justify-content:space-between;gap:9px;align-items:baseline;font-size:10px;color:#a8c4b0;background:#1e3125;border:1px solid #385443;border-radius:8px;padding:11px}
+.candleStatistics strong{font-size:11px;color:#e3f6e7;text-align:right;overflow-wrap:anywhere}
+.chartUnavailable{padding:45px 22px;color:#b4cbb8;text-align:center;font-size:11px;line-height:1.75}
+.candleWarnings{display:flex;align-items:start;gap:9px;background:#423522;color:#f2d2a7;padding:12px 15px;font-size:11px;line-height:1.65}
+.candleWarnings svg{flex:0 0 auto}
+.candleDisclaimer{font-size:10px;line-height:1.7;color:#a4b8a9;padding:0 15px 15px;margin:0}
+@media(max-width:720px){.candlePanel{margin:0 9px 12px}.timeframeTabs button{padding:7px}.candleStatistics{grid-template-columns:1fr}.candleHeader{padding:11px}}
