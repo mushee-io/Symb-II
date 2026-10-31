@@ -1,6 +1,7 @@
 import "server-only";
 import { EngineClient, ENGINE_CLIENT_ENDPOINTS } from "@nadohq/engine-client";
-import { IndexerClient, INDEXER_CLIENT_ENDPOINTS } from "@nadohq/indexer-client";
+import { IndexerClient, INDEXER_CLIENT_ENDPOINTS, type CandlestickPeriod } from "@nadohq/indexer-client";
+import {normalizeNadoCandles,CANDLE_INTERVALS,type CandleInterval,type HistoricalCandleResponse} from "@/lib/trading/candles";
 import { isAddress } from "viem";
 import BigNumber from "bignumber.js";
 import type {ReduceOnlyObservation} from "../preflight/nado-reduce";
@@ -36,6 +37,19 @@ export async function getNadoMarkets(): Promise<NadoMarketsResponse> {
       volume24h: Number.isFinite(t.quoteVolume) ? t.quoteVolume : 0,
     })).sort((a,b)=>b.volume24h-a.volume24h);
   return { source: "Nado indexer", chainId, updatedAt: new Date().toISOString(), markets };
+}
+
+/** Read-only provider OHLCV. Verify product membership on Ink and never derive bars from last-price guesses. */
+export async function getNadoCandles(productId:number,interval:CandleInterval):Promise<HistoricalCandleResponse>{
+  if(!Number.isSafeInteger(productId)||productId<0||productId>1_000_000||!CANDLE_INTERVALS[interval])
+    throw Error("Invalid Nado candle request");
+  const markets=await getNadoMarkets();
+  const matches=markets.markets.filter(m=>m.productId===productId&&m.type==="perp");
+  if(matches.length!==1)throw Error("A verified live Nado perp product is required");
+  const bars=await indexer().getCandlesticks({
+    productId,period:CANDLE_INTERVALS[interval] as CandlestickPeriod,limit:96,
+  });
+  return normalizeNadoCandles(bars,productId,interval);
 }
 
 /**
