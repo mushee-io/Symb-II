@@ -804,3 +804,14 @@ h1,h2,h3,p { margin-top: 0; }
 @media(max-width:780px){
  .workspace-shell:has(.terminal-route){width:calc(100% - 18px);padding-top:9px}
 }
+
+
+/* Available Windows beta download is a first-class destination on every page.
+   Keep dense header links readable without breaking the wallet action. */
+.desktop-nav .download-nav-link{display:inline-flex;align-items:center;gap:7px;padding:10px 13px;background:#20412d;border:1px solid #477c58;color:#baf9cd;font-weight:800;border-radius:3px}
+.desktop-nav .download-nav-link:hover,.desktop-nav .download-nav-link.nav-active{background:#a6edb8;color:#13261b}
+@media(min-width:821px) and (max-width:1400px){
+ .desktop-nav{gap:13px}
+ .header-right{margin-left:9px}
+ .desktop-nav>a{font-size:11px}
+}
