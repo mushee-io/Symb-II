@@ -10,6 +10,7 @@ import type {NadoMarketsResponse} from "@/lib/nado/types";
 import {TerminalAccountDesk} from "@/components/terminal-account-desk";
 import {TerminalPriceTape} from "@/components/terminal-price-tape";
 import {TerminalCandlestickChart} from "@/components/terminal-candlestick-chart";
+import {TerminalTradeResearch} from "@/components/terminal-trade-research";
 import {TerminalEngineQuote} from "@/components/terminal-engine-quote";
 import styles from "@/app/workspace/terminal/terminal.module.css";
 import {parseTerminalCommand,calculateDraftIllustration} from "@/lib/trading/order-draft";
@@ -112,6 +113,7 @@ export function TradingTerminal(){
           {parserNote&&<p className={styles.parserNote} role="status">{parserNote}</p>}
           <p className={styles.muted}>No AI-generated investment advice, signing, approvals, exchange orders or autonomous actions. Parsing only updates the fields on this screen.</p>
         </div>
+        {market&&<TerminalTradeResearch productId={market.productId} side={side} notional={notional} leverage={leverage}/>}
         <div className={styles.links}><Link href="/workspace/risk">Risk monitor <ArrowUpRight size={13}/></Link><Link href="/workspace/rescue">Rescue Lab <ArrowUpRight size={13}/></Link><Link href="/agent">Guided explanations <ArrowUpRight size={13}/></Link></div>
       </section>
       <section className={styles.draft} aria-label="Local order draft">
