@@ -9,6 +9,7 @@ import {WalletButton} from "@/components/wallet-button";
 import {ink} from "@/lib/ink";
 import type {NadoMarket,NadoMarketsResponse,NadoAccountResponse} from "@/lib/nado/types";
 import styles from "@/app/workspace/terminal/terminal.module.css";
+import {parseTerminalCommand,calculateDraftIllustration} from "@/lib/trading/order-draft";
 
 async function readJson<T>(url:string,signal?:AbortSignal):Promise<T>{
   const response=await fetch(url,{signal,cache:"no-store"});
@@ -50,31 +51,18 @@ export function TradingTerminal(){
   const quoteFresh=Number.isFinite(quoteAge)&&quoteAge>=0&&quoteAge<=MAX_QUOTE_AGE_MS;
   const validPrice=Boolean(market&&Number.isFinite(market.lastPrice)&&market.lastPrice>0);
   const draftReady=validDraft&&validPrice&&quoteFresh;
-  const margin=validDraft?notional/leverage:NaN;
-  const quantity=draftReady&&market?notional/market.lastPrice:NaN;
-  const moveOnePercent=validDraft?notional*0.01:NaN;
+  const illustration=validDraft&&market?calculateDraftIllustration(notional,leverage,market.lastPrice):null;
+  const margin=illustration?.simpleMarginDivision??NaN;
+  const quantity=illustration?.approximateQuantity??NaN;
+  const moveOnePercent=illustration?.grossOnePercentMove??NaN;
 
   function interpretInstruction(){
-    const prompt=instruction.trim();
-    if(!prompt){setParserNote("Enter an instruction first. No network transaction will be created.");return;}
-    const sideMatch=prompt.match(/\b(long|short|buy|sell)\b/i);
-    const cashMatch=prompt.match(/\$\s*(\d+(?:\.\d+)?)/);
-    const leverageMatch=prompt.match(/\b(\d+(?:\.\d+)?)\s*x\b/i);
-    const mentioned=perps.find(m=>new RegExp("\\b"+m.base.replace(/[^A-Za-z0-9]/g,"")+"\\b","i").test(prompt));
-    if(!sideMatch||!cashMatch||!mentioned){
-      setParserNote("Could not safely parse a side, $ notional and supported market. Try: Prepare a $500 BTC long at 2x.");
-      return;
-    }
-    const candidateLeverage=leverageMatch?Number(leverageMatch[1]):leverage;
-    const candidateNotional=Number(cashMatch[1]);
-    if(!Number.isFinite(candidateNotional)||candidateNotional<=0||!Number.isFinite(candidateLeverage)||candidateLeverage<1||candidateLeverage>10){
-      setParserNote("Draft rejected: use a positive USD notional and leverage from 1x to 10x.");
-      return;
-    }
-    setSelectedId(mentioned.productId);
-    setSide(/long|buy/i.test(sideMatch[1])?"long":"short");
-    setNotionalText(String(candidateNotional));
-    setLeverageText(String(candidateLeverage));
+    const parsed=parseTerminalCommand(instruction,perps,leverage);
+    if(!parsed.ok){setParserNote(parsed.reason);return;}
+    setSelectedId(parsed.market.productId);
+    setSide(parsed.side);
+    setNotionalText(String(parsed.notional));
+    setLeverageText(String(parsed.leverage));
     setParserNote("Instruction parsed into a local preview only. This is a deterministic parser, not a generative AI model or a trading signal.");
   }
 
