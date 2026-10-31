@@ -22,25 +22,28 @@ function fresh(iso:string){
 function tableDate(seconds:number|null){return seconds?new Date(seconds*1000).toLocaleString():"Unavailable";}
 function textAmount(value:string){const amount=Number(value);return Number.isFinite(amount)?amount.toLocaleString(undefined,{maximumFractionDigits:6}):"Unavailable";}
 
-export function TerminalAccountDesk(){
+export function TerminalAccountDesk({watchAddress}:{watchAddress:string|null}){
   const {address,chainId,isConnected}=useAccount();
-  const active=Boolean(address&&isConnected&&chainId===ink.id);
+  const connectedInk=Boolean(address&&isConnected&&chainId===ink.id);
+  const selectedAddress=connectedInk?address:watchAddress;
+  const watchOnly=!connectedInk&&Boolean(selectedAddress);
+  const active=Boolean(selectedAddress);
   const [tab,setTab]=useState<"positions"|"orders"|"history"|"lending">("positions");
   const nado=useQuery({
-    queryKey:["nado-account",address?.toLowerCase()],
-    queryFn:({signal})=>read<NadoAccountResponse>("/api/nado/account?address="+encodeURIComponent(address!),signal),
+    queryKey:["nado-account",selectedAddress?.toLowerCase()],
+    queryFn:({signal})=>read<NadoAccountResponse>("/api/nado/account?address="+encodeURIComponent(selectedAddress!),signal),
     enabled:active,retry:1,staleTime:30000,refetchInterval:active?60000:false,
   });
   const tydro=useQuery({
-    queryKey:["tydro-account",address?.toLowerCase()],
-    queryFn:({signal})=>read<TydroAccountResponse>("/api/tydro/account?address="+encodeURIComponent(address!),signal),
+    queryKey:["tydro-account",selectedAddress?.toLowerCase()],
+    queryFn:({signal})=>read<TydroAccountResponse>("/api/tydro/account?address="+encodeURIComponent(selectedAddress!),signal),
     enabled:active&&tab==="lending",retry:1,staleTime:30000,refetchInterval:active&&tab==="lending"?60000:false,
   });
   const n=nado.data;
   const t=tydro.data;
-  const nComplete=Boolean(n&&n.chainId===57073&&n.address.toLowerCase()===address?.toLowerCase()&&
+  const nComplete=Boolean(n&&n.chainId===57073&&n.address.toLowerCase()===selectedAddress?.toLowerCase()&&
     n.positionCoverageComplete&&!n.incomplete&&n.warnings.length===0&&fresh(n.updatedAt));
-  const tComplete=Boolean(t&&t.chainId===57073&&t.address.toLowerCase()===address?.toLowerCase()&&
+  const tComplete=Boolean(t&&t.chainId===57073&&t.address.toLowerCase()===selectedAddress?.toLowerCase()&&
     !t.incomplete&&t.warnings.length===0&&fresh(t.updatedAt));
   const tabs=[["positions","Positions"],["orders","Open orders"],["history","Indexed history"],["lending","Tydro lending"]] as const;
   const orderRows=tab==="orders"?n?.openOrders:n?.indexedOrders;
@@ -48,7 +51,7 @@ export function TerminalAccountDesk(){
   return <section className={styles.positions} aria-label="Unified Nado and Tydro account desk">
     <div className={styles.panelTop}>
       <strong>Account activity · Nado + Tydro</strong>
-      <span>{active&&address?address.slice(0,6)+"…"+address.slice(-4):"No connected Ink wallet"}</span>
+      <span>{active&&selectedAddress?selectedAddress.slice(0,6)+"…"+selectedAddress.slice(-4):"No Ink address selected"}</span>
     </div>
     <div className={styles.accountTabs} role="tablist" aria-label="Account activity views">
       {tabs.map(([key,label])=><button type="button" role="tab" key={key} aria-selected={tab===key}
@@ -59,8 +62,9 @@ export function TerminalAccountDesk(){
         <RefreshCw size={13}/> Refresh
       </button>
     </div>
+    {watchOnly&&<p className={styles.watchOnlyWarning} role="status">Watch-only public address · no wallet ownership, signing, trading authority, or investment-safety status is verified. The readings belong to the address entered, not necessarily to you.</p>}
     {!active?<div className={styles.positionsEmpty}><Wallet size={18}/>
-      <p>Connect a wallet on Ink mainnet to read its public protocol records. No signatures or spending permissions are requested.</p>
+      <p>Connect an Ink wallet or enter a public watch-only address to inspect public protocol records. No signatures or spending permissions are requested.</p>
     </div>:
     tab==="lending"?(
       tydro.isPending?noData("Reading on-chain Tydro Pool account…"):
