@@ -82,3 +82,11 @@
 .accountMetrics small{font-size:10px;color:#a9bbaa}
 .positions .muted a{display:inline-flex;align-items:center;gap:4px;color:#bdf2c6}
 @media(max-width:650px){.accountMetrics{grid-template-columns:1fr}.accountTabs{padding:10px;gap:5px}.accountTabs button{padding:9px 10px}}
+
+
+.priceTape{margin:0 15px 15px;border:1px solid #344c3a;border-radius:10px;background:#18291d;overflow:hidden}
+.tapeHead{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;padding:13px 14px;border-bottom:1px solid #34483a}
+.tapeHead strong{font-size:12px;color:#ddf6e2}
+.tapeHead small{font-size:10px;color:#a1bba8}
+.priceTape svg{display:block;width:100%;height:auto;min-height:90px;max-height:135px;padding:6px 8px}
+.tapeFoot{display:flex;justify-content:space-between;gap:10px;color:#9cb6a4;padding:10px 14px;font-size:10px}
