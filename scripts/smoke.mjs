@@ -133,6 +133,21 @@ const checks=[
    }));
    return results.length+" standalone workspace routes return server-rendered headings and navigation";
  }],
+ ["Unified desktop terminal read-only release",async()=>{
+   const response=await fetch(root+"/workspace/terminal",{
+     method:"GET",redirect:"error",cache:"no-store",
+     headers:{"Accept":"text/html"},signal:AbortSignal.timeout(20000),
+   });
+   if(!response.ok||!(response.headers.get("content-type")||"").includes("text/html"))
+     throw Error("Native-agent terminal route unavailable");
+   const html=await response.text();
+   if(!html.includes("Trading terminal")||
+      !html.includes("READ-ONLY")||
+      !html.includes("Order placement disabled")||
+      !html.includes("aria-label=\\"Workspace sections\\""))
+     throw Error("Terminal missing source, navigation or no-execution safety boundaries");
+   return "Desktop-first market terminal rendered with explicit disabled execution";
+ }],
  ["Nado public markets",async()=>{
    const v=await read("/api/nado/markets");
    if(v.chainId!==57073||v.source!=="Nado indexer"||!Array.isArray(v.markets)||!v.markets.length)
