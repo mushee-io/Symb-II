@@ -158,6 +158,28 @@ const checks=[
      throw Error("Invalid quote yielded unsafe or fabricated prices");
    return "Invalid Nado product rejected without engine call or execution";
  }],
+ ["Nado historical OHLCV integrity",async()=>{
+   const markets=await read("/api/nado/markets");
+   const selected=markets.markets?.find(m=>m.type==="perp"&&m.symbol.toUpperCase().includes("BTC"))||
+                  markets.markets?.find(m=>m.type==="perp");
+   if(!Number.isSafeInteger(selected?.productId))throw Error("No validated Nado perp product for historical chart");
+   const bad=await fetch(root+"/api/nado/candles?productId="+selected.productId+"&interval=invalid",{
+     cache:"no-store",signal:AbortSignal.timeout(15000),
+   });
+   if(bad.status!==400)throw Error("Unsupported candle interval accepted");
+   const v=await read("/api/nado/candles?productId="+selected.productId+"&interval=15m");
+   if(v.chainId!==57073||v.source!=="Nado official indexer"||
+      v.productId!==selected.productId||v.interval!=="15m"||
+      v.executionEnabled!==false||!Array.isArray(v.candles)||!v.candles.length)
+     throw Error("Historical Nado indexer response lacks required provenance or disables execution boundary");
+   for(const b of v.candles){
+     if(!Number.isSafeInteger(b.time)||![b.open,b.high,b.low,b.close,b.volume].every(Number.isFinite)||
+        b.open<=0||b.low<=0||b.high<b.low||b.volume<0||
+        b.high<b.close||b.high<b.open||b.low>b.close||b.low>b.open)
+       throw Error("Invalid historical Nado candle detected");
+   }
+   return v.candles.length+" real 15m Nado candles; no synthetic data or execution";
+ }],
  ["Nado public markets",async()=>{
    const v=await read("/api/nado/markets");
    if(v.chainId!==57073||v.source!=="Nado indexer"||!Array.isArray(v.markets)||!v.markets.length)
