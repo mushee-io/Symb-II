@@ -29,6 +29,16 @@ const checks=[
      throw Error("Configuration appears to expose a credential");
    return v.services.length+" configuration gates";
  }],
+ ["WalletConnect QR readiness without execution",async()=>{
+   const report=await read("/api/ops/readiness");
+   const wallet=report.services?.find(s=>s.id==="walletconnect");
+   if(!wallet||!["configured","blocked"].includes(wallet.status)||
+      wallet.verifiedLive!==false||report.executionEnabled!==false)
+     throw Error("Native wallet pairing readiness is missing or falsely marked verified");
+   return wallet.status==="configured"?
+      "public WalletConnect ID configured; real native pairing still unverified":
+      "public WalletConnect ID missing; watch-only desktop observation remains available";
+ }],
  ["preflight config",async()=>{
    const v=await read("/api/preflight/config");
    if(v.supportsExecution!==false)throw Error("Preflight unexpectedly enables execution");

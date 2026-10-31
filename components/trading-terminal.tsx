@@ -30,6 +30,7 @@ const MAX_QUOTE_AGE_MS=120000;
 export function TradingTerminal(){
   const {address,isConnected,chainId}=useAccount();
   const onInk=Boolean(isConnected&&address&&chainId===ink.id);
+  const [watchAddress,setWatchAddress]=useState<string|null>(null);
   const [selectedId,setSelectedId]=useState<number|null>(null);
   const [search,setSearch]=useState("");
   const [side,setSide]=useState<"long"|"short">("long");
@@ -78,7 +79,7 @@ export function TradingTerminal(){
     <div className={styles.statusRow}>
       <span><Activity size={15}/> Ink Mainnet · 57073</span>
       <span><Clock3 size={15}/> {markets.data?"Indexer snapshot "+new Date(markets.data.updatedAt).toLocaleTimeString():"Awaiting market data"}</span>
-      <span>{onInk?"Wallet connected":isConnected?"Wrong wallet network":"Wallet not connected"}</span>
+      <span>{onInk?"Wallet connected":watchAddress?"Watching public address (not authenticated)":isConnected?"Wrong wallet network":"Wallet not connected"}</span>
       <button type="button" onClick={()=>void markets.refetch()} disabled={markets.isFetching}><RefreshCw size={14}/> Refresh markets</button>
     </div>
     <div className={styles.grid}>
@@ -120,7 +121,7 @@ export function TradingTerminal(){
         <div className={styles.links}><Link href="/workspace/risk">Risk monitor <ArrowUpRight size={13}/></Link><Link href="/workspace/rescue">Rescue Lab <ArrowUpRight size={13}/></Link><Link href="/agent">Guided explanations <ArrowUpRight size={13}/></Link></div>
       </section>
       <section className={styles.draft} aria-label="Local order draft">
-        <TerminalWalletPairing/>
+        <TerminalWalletPairing watchAddress={watchAddress} onWatchAddress={setWatchAddress}/>
         <div className={styles.panelTop}><strong>Order draft</strong><small>Preview only</small></div>
         <div className={styles.sideButtons}>
           <button type="button" aria-pressed={side==="long"} className={side==="long"?styles.longActive:""} onClick={()=>setSide("long")}>Long</button>
@@ -142,7 +143,7 @@ export function TradingTerminal(){
         <p className={styles.muted}>These calculations are not Nado margin, liquidation or execution quotes. They exclude fees, slippage, funding, margin requirements and market impact. The quote may be stale between refreshes. Never use this draft to infer a safe liquidation price.</p>
       </section>
     </div>
-    <TerminalAccountDesk/>
+    <TerminalAccountDesk watchAddress={watchAddress}/>
     <p className={styles.footer}>Symb-II is not an exchange or brokerage. Desktop-first web terminal preview only; no native desktop installer is included yet. Trading remains disabled pending security review and independent wallet testing.</p>
   </div>;
 }
