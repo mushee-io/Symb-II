@@ -178,3 +178,164 @@
 .watchOnlyCurrent button{background:#3d4a3b;color:#e1f1e6}
 .watchOnlyWarning{background:#3c3423;border-bottom:1px solid #6f5d42;padding:12px 15px;font-size:11px;line-height:1.65;color:#f1d2af;margin:0}
 @media(max-width:650px){.watchOnlyForm>div:first-of-type{display:grid}.watchOnlyForm input{min-width:0;width:100%}}
+
+
+/* Symb-II professional exchange-inspired desk, strictly non-executable.
+   Broad market area, official L1 book, local order-ticket and research shelf.
+   Does not fabricate liquidity, margins, quote depth, or executable prices. */
+.terminal{gap:0;background:#0b100e;border:1px solid #2b3930;border-radius:0;min-width:0;font-family:Inter,"Segoe UI",Arial,sans-serif}
+.heading{padding:19px 21px 17px;background:#0b100e;border-bottom:1px solid #28372e;margin:0;align-items:center}
+.heading h1{font-size:clamp(19px,2vw,28px);font-weight:850;letter-spacing:-.045em;margin:7px 0 8px}
+.heading p{font-size:11px;max-width:750px;color:#91a99a;line-height:1.5}
+.headingSlash{color:#a0e9b5}
+.heading :global(.eyebrow){color:#94d9aa;font:750 10px "SFMono-Regular",Consolas,monospace;letter-spacing:.08em}
+.lock{background:#20281f;border:1px solid #465641;border-radius:2px;color:#e3e1c1;padding:12px 13px;letter-spacing:.05em}
+.marketRibbon{display:grid;grid-template-columns:minmax(175px,1.25fr) repeat(4,minmax(110px,.85fr));align-items:stretch;background:#141c18;border-bottom:1px solid #344338;min-height:86px}
+.marketIdentity{display:flex;align-items:center;gap:13px;padding:15px 20px;border-right:1px solid #35483c;min-width:0}
+.marketIdentity>strong{font-size:clamp(14px,1.6vw,24px);font-weight:850;letter-spacing:-.05em;overflow-wrap:anywhere}
+.marketGlyph{width:38px;height:38px;flex:0 0 38px;border-radius:50%;display:grid;place-items:center;font-size:24px;font-weight:900;color:#111b14;background:linear-gradient(130deg,#b2f1c3,#55a77d)}
+.perpTag{color:#d5e1d3;background:#344338;padding:5px 7px;font-size:10px;border-radius:3px;font-weight:750}
+.marketStat{display:flex;flex-direction:column;justify-content:center;gap:9px;min-width:0;padding:13px 16px;border-right:1px solid #2b3a30}
+.marketStat small{color:#849d8d;font-size:9px;letter-spacing:.06em;font-weight:750}
+.marketStat strong{color:#eaf6ed;font-size:clamp(12px,1.5vw,19px);letter-spacing:-.025em;overflow-wrap:anywhere}
+.statusRow{background:#101713;border:0;border-bottom:1px solid #304037;border-radius:0;padding:10px 18px;font-size:10px;min-height:41px;color:#9fb3a4;gap:15px}
+.statusRow button{margin-left:auto;border:0;background:#24382b;color:#b9e7c5;border-radius:2px;padding:6px 11px}
+.grid{display:grid;grid-template-areas:"chart book ticket" "watch watch watch";grid-template-columns:minmax(0,1fr) minmax(210px,18.5%) minmax(260px,23.5%);gap:1px;align-items:stretch;background:#2a3b30;border:1px solid #304438}
+.center{grid-area:chart}
+.orderBook{grid-area:book}
+.draft{grid-area:ticket}
+.watch{grid-area:watch}
+.center,.orderBook,.draft,.watch{min-width:0;border:0;border-radius:0;background:#0d1310;overflow:hidden}
+.center{padding-bottom:13px}
+.center .panelTop{min-height:50px}
+.panelTop{border-bottom:1px solid #2d3e33;padding:13px 15px;min-height:49px;background:#101815}
+.panelTop strong{font-size:12px;font-weight:780;letter-spacing:.02em}
+.panelTop small{font:650 9px Consolas,monospace;color:#91a89a}
+.quote{border-bottom:1px solid #263a2d;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;padding:0}
+.quote>div{background:#111c15;border:0;border-right:1px solid #283c2e;border-radius:0;padding:13px 15px;display:grid;gap:8px}
+.quote small{font-size:9px;letter-spacing:.02em;text-transform:uppercase;color:#8ca895;margin:0}
+.quote strong{font-size:clamp(13px,1.3vw,20px);letter-spacing:-.04em}
+.candlePanel{margin:0;border:0;border-bottom:1px solid #283c31;border-radius:0;background:#0a100d}
+.candleHeader{border-bottom:1px solid #22392a;background:#0e1711;padding:11px 16px}
+.candleHeader strong{font-size:11px;letter-spacing:.03em;text-transform:uppercase}
+.candleHeader small{font-size:9px}
+.timeframeTabs{border:0;border-radius:0;padding:0}
+.timeframeTabs button{border-radius:1px}
+.timeframeTabs button[aria-pressed="true"]{background:#b1ebbc;color:#12241a;border-radius:1px}
+.candleSvg{width:100%;max-height:none;background:#0c120f;padding:3px 0}
+.candleStatistics{padding:9px 14px;gap:6px;border-top:1px solid #28372c}
+.candleStatistics span{background:transparent;border:0;border-right:1px solid #304537;border-radius:0;padding:4px 8px;color:#97a99a}
+.candleStatistics strong{font-size:10px}
+.candleDisclaimer{padding:7px 15px 14px;color:#798c7e;font-size:9px;line-height:1.5}
+.priceTape{border:0;border-top:1px solid #2c4132;border-bottom:1px solid #2c4132;border-radius:0;background:#101a14;margin:0 0 12px}
+.priceTape svg{max-height:115px}
+.tapeHead{padding:9px 15px}
+.tapeFoot{padding:8px 15px}
+.watch{display:grid;grid-template-columns:200px 220px minmax(0,1fr);align-items:center;min-height:110px;background:#101916}
+.watch .panelTop{align-self:stretch;flex-direction:column;align-items:flex-start;justify-content:center;border-bottom:0;border-right:1px solid #324536}
+.watch .search{padding:10px 15px;border-right:1px solid #324536}
+.watch .search input{padding:8px 10px;background:#0b120f;border-radius:2px;font-size:11px}
+.watchList{display:flex;align-items:stretch;overflow:auto;max-height:160px;padding:8px 5px;gap:3px;scrollbar-width:thin}
+.marketButton{flex:0 0 160px;border-radius:2px;border:1px solid #294133;padding:10px 13px;background:#18251d}
+.marketButton:hover{background:#263d2c}
+.marketButton.active{background:#274d34;border:1px solid #6fb582}
+.marketButton strong{font-size:11px}
+.marketButton small{font-size:9px}
+.orderBook{display:flex;flex-direction:column}
+.bookModes{display:flex;align-items:center;gap:0;border-bottom:1px solid #2d4235;color:#869b8c}
+.bookModes>span{padding:12px 13px;font:650 10px Consolas,monospace;border-right:1px solid #26382e}
+.bookModes .bookModeActive{background:#283a2d;color:#d5ecd8}
+.bookModes .bookRefresh{margin-left:auto;border-right:0;padding:5px 8px}
+.bookRefresh button{border:0;color:#9fbea6;background:transparent;padding:6px;display:grid;place-items:center}
+.bookLabels{display:flex;justify-content:space-between;gap:6px;padding:15px 12px 9px;color:#718b7c;font:650 9px Consolas,monospace}
+.sellLadder,.buyLadder{padding:10px 8px 20px}
+.bookRow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:15px 8px;font:750 13px Consolas,monospace;letter-spacing:-.035em;min-width:0}
+.bookRow span:first-child{overflow-wrap:anywhere}
+.bookRow span:last-child{white-space:nowrap;font:650 9px Consolas,monospace;opacity:.9}
+.sellLadder .bookRow{color:#f6a59c;background:linear-gradient(90deg,#251616 0%,#5e292d5a 100%);border-bottom:1px solid #653539}
+.buyLadder .bookRow{color:#9debaf;background:linear-gradient(90deg,#122319 0%,#2d603d64 100%);border-bottom:1px solid #3a694a}
+.bookMid{padding:23px 12px;background:#16211b;border-top:1px solid #2c3e33;border-bottom:1px solid #2c3e33;display:grid;gap:8px}
+.bookMid strong{color:#e1f3e4;font-size:23px;letter-spacing:-.06em}
+.bookMid small{color:#97a69a;font-size:10px}
+.bookMid>span{color:#94deb0;font:650 11px Consolas,monospace}
+.bookNotice{display:flex;align-items:flex-start;gap:9px;background:#17231b;margin:22px 10px 0;padding:12px;border:1px solid #374a3b;color:#a3c1a9}
+.bookNotice svg{flex:0 0 15px;margin-top:2px}
+.bookNotice p{font-size:10px;line-height:1.65;margin:0}
+.bookEnd{padding:14px 12px;margin-top:auto;border-top:1px solid #2b3d31;font:650 9px/1.9 Consolas,monospace;color:#6e8b76}
+.draft{padding-bottom:20px}
+.draft .pairingPanel{border-color:#314637;border-radius:0;padding:13px 12px;background:#17221a}
+.draft .pairingHeading{margin-bottom:0}
+.draft .pairingHeading small{line-height:1.5}
+.draft .watchOnlyForm{background:#121d16;padding:10px;border-radius:3px}
+.draft .watchOnlyForm button{border-radius:2px}
+.draft .pairingHelp,.draft .pairingWarning,.draft .pairingGood{border-radius:3px}
+.draft .sideButtons{gap:0;margin:0;border-bottom:1px solid #324338}
+.draft .sideButtons button{border:0;border-radius:0;font-weight:750;padding:15px;font-size:12px;background:#1c2821}
+.draft .sideButtons button.longActive{color:#bcf4c5;background:#225238}
+.draft .sideButtons button.shortActive{color:#f3b1a7;background:#60312f}
+.draft .field{margin:0;padding:14px 13px;border-bottom:1px solid #253a2d;gap:9px;font:650 10px Consolas,monospace}
+.draft .field input{background:#151e18;border-radius:2px;border:1px solid #395542;padding:14px;font-size:13px}
+.draft .preview{background:#142019;border:1px solid #324f3a;border-radius:2px;margin:16px 12px;padding:13px}
+.draft .preview strong{letter-spacing:.04em;text-transform:uppercase}
+.draft .disabledAction{border-radius:2px;background:#353529;border:1px solid #666044;font-size:11px;margin:15px 12px;padding:15px}
+.draft>.muted{font-size:10px;line-height:1.5}
+.researchSection{border:1px solid #2d4033;border-top:0;background:#111a14;padding:0 0 22px;display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr);align-items:start;gap:0 25px}
+.researchBanner{grid-column:1/-1;padding:19px 22px;display:flex;justify-content:space-between;align-items:center;gap:20px;border-bottom:1px solid #2f4034;font:700 10px Consolas,monospace;color:#9fbaaa}
+.researchBanner strong{font-family:Inter,"Segoe UI",sans-serif;font-size:17px;letter-spacing:-.04em;color:#d9f4df}
+.researchSection .agentArea{grid-column:1;margin:19px 18px;padding:0;border-top:0}
+.researchSection .researchDesk,.researchSection .optionalModel{grid-column:2;margin:17px 18px 0 0}
+.researchSection .links{grid-column:1/-1;padding:12px 20px 0;border-top:1px solid #293e30;margin-top:20px}
+.researchSection .agentArea textarea{background:#0c1410;border-radius:2px}
+.researchSection .parseButton{border-radius:2px}
+.positions{border-radius:0;border-color:#304837;margin-top:10px;background:#111a14}
+.positions .panelTop{background:#101714}
+.positions .accountTabs{border-color:#304235}
+.positions .accountTabs button{border-radius:2px}
+.positions .accountTabs button.activeTab{background:#295437}
+.footer{padding:17px 12px 20px;font-size:10px;color:#8da590;line-height:1.6}
+
+@media(max-width:1280px){
+ .grid{grid-template-columns:minmax(0,1fr) minmax(175px,20%) minmax(235px,28%)}
+ .watch{grid-template-columns:170px 200px minmax(0,1fr)}
+ .marketRibbon{grid-template-columns:minmax(170px,1.2fr) repeat(4,minmax(90px,.8fr))}
+ .marketIdentity{padding:12px}
+ .marketStat{padding:12px}
+}
+@media(max-width:1050px){
+ .grid{grid-template-areas:"chart book" "ticket ticket" "watch watch";grid-template-columns:minmax(0,1fr) minmax(190px,29%)}
+ .draft .preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px}
+ .watch{grid-template-columns:180px 180px minmax(0,1fr)}
+ .marketRibbon{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .marketIdentity{grid-column:1/-1;border-bottom:1px solid #334839}
+ .statusRow{flex-wrap:wrap}
+}
+@media(max-width:720px){
+ .heading{padding:15px;align-items:flex-start}
+ .heading h1{font-size:23px}
+ .heading .lock{white-space:normal}
+ .marketRibbon{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .marketIdentity{grid-column:1/-1}
+ .grid{grid-template-areas:"chart" "book" "ticket" "watch";grid-template-columns:1fr}
+ .quote{grid-template-columns:1fr 1fr}
+ .quote>div:last-child{grid-column:1/-1}
+ .bookNotice{margin:10px}
+ .watch{grid-template-columns:1fr}
+ .watch .panelTop{border-right:0;border-bottom:1px solid #304438}
+ .watch .search{border-right:0}
+ .watchList{max-height:110px}
+ .researchSection{grid-template-columns:1fr}
+ .researchSection .agentArea,.researchSection .researchDesk,.researchSection .optionalModel{grid-column:1;margin:16px 12px}
+ .researchBanner{display:grid;gap:7px;padding:14px}
+ .researchBanner strong{font-size:15px}
+ .candleStatistics{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .draft .preview{display:block}
+}
+@media(max-width:420px){
+ .marketStat strong{font-size:12px}
+ .marketStat{padding:11px}
+ .marketRibbon{min-height:0}
+ .heading h1{font-size:20px}
+ .marketIdentity>strong{font-size:17px}
+ .marketGlyph{width:30px;height:30px;flex-basis:30px}
+ .candleStatistics{grid-template-columns:1fr}
+}
