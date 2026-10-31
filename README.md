@@ -397,3 +397,33 @@ verification, signature/revocation API routes or data storage until M7/M8
 production and security gates have been independently accepted. The
 public M14 readiness response reports these routes **disabled**. See the
 [M14 security and acceptance document](docs/M14_NOTIFICATION_LIFECYCLE.md).
+
+## M15 — A real multipage workspace
+
+Symb-II no longer mounts every instrument and diagnostic beneath the same
+`/workspace` scroll. Navigate via the sticky desktop section list or swipeable
+mobile tabs. Every route is a standalone page, sharing the same
+Wagmi/React Query provider and connected Ink wallet:
+
+| Page | Route | What it shows |
+| --- | --- | --- |
+| Dashboard | `/workspace` | Your actual Ink wallet balance and quick links |
+| Nado markets | `/workspace/nado` | Market discovery, public account positions and orders |
+| Tydro lending | `/workspace/tydro` | Reserves, yields, debts, collateral and health |
+| Risk monitor | `/workspace/risk` | Separate Nado/Tydro risk, exposures and stress |
+| Portfolio Rescue | `/workspace/rescue` | Bounded **hypothetical** scenarios only |
+| Preflight | `/workspace/preflight` | Protected diagnostics, currently disabled |
+| Risk alerts | `/workspace/monitor` | Active-tab warnings/timeline and disabled cron watch |
+| Wallet Lab | `/workspace/verify` | Real RPC/account reconciliation and ownership inspection |
+| Readiness | `/workspace/readiness` | Public infrastructure and release flags |
+| AI Assistant | `/agent` | Guided read-only explanations |
+
+Existing `/workspace#risk`, `#nado`, `#tydro`, `#portfolio-rescue`,
+`#preflight`, and `#launch-readiness` links redirect to those pages.
+No underlying Nado/Tydro contract access, risk thresholds, authentication,
+spending authority or notification-delivery permissions changed.
+
+Production smoke tests now verify all **nine workspace HTML routes**, their
+accessible navigation, exact-release public service checks and no-execution
+contracts. Passing a route check does not certify wallet ownership, private
+Redis/AI services, actual lending repayment, order execution or external alerts.
