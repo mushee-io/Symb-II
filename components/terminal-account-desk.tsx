@@ -70,7 +70,7 @@ export function TerminalAccountDesk(){
         <div className={styles.accountMetrics}>
           <span>Collateral <strong>{tComplete?textAmount(t.collateralBase):"Unavailable"}</strong><small>Oracle base units, not USD</small></span>
           <span>Debt <strong>{tComplete?textAmount(t.debtBase):"Unavailable"}</strong><small>Oracle base units, not USD</small></span>
-          <span>Health factor <strong>{tComplete?(t.healthFactor===null?"No active debt":textAmount(t.healthFactor)+"×"):"Unknown"}</strong><small>Liquidation risk below 1.0</small></span>
+          <span>Health factor <strong>{tComplete?(t.healthFactor===null?(Number(t.debtBase)===0?"No active debt":"Unknown"):textAmount(t.healthFactor)+"×"):"Unknown"}</strong><small>Liquidation risk below 1.0</small></span>
         </div>
         {t.userReserves.length?<div className={styles.tableScroll}><table><thead><tr><th>Asset</th><th>Supplied</th><th>Variable debt</th><th>Stable debt</th><th>Collateral</th></tr></thead>
           <tbody>{t.userReserves.map(r=><tr key={r.address}><td>{r.symbol}</td><td>{textAmount(r.supplied)}</td><td>{textAmount(r.variableDebt)}</td><td>{textAmount(r.stableDebt)}</td><td>{r.usingAsCollateral?"Yes":"No"}</td></tr>)}</tbody></table></div>:
