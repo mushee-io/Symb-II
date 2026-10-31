@@ -4,11 +4,12 @@ import Link from "next/link";
 import {useEffect} from "react";
 import {useRouter} from "next/navigation";
 import {useAccount,useBalance} from "wagmi";
-import {ArrowRight,ArrowUpRight,ChartNoAxesCombined,Droplets,ExternalLink,LockKeyhole,Network,ShieldAlert,Wallet} from "lucide-react";
+import {ArrowRight,ArrowUpRight,ChartNoAxesCombined,Droplets,ExternalLink,LockKeyhole,Monitor,Network,ShieldAlert,Wallet} from "lucide-react";
 import {WalletButton} from "@/components/wallet-button";
 import {ink,INK_EXPLORER} from "@/lib/ink";
 
 const destinations=[
+  {href:"/workspace/terminal",name:"Trading terminal",detail:"Live Nado market watch, command desk and safe order previews",icon:Monitor,eyebrow:"AGENT WORKSPACE"},
   {href:"/workspace/nado",name:"Nado markets",detail:"Live spot, perpetuals, positions and order records",icon:ChartNoAxesCombined,eyebrow:"MARKET DATA"},
   {href:"/workspace/tydro",name:"Tydro lending",detail:"Reserves, supply and borrowing health",icon:Droplets,eyebrow:"LENDING"},
   {href:"/workspace/risk",name:"Risk monitor",detail:"Independent margin and lending risk readings",icon:ShieldAlert,eyebrow:"YOUR CAPITAL"},
@@ -42,7 +43,7 @@ export default function Workspace(){
     <div className="workspace-overview-intro">
       <span className="eyebrow">SYMB-II / DASHBOARD</span>
       <h1>Capital, without the clutter<span className="title-period">.</span></h1>
-      <p>Choose a section in the navigation. Each tool now has its own page, so you can inspect one protocol or risk workflow at a time.</p>
+      <p>Open the desktop-first trading terminal for a read-only agent command desk, or select a dedicated protocol and risk page.</p>
     </div>
     <div className="workspace-overview-cards">
       <section className="workspace-card wallet-panel">
