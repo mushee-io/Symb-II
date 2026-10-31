@@ -11,7 +11,7 @@ const INK=57073;
 const POOL="0x2816cf15f6d2a220e789aa011d5ee4eb6c47feba";
 const address=/^0x[a-f0-9]{40}$/i;
 const decimal=/^\d+(?:\.\d+)?$/;
-const REQUIRED_SERVICES=["redis","ai","watch","proposals","preflight","wallet-proof","cron","rpc"];
+const REQUIRED_SERVICES=["redis","ai","watch","proposals","preflight","wallet-proof","cron","rpc","walletconnect"];
 const record=x=>x!==null&&typeof x==="object"&&!Array.isArray(x);
 const text=x=>typeof x==="string"&&x.length>0&&x.length<=128&&x.trim().length>0;
 const gate=(id,state,note)=>({id,state,note});
