@@ -788,3 +788,19 @@ h1,h2,h3,p { margin-top: 0; }
 @media(min-width:821px){
   .workspace-sidenav{max-height:calc(100vh - 36px);overflow-y:auto;scrollbar-width:thin}
 }
+
+
+/* Expanded exchange desk: hide the dashboard sidebar only on the terminal
+   route and leave every other workspace layout unchanged. */
+.workspace-shell:has(.terminal-route){
+  width:min(calc(100% - 24px),1840px);
+  grid-template-columns:minmax(0,1fr);
+  gap:0;
+  padding-top:13px;
+  padding-bottom:46px;
+}
+.workspace-shell:has(.terminal-route)>.workspace-sidenav{display:none}
+.workspace-shell:has(.terminal-route)>.workspace-content{width:100%;min-width:0}
+@media(max-width:780px){
+ .workspace-shell:has(.terminal-route){width:calc(100% - 18px);padding-top:9px}
+}
