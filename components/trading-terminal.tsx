@@ -9,6 +9,7 @@ import {ink} from "@/lib/ink";
 import type {NadoMarketsResponse} from "@/lib/nado/types";
 import {TerminalAccountDesk} from "@/components/terminal-account-desk";
 import {TerminalPriceTape} from "@/components/terminal-price-tape";
+import {TerminalEngineQuote} from "@/components/terminal-engine-quote";
 import styles from "@/app/workspace/terminal/terminal.module.css";
 import {parseTerminalCommand,calculateDraftIllustration} from "@/lib/trading/order-draft";
 
@@ -99,6 +100,7 @@ export function TradingTerminal(){
           <div><small>24-hour indexed volume</small><strong>{money(market.volume24h)}</strong></div>
         </div>:<p className={styles.muted}>Market data is unavailable. The terminal does not generate simulated prices.</p>}
         {market&&markets.data&&<TerminalPriceTape productId={market.productId} price={market.lastPrice} updatedAt={markets.data.updatedAt}/>}
+        {market&&<TerminalEngineQuote productId={market.productId}/>}
         {!quoteFresh&&<div className={styles.warning} role="status">Quote missing or more than two minutes old. Quote-based quantity estimates are disabled until refreshed.</div>}
         <div className={styles.agentArea}>
           <div className={styles.agentTitle}><Bot size={18}/><div><strong>Agent command desk</strong><small>Rule-based draft parser · AI reasoning not connected</small></div></div>
