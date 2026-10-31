@@ -1,0 +1,98 @@
+name: Publish Windows unsigned beta (GitHub Releases CDN)
+
+# One-time publish on merge of this workflow to main; all future publish
+# attempts require a reviewed manual GitHub Actions workflow dispatch.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/windows-beta-release.yml'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/windows-beta-release.yml'
+      - 'app/download/**'
+      - 'tests/download-release-policy.test.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: symb-ii-windows-beta-release
+  cancel-in-progress: false
+
+jobs:
+  validate-release-policy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate hardcoded public download and release safety
+        run: node --test tests/download-release-policy.test.mjs
+
+  publish-unsigned-beta:
+    # Never publish from pull requests, forks, or non-main refs.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: validate-release-policy
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: 'false'
+    steps:
+      - name: Check out exact main SHA
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test Electron security and Windows packaging invariants
+        shell: pwsh
+        run: |
+          node --test tests/desktop-navigation.test.mjs tests/desktop-signing-policy.test.mjs tests/windows-desktop-candidate.test.mjs tests/download-release-policy.test.mjs
+          if ($LASTEXITCODE -ne 0) { throw 'Desktop safety tests failed.' }
+      - name: Install Electron build dependencies
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: Build actual unsigned Windows installer
+        working-directory: desktop
+        run: npm run pack:win
+      - name: Verify installer bytes, unsigned status and sha256
+        shell: pwsh
+        run: ./desktop/verify-windows-candidate.ps1 -DistPath 'desktop/dist'
+      - name: Publish beta with attached EXE and checksum
+        shell: pwsh
+        run: |
+          $tag = 'v0.1.0-windows-beta'
+          gh release view $tag --repo "$env:GITHUB_REPOSITORY" --json tagName | Out-Null
+          if ($LASTEXITCODE -eq 0) {
+            throw 'Beta release already exists. Refusing to overwrite its installer.'
+          }
+          gh release create $tag `
+            "desktop/dist/Symb-II-Setup-0.1.0-x64.exe" `
+            "desktop/dist/SHA256SUMS.txt" `
+            "desktop/dist/windows-candidate.json" `
+            --title "Symb-II for Windows 0.1.0 — Unsigned Beta" `
+            --notes-file "desktop/WINDOWS_BETA_RELEASE_NOTES.md" `
+            --target "$env:GITHUB_SHA" --prerelease `
+            --repo "$env:GITHUB_REPOSITORY"
+          if ($LASTEXITCODE -ne 0) { throw 'Failed to publish GitHub Windows beta release.' }
+      - name: Verify exact public release attachments
+        shell: pwsh
+        run: |
+          $assets = gh release view 'v0.1.0-windows-beta' --repo "$env:GITHUB_REPOSITORY" --json assets --jq '.assets[].name'
+          if ($LASTEXITCODE -ne 0) { throw 'Cannot inspect published beta.' }
+          foreach ($name in @('Symb-II-Setup-0.1.0-x64.exe','SHA256SUMS.txt','windows-candidate.json')) {
+            if ($assets -notcontains $name) { throw "Missing GitHub Release file: $name" }
+          }
+          Write-Host 'PASS: all Windows beta assets hosted by GitHub Releases.'
