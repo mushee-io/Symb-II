@@ -8,6 +8,7 @@
 - Conservatively checks a 2x L2 gas estimate buffer. OP Stack L1 data fees are NOT fully modelled.
 - Exposes POST /api/tydro/simulate behind existing protected preflight flag, strict same-origin POST body size checks and a Redis wallet-scoped 30-second request throttle.
 - Adds a read-only simulation review button to the Action Lab. The feature remains disabled until SYMB_II_PREFLIGHT_ENABLED=true and the Redis configuration has been live-tested.
+- Adds a strict read-only Nado reduce-only limit-price diagnostic: confirmed engine product, wallet, opposite-side reduction, 15-second quote freshness, exact price tick, size increment, 5% book-spread heuristic and maximum 100 bps caller-specified slippage review. It does not authenticate, sign or submit an order.
 - Adds a fail-closed autonomous-agent draft grant policy: wallet, chain, venue instrument, action, 24-hour maximum expiry, revocation, exact atomic per-action and daily ceilings, mandatory fresh human approval. It ALWAYS returns canExecute=false.
 - Test coverage for invalid asset/action/amount, precision and overflow, grant expiry, revocation, budget violations and the absence of broadcasting/signing APIs.
 
