@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import { ArrowUpRight, Droplets, RefreshCw, Search, ShieldAlert, Wallet, Landmark, Info } from "lucide-react";
 import { ink } from "@/lib/ink";
+import Link from "next/link";
 import {observeTydroHealth} from "@/lib/tydro/health-policy";
 import type { TydroAccountResponse, TydroMarketsResponse } from "@/lib/tydro/types";
 
@@ -97,6 +98,7 @@ export function TydroPanel(){
   return <div className="nado-panels tydro-panels" id="tydro">
     <div className="nado-section-title"><span className="nado-ready">M03 / ONCHAIN</span><div><h2>Tydro integration</h2><p>Supply, borrowing and protocol-specific risk directly from Ink.</p></div><a href="https://app.tydro.com/" target="_blank" rel="noreferrer">Open Tydro <ArrowUpRight size={14}/></a></div>
     <div className="tydro-explain"><Droplets size={18}/><span>Symb-II displays Tydro data without creating a new lending protocol, moving funds or requesting approval. Lending actions and cross-protocol risk simulations are later milestones.</span></div>
+    <div className="nado-source"><Link href="/workspace/actions">Open the separate Tydro Lending Action Lab (read-only)</Link> · Review hypothetical supply, withdraw, borrow and repay with live Pool data. No signatures or transactions.</div>
     <MarketPanel/><AccountPanel/>
   </div>;
 }
