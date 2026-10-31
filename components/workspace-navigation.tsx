@@ -4,11 +4,12 @@ import Link from "next/link";
 import {usePathname} from "next/navigation";
 import {
   Activity, BellRing, Bot, ChartNoAxesCombined, ClipboardCheck,
-  Droplets, KeyRound, LayoutDashboard, ShieldAlert, SlidersHorizontal, TrendingUp,
+  Droplets, KeyRound, LayoutDashboard, Monitor, ShieldAlert, SlidersHorizontal, TrendingUp,
 } from "lucide-react";
 
 const sections=[
   {href:"/workspace",label:"Overview",hint:"Your wallet",icon:LayoutDashboard},
+  {href:"/workspace/terminal",label:"Trading Terminal",hint:"Agent desk & live quotes",icon:Monitor},
   {href:"/workspace/nado",label:"Nado Markets",hint:"Perpetuals & positions",icon:TrendingUp},
   {href:"/workspace/tydro",label:"Tydro Lending",hint:"Supply & borrow",icon:Droplets},
   {href:"/workspace/risk",label:"Risk Monitor",hint:"Health & exposures",icon:ShieldAlert},
