@@ -121,3 +121,22 @@
 .candleWarnings svg{flex:0 0 auto}
 .candleDisclaimer{font-size:10px;line-height:1.7;color:#a4b8a9;padding:0 15px 15px;margin:0}
 @media(max-width:720px){.candlePanel{margin:0 9px 12px}.timeframeTabs button{padding:7px}.candleStatistics{grid-template-columns:1fr}.candleHeader{padding:11px}}
+
+
+.researchDesk{background:#1b2a20;border:1px solid #375340;border-radius:10px;overflow:hidden;margin:0 15px 20px}
+.researchHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px;border-bottom:1px solid #36513e}
+.researchHeader>div{display:grid;gap:5px}
+.researchHeader strong{font-size:12px;color:#e9f9ed}
+.researchHeader small{font-size:10px;color:#a2bfa8}
+.researchStatus{font-size:9px;letter-spacing:.05em;font-weight:750;color:#c9e4cc;border:1px solid #53634b;border-radius:7px;padding:7px 9px}
+.researchSummary p{display:flex;align-items:start;gap:9px;margin:0;padding:13px 14px;font-size:11px;line-height:1.75;color:#bddbc4}
+.researchSummary svg{flex:0 0 auto}
+.researchMetrics{padding:5px 14px 14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.researchMetrics>div{border:1px solid #33503a;border-radius:8px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px;background:#24382b}
+.researchMetrics span{font-size:10px;color:#abcbb3}
+.researchMetrics strong{font-size:11px;text-align:right;overflow-wrap:anywhere;color:#e7faed}
+.researchReasons{padding:0 15px 12px;font-size:10px;color:#f0c5a4}
+.researchReasons p{padding:4px 0;line-height:1.6}
+.researchLock{display:flex;gap:9px;align-items:start;border-top:1px solid #445943;background:#263028;padding:12px 14px;color:#c7d5c4;font-size:10px;line-height:1.7}
+.researchLock svg{flex:0 0 auto}
+@media(max-width:600px){.researchMetrics{grid-template-columns:1fr}.researchDesk{margin:0 9px 15px}}
