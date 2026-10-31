@@ -158,6 +158,24 @@ const checks=[
      throw Error("Invalid quote yielded unsafe or fabricated prices");
    return "Invalid Nado product rejected without engine call or execution";
  }],
+ ["Market AI refuses cross-origin/unauthenticated generation",async()=>{
+   const config=await read("/api/agent/config");
+   const response=await fetch(root+"/api/agent/market",{
+     method:"POST",
+     headers:{"Origin":"https://untrusted-market-client.invalid","Content-Type":"application/json"},
+     body:JSON.stringify({
+       productId:2,side:"long",notional:1000,leverage:2,
+       wallet:"0x0000000000000000000000000000000000000001"
+     }),
+     cache:"no-store",signal:AbortSignal.timeout(15000),
+   });
+   const expected=config.modelEnabled?403:503;
+   if(response.status!==expected)throw Error("AI market request returned "+response.status+"; expected "+expected);
+   const body=await response.json();
+   if(body.executionEnabled===true||body.permissionGranted||body.narrative||body.signature)
+     throw Error("Unauthorized or disabled market request released a model reply or spending permission");
+   return "Protected AI endpoint rejects disabled or cross-origin requests before model access";
+ }],
  ["Nado historical OHLCV integrity",async()=>{
    const markets=await read("/api/nado/markets");
    const selected=markets.markets?.find(m=>m.type==="perp"&&m.symbol.toUpperCase().includes("BTC"))||

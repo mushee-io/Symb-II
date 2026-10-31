@@ -140,3 +140,28 @@
 .researchLock{display:flex;gap:9px;align-items:start;border-top:1px solid #445943;background:#263028;padding:12px 14px;color:#c7d5c4;font-size:10px;line-height:1.7}
 .researchLock svg{flex:0 0 auto}
 @media(max-width:600px){.researchMetrics{grid-template-columns:1fr}.researchDesk{margin:0 9px 15px}}
+
+
+/* Operator-gated AI market explanations and desktop QR pairing, never custody or execution */
+.optionalModel{margin:0 15px 20px;border:1px solid #456447;border-radius:10px;background:#192a20;padding:15px}
+.optionalModel .agentTitle{margin-bottom:12px}
+.optionalModel .parseButton{display:inline-flex;align-items:center;gap:8px;margin:0}
+.optionalModel .parseButton:disabled{opacity:.5;cursor:not-allowed}
+.optionalModel .muted{margin:10px 0 14px}
+.modelFootnote{display:flex;align-items:start;gap:8px;font-size:10px;line-height:1.65;color:#a6c3ad;margin:13px 0 0}
+.modelFootnote svg{flex:0 0 14px}
+.modelResult{border:1px solid #46644c;background:#21382a;padding:12px;border-radius:8px;margin:13px 0}
+.modelResult strong{font-size:11px;color:#c8f4d3}
+.modelResult p{margin:9px 0 0;font-size:11px;line-height:1.65;color:#dbebde}
+.pairingPanel{border-bottom:1px solid #395540;background:#213127;padding:15px;display:grid;gap:12px}
+.pairingHeading{display:flex;gap:8px;align-items:start}
+.pairingHeading>svg{color:#b9f1c7;flex:0 0 17px}
+.pairingHeading>div{display:grid;gap:4px}
+.pairingHeading strong{font-size:12px}
+.pairingHeading small{font-size:10px;color:#a4baa9}
+.pairingHelp,.pairingWarning,.pairingGood{display:flex;gap:8px;align-items:start;margin:0;padding:11px;border-radius:8px;border:1px solid #46624a;font-size:10px;line-height:1.65;color:#cbe3cf}
+.pairingHelp>svg,.pairingWarning>svg,.pairingGood>svg{flex:0 0 15px}
+.pairingWarning{background:#3b3324;border-color:#7b6247;color:#ead0ac}
+.pairingGood{background:#24442f;color:#d7ffdf}
+.pairingPanel .modelFootnote{margin:0}
+@media(max-width:600px){.optionalModel{margin:0 9px 15px}.pairingPanel{padding:12px}}

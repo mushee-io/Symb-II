@@ -1,0 +1,119 @@
+name: Desktop signed candidate (manual, protected environment only)
+
+# A maintainer must invoke this workflow, approve the protected environment,
+# and separately provision code-signing/notarization credentials. No publishing.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: symb-ii-manual-signed-desktop
+  cancel-in-progress: false
+
+jobs:
+  windows:
+    if: ${{ vars.SYMB_II_DESKTOP_SIGNING_APPROVED == 'true' }}
+    runs-on: windows-latest
+    environment: desktop-release
+    timeout-minutes: 90
+    env:
+      CSC_LINK: ${{ secrets.SYMB_II_WINDOWS_PFX_BASE64 }}
+      CSC_KEY_PASSWORD: ${{ secrets.SYMB_II_WINDOWS_PFX_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require protected Windows signing identity
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CSC_LINK) -or [string]::IsNullOrWhiteSpace($env:CSC_KEY_PASSWORD)) {
+            throw 'Required protected Windows signing certificate or password is missing.'
+          }
+      - name: Verify desktop isolation policy
+        run: node --test tests/desktop-navigation.test.mjs
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: Produce internally signed Windows candidate
+        working-directory: desktop
+        run: npm run pack:win
+      - name: Verify Authenticode signature before exposing artifact
+        shell: pwsh
+        run: |
+          $files = @(Get-ChildItem 'desktop/dist' -File -Filter '*.exe' -Recurse)
+          if ($files.Count -eq 0) { throw 'No Windows installer was built.' }
+          foreach ($file in $files) {
+            $sig = Get-AuthenticodeSignature -FilePath $file.FullName
+            if ($sig.Status -ne 'Valid' -or $null -eq $sig.SignerCertificate) {
+              throw ('Installer is not validly signed: ' + $file.Name + ' ' + $sig.Status)
+            }
+          }
+      - name: Store signed candidate for review, not public distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: symb-ii-signed-windows-candidate-${{ github.sha }}
+          path: desktop/dist/*.exe
+          retention-days: 7
+          if-no-files-found: error
+
+  macos:
+    if: ${{ vars.SYMB_II_DESKTOP_SIGNING_APPROVED == 'true' }}
+    runs-on: macos-latest
+    environment: desktop-release
+    timeout-minutes: 90
+    env:
+      CSC_LINK: ${{ secrets.SYMB_II_MAC_DEVELOPER_ID_P12_BASE64 }}
+      CSC_KEY_PASSWORD: ${{ secrets.SYMB_II_MAC_DEVELOPER_ID_P12_PASSWORD }}
+      APPLE_ID: ${{ secrets.SYMB_II_APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.SYMB_II_APPLE_APP_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.SYMB_II_APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require protected Developer ID and notarization credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          for key in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            if [[ -z "${!key:-}" ]]; then
+              echo "::error::Protected macOS signing prerequisites not configured"
+              exit 1
+            fi
+          done
+      - name: Verify desktop isolation policy
+        run: node --test tests/desktop-navigation.test.mjs
+      - name: Install desktop dependencies
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: Produce internally signed macOS candidate
+        working-directory: desktop
+        run: npm run pack:mac
+      - name: Verify Developer ID signature and notarize DMG
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$(find desktop/dist -type d -name '*.app' -print -quit)"
+          dmg="$(find desktop/dist -type f -name '*.dmg' -print -quit)"
+          [[ -n "$app" && -n "$dmg" ]] || { echo "::error::Missing app or DMG"; exit 1; }
+          codesign --verify --deep --strict "$app"
+          # Apple notarization is a real external attestation, not a local build flag.
+          xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" \
+            --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+          xcrun stapler staple "$dmg"
+          xcrun stapler validate "$dmg"
+      - name: Store notarized candidate for review, not public distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: symb-ii-notarized-macos-candidate-${{ github.sha }}
+          path: desktop/dist/*.dmg
+          retention-days: 7
+          if-no-files-found: error

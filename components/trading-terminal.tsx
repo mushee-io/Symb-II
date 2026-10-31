@@ -11,6 +11,8 @@ import {TerminalAccountDesk} from "@/components/terminal-account-desk";
 import {TerminalPriceTape} from "@/components/terminal-price-tape";
 import {TerminalCandlestickChart} from "@/components/terminal-candlestick-chart";
 import {TerminalTradeResearch} from "@/components/terminal-trade-research";
+import {TerminalAIExplanation} from "@/components/terminal-ai-explanation";
+import {TerminalWalletPairing} from "@/components/terminal-wallet-pairing";
 import {TerminalEngineQuote} from "@/components/terminal-engine-quote";
 import styles from "@/app/workspace/terminal/terminal.module.css";
 import {parseTerminalCommand,calculateDraftIllustration} from "@/lib/trading/order-draft";
@@ -114,9 +116,11 @@ export function TradingTerminal(){
           <p className={styles.muted}>No AI-generated investment advice, signing, approvals, exchange orders or autonomous actions. Parsing only updates the fields on this screen.</p>
         </div>
         {market&&<TerminalTradeResearch productId={market.productId} side={side} notional={notional} leverage={leverage}/>}
+        {market&&<TerminalAIExplanation productId={market.productId} side={side} notional={notional} leverage={leverage}/>}
         <div className={styles.links}><Link href="/workspace/risk">Risk monitor <ArrowUpRight size={13}/></Link><Link href="/workspace/rescue">Rescue Lab <ArrowUpRight size={13}/></Link><Link href="/agent">Guided explanations <ArrowUpRight size={13}/></Link></div>
       </section>
       <section className={styles.draft} aria-label="Local order draft">
+        <TerminalWalletPairing/>
         <div className={styles.panelTop}><strong>Order draft</strong><small>Preview only</small></div>
         <div className={styles.sideButtons}>
           <button type="button" aria-pressed={side==="long"} className={side==="long"?styles.longActive:""} onClick={()=>setSide("long")}>Long</button>
