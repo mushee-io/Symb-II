@@ -1,88 +1,67 @@
 "use client";
 
 import Link from "next/link";
-import { useAccount, useBalance } from "wagmi";
-import { ArrowLeft, ArrowRight, ArrowUpRight, ChartNoAxesCombined, CircleCheck, Clock3, ExternalLink, LockKeyhole, Network, ShieldAlert, Wallet } from "lucide-react";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
-import { NadoPanel } from "@/components/nado-panel";
-import { TydroPanel } from "@/components/tydro-panel";
-import { RiskPanel } from "@/components/risk-panel";
-import {LaunchReadiness} from "@/components/launch-readiness";
-import {WalletVerification} from "@/components/wallet-verification";
-import { WalletButton } from "@/components/wallet-button";
-import { ink, INK_EXPLORER } from "@/lib/ink";
+import {useAccount,useBalance} from "wagmi";
+import {ArrowRight,ArrowUpRight,ChartNoAxesCombined,Droplets,ExternalLink,LockKeyhole,Network,ShieldAlert,Wallet} from "lucide-react";
+import {WalletButton} from "@/components/wallet-button";
+import {ink,INK_EXPLORER} from "@/lib/ink";
 
-const steps = [
-  { number:"02",title:"Nado integration",description:"Read-only markets, positions and order records",status:"Implemented" },
-  { number:"03",title:"Tydro integration",description:"Read-only reserves, lending balances and health",status:"Implemented" },
-  { number:"04",title:"Risk intelligence",description:"Separate Nado PnL, Tydro health sensitivity and exposure inventory",status:"In progress" },
-  { number:"05",title:"AI capital operator",description:"Read-only, source-linked capital analysis preview",status:"Preview" },
-  { number:"06",title:"Portfolio Rescue + Preflight",description:"Read-only Nado/Tydro scenarios and guarded single-asset repay preflight",status:"Preview" },
-  { number:"07",title:"Production service readiness",description:"Credential gates, protected connectivity probes and deployment checks",status:"Implementation" },
-  { number:"08",title:"Real-wallet verification",description:"Opt-in Ink RPC, Nado and Tydro reconciliation with evidence export",status:"Implementation" },
-  { number:"09",title:"Release qualification",description:"Fail-closed public deployment and provider integrity checks; live acceptance outstanding",status:"Code implemented" },
-  { number:"11",title:"In-tab risk timeline",description:"Privacy-limited, wallet-isolated warning changes and conservative recovery handling",status:"Code implemented" },
-  { number:"12",title:"Mobile wallet connections",description:"Optional WalletConnect pairing, explicit wallet selection and strict Ink network checks",status:"Code implemented · Mobile acceptance pending" },
-  { number:"13",title:"Notification delivery foundations",description:"Separate opt-in, bounded private queue and retry policies; external delivery inactive",status:"Code implemented · Delivery inactive" },
-  { number:"14",title:"Recipient and opt-out security",description:"One-time contact ownership challenges and wallet-bound unsubscribe; live services inactive",status:"Code implemented · Security acceptance pending" },
-];
+const destinations=[
+  {href:"/workspace/nado",name:"Nado markets",detail:"Live spot, perpetuals, positions and order records",icon:ChartNoAxesCombined,eyebrow:"MARKET DATA"},
+  {href:"/workspace/tydro",name:"Tydro lending",detail:"Reserves, supply and borrowing health",icon:Droplets,eyebrow:"LENDING"},
+  {href:"/workspace/risk",name:"Risk monitor",detail:"Independent margin and lending risk readings",icon:ShieldAlert,eyebrow:"YOUR CAPITAL"},
+] as const;
 
-export default function Workspace() {
-  const { address, isConnected, chainId } = useAccount();
-  const onInk = isConnected && chainId === ink.id;
-  const { data: balance, isLoading: balanceLoading, isError: balanceError, refetch } = useBalance({
-    address,
-    chainId: ink.id,
-    query: { enabled: onInk, refetchInterval: 30000 },
+export default function Workspace(){
+  const {address,isConnected,chainId}=useAccount();
+  const onInk=Boolean(address&&isConnected&&chainId===ink.id);
+  const {data:balance,isLoading:balanceLoading,isError:balanceError,refetch}=useBalance({
+    address,chainId:ink.id,
+    query:{enabled:onInk,refetchInterval:30000},
   });
-  return (
-    <div className="site workspace-site">
-      <SiteHeader/>
-      <main className="shell workspace-main">
-        <Link href="/" className="back-link"><ArrowLeft size={15}/> Back to overview</Link>
-        <div className="workspace-title-row">
-          <div><span className="eyebrow">SYMB-II / WORKSPACE</span><h1>Your capital workspace<span className="title-period">.</span></h1><p>Connect your Ink wallet, inspect real Nado markets and read your wallet-associated trading activity. Tydro lending and health data are read-only. Automated actions are not available.</p></div>
-          <span className="milestone-pill"><span/> M07–M09 / M11–M14 · VALIDATION</span>
-        </div>
-        <div className="workspace-grid">
-          <section className="workspace-card wallet-panel">
-            <div className="panel-top"><span><Wallet size={18}/> Connected wallet</span><span className="panel-status">{onInk ? "● CONNECTED" : "NOT CONNECTED"}</span></div>
-            {!isConnected ? (
-              <div className="empty-wallet"><div className="empty-wallet-icon"><Wallet size={32}/></div><h2>Connect to see your wallet</h2><p>View your actual Ink mainnet address and ETH balance. We never invent portfolio data.</p><WalletButton/></div>
-            ) : !onInk ? (
-              <div className="empty-wallet"><div className="empty-wallet-icon"><Network size={32}/></div><h2>Switch to Ink mainnet</h2><p>Symb-II is built exclusively on Ink. Switch networks to load your account data.</p><WalletButton/></div>
-            ) : (
-              <div className="wallet-details">
-                <div className="detail-label">Ink ETH balance</div>
-                <div className="large-balance">{balanceLoading ? "Loading…" : balanceError ? "Unavailable" : balance ? Number(balance.formatted).toLocaleString(undefined,{maximumFractionDigits:6}) : "Unavailable"} <span>{balance && !balanceError ? balance.symbol : ""}</span></div>
-                <div className="detail-address">{address}</div>
-                <div className="wallet-detail-actions">
-                  <button className="btn btn-secondary" type="button" onClick={() => void refetch()}>Refresh balance</button>
-                  <a href={INK_EXPLORER + "/address/" + address} target="_blank" rel="noreferrer" className="btn btn-secondary">Explorer <ExternalLink size={14}/></a>
-                </div>
-                {balanceError && <p className="wallet-error" role="alert">Could not fetch the RPC balance. Please try again.</p>}
-              </div>
-            )}
-            <div className="panel-footnote"><LockKeyhole size={15}/> Read-only wallet data. No transaction signing requested.</div>
-          </section>
-          <section className="workspace-card foundation-panel">
-            <div className="panel-top"><span><ShieldAlert size={18}/> Protocol overview</span><span className="panel-status muted">ONCHAIN READS</span></div>
-            <div className="foundation-info"><div className="foundation-icon"><ChartNoAxesCombined size={25}/></div><h2>No simulated positions</h2><p>Nado trading and Tydro lending information appear below. They remain separate protocol accounts. A read-only cross-protocol exposure inventory and separate Nado PnL / Tydro lending what-if models are available below. No combined liquidation model exists.</p></div>
-            <div className="foundation-rows"><div><span>Nado records</span><b>See live panel below</b></div><div><span>Tydro lending</span><b>See health below</b></div><div><span>Protocol risk</span><b>See risk monitor below</b></div></div>
-          </section>
-        </div>
-        <div className="agent-promo"><div><span className="eyebrow">M05 / AGENT PREVIEW</span><h2>Ask your capital, not a dashboard.</h2><p>Explore source-grounded read-only explanations of your Nado positions, Tydro lending and risk alerts. No model calls, trading or delegated execution.</p></div><Link href="/agent" className="btn btn-primary">Open capital assistant <ArrowRight size={16}/></Link></div>
-        <LaunchReadiness/>
-        <WalletVerification/>
-        <RiskPanel/>
-        <NadoPanel/>
-        <TydroPanel/>
-        <div className="workspace-roadmap-title"><div><span className="eyebrow">BUILDING THE FOUNDATION</span><h2>What comes next</h2></div><a href="https://github.com/mushee-io/Symb-II" target="_blank" rel="noreferrer">Follow development <ArrowUpRight size={16}/></a></div>
-        <div className="roadmap-grid">{steps.map(step=><div className="roadmap-card" key={step.number}><span className="roadmap-number">M{step.number}</span><Clock3 size={18}/><h3>{step.title}</h3><p>{step.description}</p><span className="roadmap-status">{step.status} <ArrowRight size={13}/></span></div>)}</div>
-        <div className="workspace-disclaimer"><CircleCheck size={17}/><span>Symb-II does not custody assets or operate an exchange. The app offers wallet balance inspection and read-only Nado and Tydro market/account records only. Some account results may be incomplete; no order placement, AI execution, lending actions or permissions are enabled.</span></div>
-      </main>
-      <SiteFooter/>
+  return <>
+    <div className="workspace-overview-intro">
+      <span className="eyebrow">SYMB-II / DASHBOARD</span>
+      <h1>Capital, without the clutter<span className="title-period">.</span></h1>
+      <p>Choose a section in the navigation. Each tool now has its own page, so you can inspect one protocol or risk workflow at a time.</p>
     </div>
-  );
+    <div className="workspace-overview-cards">
+      <section className="workspace-card wallet-panel">
+        <div className="panel-top"><span><Wallet size={18}/> Your Ink wallet</span><span className="panel-status">{onInk?"● CONNECTED":"NOT CONNECTED"}</span></div>
+        {!isConnected?<div className="empty-wallet"><div className="empty-wallet-icon"><Wallet size={32}/></div><h2>Connect your wallet</h2><p>Read your real Ink ETH balance and account data. No sample balances are shown.</p><WalletButton/></div>:
+          !onInk?<div className="empty-wallet"><div className="empty-wallet-icon"><Network size={32}/></div><h2>Switch to Ink mainnet</h2><p>Switch your wallet to chain 57073 to read your account.</p><WalletButton/></div>:
+          <div className="wallet-details">
+            <div className="detail-label">Ink ETH balance</div>
+            <div className="large-balance">{balanceLoading?"Loading…":balanceError||!balance?"Unavailable":Number(balance.formatted).toLocaleString(undefined,{maximumFractionDigits:6})} <span>{balance&&!balanceError?balance.symbol:""}</span></div>
+            <div className="detail-address">{address}</div>
+            <div className="wallet-detail-actions">
+              <button className="btn btn-secondary" type="button" onClick={()=>void refetch()}>Refresh balance</button>
+              <a href={INK_EXPLORER+"/address/"+address} target="_blank" rel="noreferrer" className="btn btn-secondary">Explorer <ExternalLink size={14}/></a>
+            </div>
+            {balanceError&&<p className="wallet-error" role="alert">Could not fetch the Ink balance. Try again.</p>}
+          </div>}
+        <div className="panel-footnote"><LockKeyhole size={15}/> Read-only account inspection. No spending approvals.</div>
+      </section>
+      <section className="workspace-card workspace-start-card">
+        <span className="eyebrow">HOW TO GET STARTED</span>
+        <h2>Everything has its place.</h2>
+        <p>Browse markets without a wallet. Connect on Ink to see your positions, health and available read-only analysis.</p>
+        <div className="workspace-start-steps">
+          <div><strong>01</strong><span>Open Nado or Tydro for live public markets.</span></div>
+          <div><strong>02</strong><span>Connect a wallet to inspect your own account.</span></div>
+          <div><strong>03</strong><span>Use Risk, Rescue, Alerts or Wallet Lab when needed.</span></div>
+        </div>
+        <Link href="/workspace/verify" className="workspace-text-link">Check wallet verification <ArrowUpRight size={15}/></Link>
+      </section>
+    </div>
+    <div className="workspace-shortcuts-head"><div><span className="eyebrow">YOUR TOOLS</span><h2>Pick a destination</h2></div><span>INK MAINNET · READ ONLY</span></div>
+    <div className="workspace-shortcuts">
+      {destinations.map(({href,name,detail,icon:Icon,eyebrow})=><Link href={href} className="workspace-shortcut" key={href}>
+        <div className="workspace-shortcut-top"><span className="workspace-shortcut-icon"><Icon size={20}/></span><ArrowUpRight size={18}/></div>
+        <small>{eyebrow}</small><strong>{name}</strong><p>{detail}</p>
+        <span className="workspace-shortcut-open">Open page <ArrowRight size={15}/></span>
+      </Link>)}
+    </div>
+    <p className="workspace-overview-disclaimer">Symb-II does not custody assets or operate an exchange. Live market and account views are read-only; rescue calculations are hypothetical. Transactions, automatic trading and external notification delivery are not active.</p>
+  </>;
 }
