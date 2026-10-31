@@ -93,7 +93,7 @@ export default function AgentPage(){
             <p>No model-generated financial instructions, unrestricted tools, position closing, automatic repayments or agent signing authority.</p>
             <p>Optional model-generated explanations require a protected AI Gateway, one-time wallet authentication and server-side limits. Without these credentials, guided deterministic analysis remains available.</p>
           </div>
-          <Link href="/workspace#risk" className="agent-side-link">Inspect detailed risk and simulations <ArrowRight size={16}/></Link>
+          <Link href="/workspace/risk" className="agent-side-link">Inspect detailed risk and simulations <ArrowRight size={16}/></Link>
         </aside>
       </div>
     </main><SiteFooter/></div>;
