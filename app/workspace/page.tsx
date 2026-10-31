@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import {useEffect} from "react";
+import {useRouter} from "next/navigation";
 import {useAccount,useBalance} from "wagmi";
 import {ArrowRight,ArrowUpRight,ChartNoAxesCombined,Droplets,ExternalLink,LockKeyhole,Network,ShieldAlert,Wallet} from "lucide-react";
 import {WalletButton} from "@/components/wallet-button";
@@ -12,7 +14,24 @@ const destinations=[
   {href:"/workspace/risk",name:"Risk monitor",detail:"Independent margin and lending risk readings",icon:ShieldAlert,eyebrow:"YOUR CAPITAL"},
 ] as const;
 
+const legacySectionRoutes:Record<string,string>={
+  "#risk":"/workspace/risk",
+  "#nado":"/workspace/nado",
+  "#tydro":"/workspace/tydro",
+  "#portfolio-rescue":"/workspace/rescue",
+  "#preflight":"/workspace/preflight",
+  "#launch-readiness":"/workspace/readiness",
+  "#wallet-verification":"/workspace/verify",
+  "#risk-alerts":"/workspace/monitor",
+};
+
 export default function Workspace(){
+  const router=useRouter();
+  useEffect(()=>{
+    // Previously shared single-page section URLs still lead to the real tool.
+    const destination=legacySectionRoutes[window.location.hash.toLowerCase()];
+    if(destination)router.replace(destination);
+  },[router]);
   const {address,isConnected,chainId}=useAccount();
   const onInk=Boolean(address&&isConnected&&chainId===ink.id);
   const {data:balance,isLoading:balanceLoading,isError:balanceError,refetch}=useBalance({
