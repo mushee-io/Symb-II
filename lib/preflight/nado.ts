@@ -58,7 +58,8 @@ export async function preflightNado(request:Extract<PreflightRequest,{kind:"nado
    wallet:request.wallet,account,markets,positionKey:request.positionKey,
    engine:evidence,now:Date.now(),
  });
- if(!canInspectNadoReduction(assessed))reduction=null;
+ const coreNadoEvidencePassed=canInspectNadoReduction(assessed);
+ if(!coreNadoEvidencePassed)reduction=null;
  // Even a matching engine cap is NOT a valid order.
  assessed.gates.push({
    name:"Hypothetical reduce-only size bounds",
@@ -67,7 +68,7 @@ export async function preflightNado(request:Extract<PreflightRequest,{kind:"nado
  });
  // A second, independent display-only limit-tick and slippage screening on
  // current official BBO is useful for review. No user or exchange signature.
- const indicativeLimit=reduction&&position&&canInspectNadoReduction(assessed)?
+ const indicativeLimit=reduction&&position&&coreNadoEvidencePassed?
    reviewNadoReduceOnlyLimit({
      wallet:request.wallet,sourceWallet:account.address,productId:position.productId,
      positionSide:position.side,engine:evidence,reduction,
