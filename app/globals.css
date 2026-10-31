@@ -783,3 +783,8 @@ h1,h2,h3,p { margin-top: 0; }
 
 /* Sticky dashboard tabs must not be trapped by the legacy .site overflow container. */
 .workspace-site{overflow:clip}
+
+/* Keep every workspace destination reachable on shorter desktop screens. */
+@media(min-width:821px){
+  .workspace-sidenav{max-height:calc(100vh - 36px);overflow-y:auto;scrollbar-width:thin}
+}
