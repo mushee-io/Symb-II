@@ -12,7 +12,7 @@ export function recordPriceObservation(
   if(!Number.isSafeInteger(productId)||productId<0||!Number.isFinite(at)||
      at>now+5000||now-at<0||now-at>MAX_AGE_MS||
      !Number.isFinite(price)||price<=0)return history.slice(-MAX_SAMPLES);
-  const existing=history.filter(s=>s.productId===productId&&s.at!==at&&s.at<at);
+  const existing=history.filter(s=>s.productId!==productId||(s.at!==at&&s.at<at));
   return [...existing,{productId,at,price}].slice(-MAX_SAMPLES);
 }
 export function chartPoints(history:readonly PriceObservation[],productId:number):PriceObservation[]{
