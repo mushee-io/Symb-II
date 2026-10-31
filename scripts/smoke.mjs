@@ -148,6 +148,16 @@ const checks=[
      throw Error("Terminal missing source, navigation or no-execution safety boundaries");
    return "Desktop-first market terminal rendered with explicit disabled execution";
  }],
+ ["Desktop Nado quote denies invalid product IDs",async()=>{
+   const response=await fetch(root+"/api/nado/quote?productId=not-a-product",{
+      headers:{"Accept":"application/json"},cache:"no-store",signal:AbortSignal.timeout(15000),
+   });
+   if(response.status!==400)throw Error("Unvalidated quote product ID accepted");
+   const body=await response.json();
+   if(body.executionEnabled===true||body.ordersEnabled===true||body.bid||body.ask)
+     throw Error("Invalid quote yielded unsafe or fabricated prices");
+   return "Invalid Nado product rejected without engine call or execution";
+ }],
  ["Nado public markets",async()=>{
    const v=await read("/api/nado/markets");
    if(v.chainId!==57073||v.source!=="Nado indexer"||!Array.isArray(v.markets)||!v.markets.length)
