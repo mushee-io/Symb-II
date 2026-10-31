@@ -107,6 +107,32 @@ const checks=[
      throw Error("M8 cross-origin verification granted permissions");
    return "cross-origin proof refused before signature verification";
  }],
+ ["M15 standalone workspace pages",async()=>{
+   const routes=[
+    ["/workspace","Capital, without the clutter"],
+    ["/workspace/nado","Nado markets"],
+    ["/workspace/tydro","Tydro lending"],
+    ["/workspace/risk","Risk intelligence"],
+    ["/workspace/rescue","Portfolio Rescue Lab"],
+    ["/workspace/preflight","Transaction preflight"],
+    ["/workspace/monitor","Risk alerts"],
+    ["/workspace/verify","Wallet verification lab"],
+    ["/workspace/readiness","Launch readiness"],
+   ];
+   const results=await Promise.all(routes.map(async ([path,heading])=>{
+    const response=await fetch(root+path,{
+      method:"GET",redirect:"error",cache:"no-store",
+      headers:{"Accept":"text/html"},signal:AbortSignal.timeout(20000),
+    });
+    if(!response.ok||!(response.headers.get("content-type")||"").includes("text/html"))
+      throw Error("Standalone workspace page unavailable: "+path);
+    const html=await response.text();
+    if(!html.includes(heading)||!html.includes('aria-label="Workspace sections"'))
+      throw Error("Page is missing its heading or accessible workspace navigation: "+path);
+    return path;
+   }));
+   return results.length+" standalone workspace routes return server-rendered headings and navigation";
+ }],
  ["Nado public markets",async()=>{
    const v=await read("/api/nado/markets");
    if(v.chainId!==57073||v.source!=="Nado indexer"||!Array.isArray(v.markets)||!v.markets.length)
