@@ -3,13 +3,14 @@
  * Never return env variable values, tokens, Redis endpoints or backend errors.
  * Configured != connected, tested or production-ready.
  */
-export type ServiceId="redis"|"ai"|"watch"|"proposals"|"preflight"|"wallet-proof"|"cron"|"rpc";
+export type ServiceId="redis"|"ai"|"watch"|"proposals"|"preflight"|"wallet-proof"|"cron"|"rpc"|"walletconnect";
 export type GateState="configured"|"disabled"|"blocked";
 export type LaunchGate={
  id:ServiceId;title:string;status:GateState;
  requirements:string[];issues:string[];verifiedLive:false;
 };
 import {validatedUpstashOrigin,hasValidRedisConfiguration} from "./redis-config.ts";
+import {validWalletConnectProjectId} from "../wallet/connect-policy.ts";
 export {hasValidRedisConfiguration} from "./redis-config.ts";
 const set=(value:string|undefined)=>typeof value==="string"&&value.trim().length>0;
 const secureUrl=(value:string|undefined)=>validatedUpstashOrigin(value)!==null;
@@ -60,6 +61,11 @@ export function describeReadiness(env:NodeJS.ProcessEnv=process.env):{
  dependent("wallet-proof","One-use server wallet ownership self-test","SYMB_II_WALLET_PROOF_ENABLED",[
    {ok:redis,label:"Private Redis credentials"},
  ]);
+ add("walletconnect","Optional WalletConnect QR pairing",true,
+   ["NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID (public 32-hex Project ID)","Independent native-device pairing test"],[
+     ...(!validWalletConnectProjectId(env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID)?
+       ["Public WalletConnect Project ID is missing or invalid."]:[]),
+   ]);
  add("rpc","Ink public RPC",true,["Ink chain ID 57073 (runtime verification required)"],[]);
  return {
    network:"Ink",chainId:57073,services:rows,
