@@ -2,7 +2,7 @@ import {test} from "node:test";
 import assert from "node:assert/strict";
 import {assessM9PublicQualification} from "../scripts/m9-qualification-policy.mjs";
 const sha="cea12281adae5fc1b6537467d2f6f0134fbaa958";
-const serviceIds=["redis","ai","watch","proposals","preflight","wallet-proof","cron","rpc"];
+const serviceIds=["redis","ai","watch","proposals","preflight","wallet-proof","cron","rpc","walletconnect"];
 const serviceRows=()=>serviceIds.map(id=>({id,status:"disabled",verifiedLive:false}));
 const fixture=()=>({
  expectedSha:sha,
@@ -142,7 +142,7 @@ test("untrusted malformed JSON cannot throw or become a provider pass",()=>{
  }
 });
 
-test("all eight M9 readiness services are unique and explicitly unverified",()=>{
+test("all nine M9 readiness services are unique and explicitly unverified",()=>{
  for(const change of [
   x=>x.readiness.services.pop(),
   x=>x.readiness.services[1].id="redis",
