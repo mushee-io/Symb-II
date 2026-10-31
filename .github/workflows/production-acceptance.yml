@@ -28,7 +28,7 @@ jobs:
           node-version: '22'
       - name: Wait for exact Vercel production commit
         run: node scripts/await-production.mjs
-      - name: Verify thirteen safe public production and M8-M15 workspace checks
+      - name: Verify fifteen public production and desktop agent safety checks
         run: npm run smoke
       - name: M9 exact-release and no-execution public qualification
         run: npm run verify:m9:public -- "$EXPECTED_COMMIT_SHA"

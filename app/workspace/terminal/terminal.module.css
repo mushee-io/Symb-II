@@ -68,3 +68,33 @@
 @media(max-width:1200px){.grid{grid-template-columns:minmax(160px,.7fr) minmax(250px,1.3fr)}.draft{grid-column:1/-1}.draft .preview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px}}
 @media(max-width:800px){.heading{flex-direction:column}.grid{grid-template-columns:1fr}.draft{grid-column:auto}.watchList{max-height:260px}.statusRow button{margin-left:0}.positionsEmpty{flex-wrap:wrap}.quote strong{font-size:16px}}
 @media(max-width:500px){.quote{grid-template-columns:1fr}.draft .preview{display:block}.lock{white-space:normal}.positionsEmpty{display:grid}}
+
+
+/* Unified read-only activity: Nado positions, orders/history and Tydro Pool */
+.accountTabs{display:flex;align-items:center;gap:7px;overflow-x:auto;padding:12px 15px;border-bottom:1px solid #314637;scrollbar-width:thin}
+.accountTabs button{flex:0 0 auto;border:1px solid #3f5b46;background:#203226;color:#b8d3be;border-radius:8px;padding:9px 13px;font-size:11px;cursor:pointer}
+.accountTabs button.activeTab{background:#365f40;border-color:#82bc90;color:#e8ffee;font-weight:700}
+.accountTabs button.accountRefresh{margin-left:auto;display:inline-flex;align-items:center;gap:6px}
+.accountTabs button:disabled{opacity:.5;cursor:default}
+.accountMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:15px}
+.accountMetrics>span{display:grid;gap:8px;min-width:0;background:#223529;border:1px solid #395343;border-radius:10px;padding:15px;color:#b8d1bd;font-size:11px}
+.accountMetrics strong{font-size:19px;letter-spacing:-.035em;color:#e3f7e7;overflow-wrap:anywhere}
+.accountMetrics small{font-size:10px;color:#a9bbaa}
+.positions .muted a{display:inline-flex;align-items:center;gap:4px;color:#bdf2c6}
+@media(max-width:650px){.accountMetrics{grid-template-columns:1fr}.accountTabs{padding:10px;gap:5px}.accountTabs button{padding:9px 10px}}
+
+
+.priceTape{margin:0 15px 15px;border:1px solid #344c3a;border-radius:10px;background:#18291d;overflow:hidden}
+.tapeHead{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;padding:13px 14px;border-bottom:1px solid #34483a}
+.tapeHead strong{font-size:12px;color:#ddf6e2}
+.tapeHead small{font-size:10px;color:#a1bba8}
+.priceTape svg{display:block;width:100%;height:auto;min-height:90px;max-height:135px;padding:6px 8px}
+.tapeFoot{display:flex;justify-content:space-between;gap:10px;color:#9cb6a4;padding:10px 14px;font-size:10px}
+
+
+.engineQuote{margin:0 15px 15px;border:1px solid #36503d;border-radius:10px;background:#18291d;overflow:hidden}
+.engineQuoteMetrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:14px}
+.engineQuoteMetrics span{min-width:0;display:grid;gap:8px;padding:12px;border-radius:9px;background:#213829;border:1px solid #3d5944}
+.engineQuoteMetrics small{font-size:10px;color:#aac4af}
+.engineQuoteMetrics strong{font-size:14px;color:#e9faed;overflow-wrap:anywhere}
+@media(max-width:620px){.engineQuoteMetrics{grid-template-columns:1fr}}
