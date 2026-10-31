@@ -144,7 +144,7 @@ const checks=[
    if(!html.includes("Trading terminal")||
       !html.includes("READ-ONLY")||
       !html.includes("Order placement disabled")||
-      !html.includes("aria-label=\\"Workspace sections\\""))
+      !html.includes('aria-label="Workspace sections"'))
      throw Error("Terminal missing source, navigation or no-execution safety boundaries");
    return "Desktop-first market terminal rendered with explicit disabled execution";
  }],
