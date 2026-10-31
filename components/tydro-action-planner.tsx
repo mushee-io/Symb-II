@@ -11,6 +11,7 @@ import {parseWatchOnlyAddress} from "@/lib/wallet/watch-only";
 import {previewTydroAction,type TydroDraftAction} from "@/lib/tydro/action-preview";
 import type {TydroAccountResponse,TydroMarketsResponse} from "@/lib/tydro/types";
 import {observeTydroHealth} from "@/lib/tydro/health-policy";
+import type {TydroSimulationReport} from "@/lib/tydro/four-action-simulation";
 import styles from "@/app/workspace/actions/actions.module.css";
 
 async function read<T>(url:string,signal?:AbortSignal):Promise<T>{
@@ -31,6 +32,9 @@ export function TydroActionPlanner(){
  const [asset,setAsset]=useState("");
  const [action,setAction]=useState<TydroDraftAction>("supply");
  const [amount,setAmount]=useState("");
+ const [simulation,setSimulation]=useState<{key:string;report:TydroSimulationReport}|null>(null);
+ const [simulationError,setSimulationError]=useState("");
+ const [simulationLoading,setSimulationLoading]=useState(false);
  const onInk=Boolean(address&&isConnected&&chainId===ink.id);
  const observedWallet=onInk?address:watchAddress;
  const isWatchOnly=!onInk&&Boolean(observedWallet);
@@ -46,7 +50,13 @@ export function TydroActionPlanner(){
   enabled:Boolean(observedWallet),retry:1,staleTime:30000,
   refetchInterval:observedWallet?60000:false,
  });
+ const protectedPreflight=useQuery({
+  queryKey:["tydro-preflight-config"],
+  queryFn:({signal})=>read<{enabled:boolean}>("/api/preflight/config",signal),
+  staleTime:30000,retry:1,
+ });
  const selected=markets.data?.reserves.find(r=>r.address===asset)??markets.data?.reserves[0]??null;
+ const simulationKey=[observedWallet,selected?.address,action,amount].join(":");
  const draft=previewTydroAction({
   action,asset:selected?.address??"",amount,wallet:observedWallet??null,
   markets:markets.data??null,account:account.data??null,
@@ -55,6 +65,21 @@ export function TydroActionPlanner(){
   debtBase:account.data.debtBase,healthFactor:account.data.healthFactor,
   incomplete:account.data.incomplete,warnings:account.data.warnings,
  }):null;
+ async function runSimulation(){
+  if(!observedWallet||!selected||!amount||!protectedPreflight.data?.enabled)return;
+  const key=simulationKey;
+  setSimulationLoading(true);setSimulationError("");setSimulation(null);
+  try{
+   const response=await fetch("/api/tydro/simulate",{
+    method:"POST",cache:"no-store",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({wallet:observedWallet,asset:selected.address,action,amount}),
+   });
+   const data=await response.json() as {report?:TydroSimulationReport;error?:string};
+   if(!response.ok||!data.report)throw Error(data.error??"Read-only simulation unavailable.");
+   setSimulation({key,report:data.report});
+  }catch(e){setSimulationError(e instanceof Error?e.message:"No simulation available.");}
+  finally{setSimulationLoading(false);}
+ }
  function watch(event:React.FormEvent<HTMLFormElement>){
   event.preventDefault();
   const address=parseWatchOnlyAddress(watchInput);
@@ -105,6 +130,16 @@ export function TydroActionPlanner(){
        onClick={()=>{void markets.refetch();if(observedWallet)void account.refetch();}}>
        <RefreshCw size={14}/> Refresh public evidence
       </button>
+      <button type="button" className={styles.minorButton}
+       disabled={!protectedPreflight.data?.enabled||!observedWallet||!selected||!amount||simulationLoading}
+       onClick={()=>{void runSimulation();}}>
+       <ShieldCheck size={14}/> {simulationLoading?"Checking pinned Ink block…":"Run read-only Pool simulation"}
+      </button>
+      {!protectedPreflight.data?.enabled&&<p className={styles.hint}>
+       Protected eth_call simulations are not activated. Configure and verify Redis,
+       then independently enable SYMB_II_PREFLIGHT_ENABLED on Vercel.
+      </p>}
+      {simulationError&&<p role="alert" className={styles.warning}>{simulationError}</p>}
       {markets.isPending&&<p className={styles.hint}>Loading canonical Tydro reserves…</p>}
       {markets.error&&<p className={styles.warning} role="alert">{markets.error.message}</p>}
       {observedWallet&&account.isPending&&<p className={styles.hint}>Loading account-specific Pool evidence…</p>}
@@ -129,6 +164,17 @@ export function TydroActionPlanner(){
         </div>
        </div>)}
       </div>
+      {simulation?.key===simulationKey&&<div className={styles.gates} aria-label="Pinned-block simulation results">
+       <p className={styles.hint}><strong>Read-only Pool simulation</strong> · Block {simulation.report.blockNumber??"unknown"}</p>
+       <p className={styles.hint}>Eth_call: {simulation.report.simulated?"Succeeded":"Not verified"} ·
+        Gas estimate: {simulation.report.gasEstimate??"Unavailable"} ·
+        Action review: {simulation.report.readyForHumanReview?"Indicative only":"Blocked"}</p>
+       {simulation.report.gates.map(g=><div className={styles.gate} key={g.name}>
+        {g.passed?<ShieldCheck size={17}/>:<AlertTriangle size={17}/>}
+        <div><strong>{g.name} · {g.passed?"Observed":"Blocked"}</strong><p>{g.detail}</p></div>
+       </div>)}
+       <p className={styles.warning}>{simulation.report.note}</p>
+      </div>}
       <div className={styles.blocked}><LockKeyhole size={16}/> Approvals, wallet signing and execution are unavailable.</div>
       <p className={styles.hint}>{draft.note}</p>
       <p className={styles.hint}>For chain-specific tests, open the separate <Link href="/workspace/preflight">Preflight diagnostics</Link>. For genuine lending transactions, use the official Tydro interface independently after reviewing its current risks.</p>

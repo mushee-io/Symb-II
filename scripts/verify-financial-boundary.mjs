@@ -14,6 +14,10 @@ const forbidden=[
 ];
 const scoped=[
  "app/api/agent/market/route.ts",
+ "app/api/tydro/simulate/route.ts",
+ "lib/tydro/four-action-simulation.ts",
+ "lib/nado/order-limit-policy.ts",
+ "lib/execution/agent-policy.ts",
  "components/terminal-ai-explanation.tsx",
  "components/terminal-wallet-pairing.tsx",
  "components/trading-terminal.tsx",
