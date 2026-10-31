@@ -15,7 +15,7 @@ export const metadata={
 
 const WINDOWS_TAG="v0.1.0-windows-beta";
 const ASSET_BASE="https://github.com/mushee-io/Symb-II/releases/download/"+WINDOWS_TAG;
-export const WINDOWS_INSTALLER_URL=ASSET_BASE+"/Symb-II-Setup-0.1.0-x64.exe";
+const WINDOWS_INSTALLER_URL=ASSET_BASE+"/Symb-II-Setup-0.1.0-x64.exe";
 const WINDOWS_CHECKSUM_URL=ASSET_BASE+"/SHA256SUMS.txt";
 
 const upcoming=[
