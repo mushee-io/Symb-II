@@ -16,6 +16,7 @@ export function SiteHeader(){
       <nav className="desktop-nav" aria-label="Primary navigation">
         <Link className={pathname==="/"?"nav-active":""} href="/">Home</Link>
         <Link className={pathname==="/workspace"?"nav-active":""} href="/workspace">Dashboard</Link>
+        <Link className={pathname==="/workspace/terminal"?"nav-active":""} href="/workspace/terminal">Trade</Link>
         <Link className={pathname==="/workspace/nado"?"nav-active":""} href="/workspace/nado">Nado</Link>
         <Link className={pathname==="/workspace/tydro"?"nav-active":""} href="/workspace/tydro">Tydro</Link>
         <Link className={pathname==="/workspace/risk"?"nav-active":""} href="/workspace/risk">Risk</Link>
@@ -33,7 +34,7 @@ export function SiteHeader(){
       </div>
     </div>
     {menuOpen&&<nav className="mobile-nav" aria-label="Mobile navigation" onClick={()=>setMenuOpen(false)}>
-      <Link href="/">Home</Link><Link href="/workspace">Dashboard</Link>
+      <Link href="/">Home</Link><Link href="/workspace">Dashboard</Link><Link href="/workspace/terminal">Trade terminal</Link>
       <Link href="/workspace/nado">Nado</Link><Link href="/workspace/tydro">Tydro</Link>
       <Link href="/workspace/risk">Risk</Link><Link href="/workspace/rescue">Rescue Lab</Link>
       <Link href="/workspace/preflight">Preflight</Link><Link href="/workspace/monitor">Alerts</Link>
