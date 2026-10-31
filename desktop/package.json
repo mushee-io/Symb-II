@@ -20,6 +20,7 @@
     "productName": "Symb-II Desktop",
     "files": [
       "main.cjs",
+      "security-policy.cjs",
       "package.json"
     ],
     "directories": {
