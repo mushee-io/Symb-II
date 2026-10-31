@@ -18,6 +18,9 @@ jobs:
         run: |
           node --check scripts/smoke.mjs
           node --check scripts/verify-m9-public.mjs
+          node --check scripts/verify-financial-boundary.mjs
+      - name: Enforce read-only financial security boundary
+        run: node scripts/verify-financial-boundary.mjs
       - run: npm install --no-audit --no-fund
       - run: npm run typecheck
       - run: npm run test
