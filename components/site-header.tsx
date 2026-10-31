@@ -10,7 +10,6 @@ import {WalletButton} from "@/components/wallet-button";
 export function SiteHeader(){
   const [menuOpen,setMenuOpen]=useState(false);
   const pathname=usePathname();
-  const isWorkspace=pathname.startsWith("/workspace");
   return <header className="site-header">
     <div className="header-inner shell">
       <Brand/>
