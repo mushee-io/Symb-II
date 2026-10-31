@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import {usePathname} from "next/navigation";
-import {ArrowUpRight,Menu,X} from "lucide-react";
+import {ArrowUpRight,Download,Menu,X} from "lucide-react";
 import {useState} from "react";
 import {Brand} from "@/components/brand";
 import {WalletButton} from "@/components/wallet-button";
@@ -21,6 +21,7 @@ export function SiteHeader(){
         <Link className={pathname==="/workspace/tydro"?"nav-active":""} href="/workspace/tydro">Tydro</Link>
         <Link className={pathname==="/workspace/risk"?"nav-active":""} href="/workspace/risk">Risk</Link>
         <Link className={pathname==="/agent"?"nav-active":""} href="/agent">AI Agent</Link>
+        <Link className={pathname==="/download"?"download-nav-link nav-active":"download-nav-link"} href="/download"><Download size={13}/> Download</Link>
         <a href="https://github.com/mushee-io/Symb-II" target="_blank" rel="noreferrer">GitHub <ArrowUpRight size={13}/></a>
       </nav>
       <div className="header-right">
@@ -40,6 +41,7 @@ export function SiteHeader(){
       <Link href="/workspace/preflight">Preflight</Link><Link href="/workspace/monitor">Alerts</Link>
       <Link href="/workspace/verify">Wallet Lab</Link><Link href="/workspace/readiness">Readiness</Link>
       <Link href="/agent">AI Agent</Link>
+      <Link href="/download">Download</Link>
       <a href="https://github.com/mushee-io/Symb-II" target="_blank" rel="noreferrer">GitHub ↗</a>
     </nav>}
   </header>;
