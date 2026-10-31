@@ -8,6 +8,7 @@ import Link from "next/link";
 import {ink} from "@/lib/ink";
 import type {NadoAccountResponse} from "@/lib/nado/types";
 import type {TydroAccountResponse} from "@/lib/tydro/types";
+import {observeTydroHealth} from "@/lib/tydro/health-policy";
 import styles from "@/app/workspace/terminal/terminal.module.css";
 
 async function read<T>(path:string,signal?:AbortSignal):Promise<T>{
@@ -41,6 +42,7 @@ export function TerminalAccountDesk({watchAddress}:{watchAddress:string|null}){
   });
   const n=nado.data;
   const t=tydro.data;
+  const health=t?observeTydroHealth({debtBase:t.debtBase,healthFactor:t.healthFactor,incomplete:t.incomplete,warnings:t.warnings}):null;
   const nComplete=Boolean(n&&n.chainId===57073&&n.address.toLowerCase()===selectedAddress?.toLowerCase()&&
     n.positionCoverageComplete&&!n.incomplete&&n.warnings.length===0&&fresh(n.updatedAt));
   const tComplete=Boolean(t&&t.chainId===57073&&t.address.toLowerCase()===selectedAddress?.toLowerCase()&&
@@ -74,7 +76,7 @@ export function TerminalAccountDesk({watchAddress}:{watchAddress:string|null}){
         <div className={styles.accountMetrics}>
           <span>Collateral <strong>{tComplete?textAmount(t.collateralBase):"Unavailable"}</strong><small>Oracle base units, not USD</small></span>
           <span>Debt <strong>{tComplete?textAmount(t.debtBase):"Unavailable"}</strong><small>Oracle base units, not USD</small></span>
-          <span>Health factor <strong>{tComplete?(t.healthFactor===null?(Number(t.debtBase)===0?"No active debt":"Unknown"):textAmount(t.healthFactor)+"×"):"Unknown"}</strong><small>Liquidation risk below 1.0</small></span>
+          <span>Health factor <strong>{tComplete?health?.display??"Unavailable":"Unavailable"}</strong><small>Liquidation risk below 1.0</small></span>
         </div>
         {t.userReserves.length?<div className={styles.tableScroll}><table><thead><tr><th>Asset</th><th>Supplied</th><th>Variable debt</th><th>Stable debt</th><th>Collateral</th></tr></thead>
           <tbody>{t.userReserves.map(r=><tr key={r.address}><td>{r.symbol}</td><td>{textAmount(r.supplied)}</td><td>{textAmount(r.variableDebt)}</td><td>{textAmount(r.stableDebt)}</td><td>{r.usingAsCollateral?"Yes":"No"}</td></tr>)}</tbody></table></div>:
