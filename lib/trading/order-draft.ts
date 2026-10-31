@@ -11,7 +11,11 @@ export function parseTerminalCommand(text:string,markets:NadoMarket[],fallbackLe
   const sideMatch=prompt.match(/\b(long|short|buy|sell)\b/i);
   const cashMatch=prompt.match(/\$\s*(\d+(?:\.\d+)?)/);
   const leverageMatch=prompt.match(/\b(\d+(?:\.\d+)?)\s*x\b/i);
-  const market=markets.find(m=>new RegExp("\\b"+m.base.replace(/[^A-Za-z0-9]/g,"")+"\\b","i").test(prompt));
+  // Nado's canonical base is BTC-PERP; commands normally say "BTC".
+  const market=markets.find(m=>{
+    const asset=m.base.replace(/-PERP$/i,"").replace(/[^A-Za-z0-9]/g,"");
+    return asset.length>0&&new RegExp("\\b"+asset+"\\b","i").test(prompt);
+  });
   if(!sideMatch||!cashMatch||!market){
     return {ok:false,reason:"Could not safely parse a side, $ notional and supported market. Try: Prepare a $500 BTC long at 2x."};
   }
