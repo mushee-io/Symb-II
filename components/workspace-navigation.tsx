@@ -4,7 +4,7 @@ import Link from "next/link";
 import {usePathname} from "next/navigation";
 import {
   Activity, BellRing, Bot, ChartNoAxesCombined, ClipboardCheck,
-  Droplets, KeyRound, LayoutDashboard, Monitor, ShieldAlert, SlidersHorizontal, TrendingUp,
+  Droplets, KeyRound, LayoutDashboard, Monitor, ShieldAlert, SlidersHorizontal, TrendingUp, FlaskConical,
 } from "lucide-react";
 
 const sections=[
@@ -12,6 +12,7 @@ const sections=[
   {href:"/workspace/terminal",label:"Trading Terminal",hint:"Agent desk & live quotes",icon:Monitor},
   {href:"/workspace/nado",label:"Nado Markets",hint:"Perpetuals & positions",icon:TrendingUp},
   {href:"/workspace/tydro",label:"Tydro Lending",hint:"Supply & borrow",icon:Droplets},
+  {href:"/workspace/actions",label:"Lending Action Lab",hint:"Read-only action drafts",icon:FlaskConical},
   {href:"/workspace/risk",label:"Risk Monitor",hint:"Health & exposures",icon:ShieldAlert},
   {href:"/workspace/rescue",label:"Rescue Lab",hint:"What-if scenarios",icon:SlidersHorizontal},
   {href:"/workspace/preflight",label:"Preflight",hint:"Safety diagnostics",icon:ClipboardCheck},

@@ -8,6 +8,7 @@ const read=path=>readFileSync(join(process.cwd(),path),"utf8");
 const routes={
   "/workspace/nado":{component:"NadoPanel",file:"app/workspace/nado/page.tsx"},
   "/workspace/tydro":{component:"TydroPanel",file:"app/workspace/tydro/page.tsx"},
+  "/workspace/actions":{component:"TydroActionPlanner",file:"app/workspace/actions/page.tsx"},
   "/workspace/risk":{component:"RiskPanel",file:"app/workspace/risk/page.tsx",mode:"risk"},
   "/workspace/rescue":{component:"RiskPanel",file:"app/workspace/rescue/page.tsx",mode:"rescue"},
   "/workspace/preflight":{component:"RiskPanel",file:"app/workspace/preflight/page.tsx",mode:"preflight"},

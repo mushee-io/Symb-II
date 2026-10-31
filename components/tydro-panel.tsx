@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import { ArrowUpRight, Droplets, RefreshCw, Search, ShieldAlert, Wallet, Landmark, Info } from "lucide-react";
 import { ink } from "@/lib/ink";
+import Link from "next/link";
+import {observeTydroHealth} from "@/lib/tydro/health-policy";
 import type { TydroAccountResponse, TydroMarketsResponse } from "@/lib/tydro/types";
 
 async function getJson<T>(url:string,signal?:AbortSignal):Promise<T>{
@@ -66,8 +68,7 @@ function AccountPanel(){
     enabled:Boolean(onInk&&address),
     staleTime:30000,refetchInterval:onInk?60000:false,retry:1,
   });
-  const hf=data?.healthFactor?Number(data.healthFactor):null;
-  const healthLabel=hf===null?"No outstanding debt":hf<1?"Liquidation threshold breached":hf<1.5?"Elevated liquidation risk":"Health factor";
+  const health=data?observeTydroHealth({debtBase:data.debtBase,healthFactor:data.healthFactor,incomplete:data.incomplete,warnings:data.warnings}):null;
   return <section className="nado-section" aria-labelledby="tydro-account-title">
     <div className="nado-heading"><div><span className="eyebrow">TYDRO / PUBLIC ACCOUNT DATA</span><h2 id="tydro-account-title">Lending health & positions</h2><p>View on-chain supply balances, variable debt and your Tydro health factor. Nado and Tydro positions are not cross-margined.</p></div>
       {onInk&&<button className="btn btn-secondary" type="button" disabled={isFetching} onClick={()=>void refetch()}><RefreshCw size={15}/> Refresh</button>}
@@ -78,7 +79,7 @@ function AccountPanel(){
       data&&<>
         <ReadWarnings warnings={data.warnings}/>
         <div className="tydro-account-cards">
-          <div className="tydro-metric tydro-health"><span><ShieldAlert size={15}/> {healthLabel}</span><strong className={hf!==null&&hf<1.5?"tydro-risk":""}>{hf===null?"No debt":Number.isFinite(hf)?hf.toFixed(3)+"×":"Unavailable"}</strong><small>{hf!==null?"Liquidation may be possible below a health factor of 1.0.":"Health factor is not meaningful without outstanding debt."}</small></div>
+          <div className="tydro-metric tydro-health"><span><ShieldAlert size={15}/> {health?.label??"Health unknown"}</span><strong className={health?.state==="critical"||health?.state==="elevated"?"tydro-risk":""}>{health?.display??"Unavailable"}</strong><small>{health?.state==="unknown"?"Missing or contradictory account evidence; no safety conclusion can be made.":health?.state==="no-debt"?"No debt reported in the complete on-chain snapshot.":"Liquidation risk rises as health approaches 1.0. No future health is guaranteed."}</small></div>
           <div className="tydro-metric"><span>Total collateral</span><strong>{formatAmount(data.collateralBase,2)}</strong><small>{data.baseCurrency}, not necessarily USD</small></div>
           <div className="tydro-metric"><span>Total debt</span><strong>{formatAmount(data.debtBase,2)}</strong><small>{data.baseCurrency}, not necessarily USD</small></div>
           <div className="tydro-metric"><span>Borrow capacity left</span><strong>{formatAmount(data.availableBorrowsBase,2)}</strong><small>Current on-chain snapshot; not a borrowing guarantee</small></div>
@@ -97,6 +98,7 @@ export function TydroPanel(){
   return <div className="nado-panels tydro-panels" id="tydro">
     <div className="nado-section-title"><span className="nado-ready">M03 / ONCHAIN</span><div><h2>Tydro integration</h2><p>Supply, borrowing and protocol-specific risk directly from Ink.</p></div><a href="https://app.tydro.com/" target="_blank" rel="noreferrer">Open Tydro <ArrowUpRight size={14}/></a></div>
     <div className="tydro-explain"><Droplets size={18}/><span>Symb-II displays Tydro data without creating a new lending protocol, moving funds or requesting approval. Lending actions and cross-protocol risk simulations are later milestones.</span></div>
+    <div className="nado-source"><Link href="/workspace/actions">Open the separate Tydro Lending Action Lab (read-only)</Link> · Review hypothetical supply, withdraw, borrow and repay with live Pool data. No signatures or transactions.</div>
     <MarketPanel/><AccountPanel/>
   </div>;
 }
