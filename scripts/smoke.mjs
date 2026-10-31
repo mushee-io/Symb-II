@@ -151,12 +151,14 @@ const checks=[
    if(!response.ok||!(response.headers.get("content-type")||"").includes("text/html"))
      throw Error("Native-agent terminal route unavailable");
    const html=await response.text();
-   if(!html.includes("Trading terminal")||
-      !html.includes("READ-ONLY")||
+   if(!html.includes("PERPETUALS")||
+      !html.includes("EXECUTION LOCKED")||
       !html.includes("Order placement disabled")||
-      !html.includes('aria-label="Workspace sections"'))
+      !html.includes('aria-label="Primary navigation"')||
+      !html.includes('aria-label="Nado market watchlist"')||
+      !html.includes('aria-label="Local order draft"'))
      throw Error("Terminal missing source, navigation or no-execution safety boundaries");
-   return "Desktop-first market terminal rendered with explicit disabled execution";
+   return "Redesigned market terminal renders real-market sections, accessible navigation and explicit disabled execution";
  }],
  ["Desktop Nado quote denies invalid product IDs",async()=>{
    const response=await fetch(root+"/api/nado/quote?productId=not-a-product",{
