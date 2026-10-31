@@ -1,0 +1,41 @@
+name: M7 private Redis acceptance (operator-only)
+
+# This workflow uses a short-lived private Bearer token stored ONLY in
+# GitHub Environment secrets, never as a workflow input or repository file.
+# Run it manually from main after Vercel has deployed that exact commit.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: symb-ii-m7-operator-private-acceptance
+  cancel-in-progress: false
+
+jobs:
+  protected-redis-acceptance:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production-ops
+    timeout-minutes: 10
+    env:
+      CRON_SECRET: ${{ secrets.SYMB_II_CRON_SECRET }}
+    steps:
+      - name: Check out the exact production Git revision
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare trusted Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reject absent operator secret before external probing
+        shell: bash
+        run: |
+          if [ -z "$CRON_SECRET" ] || [ ${#CRON_SECRET} -lt 32 ]; then
+            echo "::error::Protected production-ops environment secret SYMB_II_CRON_SECRET is missing or shorter than 32 characters."
+            exit 1
+          fi
+      - name: Independently exercise Redis one-use and provider checks
+        run: npm run verify:m7:redis
