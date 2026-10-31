@@ -4,13 +4,13 @@ import {join} from "node:path";
 const root=process.cwd();
 const read=path=>readFileSync(join(root,path),"utf8");
 const forbidden=[
- /\\bwriteContract\\s*\\(/,
- /\\bsendTransaction\\s*\\(/,
- /\\bsignTypedData\\s*\\(/,
- /\\bwalletClient\\.sendTransaction\\s*\\(/,
+ /\bwriteContract\s*\(/,
+ /\bsendTransaction\s*\(/,
+ /\bsignTypedData\s*\(/,
+ /\bwalletClient\.sendTransaction\s*\(/,
  /eth_sendTransaction/,
  /eth_signTransaction/,
- /\\bsetWindowOpenHandler\\s*\\([^)]*allow/,
+ /\bsetWindowOpenHandler\s*\([^)]*allow/,
 ];
 const scoped=[
  "app/api/agent/market/route.ts",
