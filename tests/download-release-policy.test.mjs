@@ -50,3 +50,15 @@ test("release job cannot publish from pull requests or non-main branches",()=>{
  assert.match(notes,/UNSIGNED BETA/);
  assert.match(notes,/Nado order submission.*remain \*\*disabled\*\*/s);
 });
+
+
+test("Electron packaging runs without GitHub publishing tokens; only gh upload steps receive them",()=>{
+ const workflow=read(".github/workflows/windows-beta-release.yml");
+ const jobEnv=workflow.slice(workflow.indexOf("    env:",workflow.indexOf("  publish-unsigned-beta:")),
+    workflow.indexOf("    steps:",workflow.indexOf("  publish-unsigned-beta:")));
+ assert.doesNotMatch(jobEnv,/GH_TOKEN|GITHUB_TOKEN/);
+ assert.equal((workflow.match(/GH_TOKEN:/g)||[]).length,2);
+ assert.match(workflow,/name: Publish beta with attached EXE and checksum\s+shell: pwsh\s+env:\s+GH_TOKEN:/);
+ assert.match(workflow,/name: Verify exact public release attachments\s+shell: pwsh\s+env:\s+GH_TOKEN:/);
+ assert.match(workflow,/npm run pack:win/);
+});
