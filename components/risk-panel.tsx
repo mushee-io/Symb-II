@@ -57,7 +57,7 @@ export function RiskPanel({mode="risk"}:{mode?:"risk"|"rescue"|"preflight"|"moni
     monitor:["M04 + M07 / OBSERVABILITY","Wallet risk alerts","In-tab alert transitions and the status of the optional daily signed watch. Email and mobile push delivery remain disabled."],
   } as const;
   const [eyebrow,title,description]=headings[mode];
-  return <section className="nado-section workspace-feature-panel" id={mode==="rescue"?"portfolio-rescue":mode==="monitor"?"risk-alerts":mode} aria-labelledby="risk-panel-title">
+  return <section className="nado-section workspace-feature-panel" id={mode==="rescue"?"rescue-route":mode==="preflight"?"preflight-route":mode==="monitor"?"risk-alerts":mode} aria-labelledby="risk-panel-title">
     <div className="nado-heading"><div><span className="eyebrow">{eyebrow}</span><h2 id="risk-panel-title">{title}</h2><p>{description}</p></div>
       <span className="risk-pill">READ-ONLY SIGNALS</span>
     </div>
